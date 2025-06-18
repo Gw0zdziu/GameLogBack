@@ -4,15 +4,8 @@ namespace GameLogBack.Entities;
 
 public class UserLogins
 {
-    [Key]
-    [Required]
-    [MaxLength(100)]
-    public string UserLoginId { get; set; }
-    [Required]
-    [MaxLength(100)]
-    public string Password { get; set; }
-    [Required]
-    [MaxLength(100)]
     public string UserId { get; set; }
+    public string UserName { get; set; }
+    public string Password { get; set; }
     public Users User { get; set; }
 }
