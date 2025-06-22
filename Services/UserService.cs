@@ -17,12 +17,14 @@ public class UserService : IUserService
     private readonly GameLogDbContext _context;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly AuthenticationSettings _authenticationSettings;
+    private readonly IUtilsService _utilsService;
     
-    public UserService(GameLogDbContext context, IPasswordHasher<UserLogins> passwordHasher, AuthenticationSettings authenticationSettings)
+    public UserService(GameLogDbContext context, IPasswordHasher<UserLogins> passwordHasher, AuthenticationSettings authenticationSettings, IUtilsService utilsService)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _authenticationSettings = authenticationSettings;
+        _utilsService = utilsService;
     } 
     
     public void RegisterUser(RegisterNewUserDto registerNewUser)
@@ -53,7 +55,7 @@ public class UserService : IUserService
         _context.SaveChanges(); 
     }
 
-    public string LoginUser(LoginUserDto loginUserDto)
+    public LoginResponseDto LoginUser(LoginUserDto loginUserDto)
     {
         var user = _context.UserLogins.FirstOrDefault(x => x.UserName == loginUserDto.UserName);
         if (user is null)
@@ -74,8 +76,15 @@ public class UserService : IUserService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expires = DateTime.Now.AddDays(_authenticationSettings.JwtExpireDays);
-        var token = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires, signingCredentials: credentials);
+        var jwtToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires, signingCredentials: credentials);
         var tokenHandler = new JwtSecurityTokenHandler();
-        return tokenHandler.WriteToken(token);
+        var token = tokenHandler.WriteToken(jwtToken);
+        var refreshToken = _utilsService.GetRefreshToken();
+        var loginResponse = new LoginResponseDto()
+        {
+            Token = token,
+            RefreshToken = refreshToken,
+        };
+        return loginResponse;
     }
 }

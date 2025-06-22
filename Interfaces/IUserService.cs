@@ -5,5 +5,5 @@ namespace GameLogBack.Interfaces;
 public interface IUserService
 {
     public void RegisterUser(RegisterNewUserDto registerNewUser);
-    public string LoginUser(LoginUserDto loginUserDto);
+    public LoginResponseDto LoginUser(LoginUserDto loginUserDto);
 }
