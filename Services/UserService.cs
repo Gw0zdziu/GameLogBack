@@ -68,17 +68,7 @@ public class UserService : IUserService
             throw new BadHttpRequestException("Data of login is incorrect");
         }
 
-        var claims = new List<Claim>()
-        {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.NameIdentifier, user.UserId),
-        };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.Now.AddDays(_authenticationSettings.JwtExpireDays);
-        var jwtToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires, signingCredentials: credentials);
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.WriteToken(jwtToken);
+        var token = _utilsService.GetToken(user);
         var refreshToken = _utilsService.GetRefreshToken();
         var loginResponse = new LoginResponseDto()
         {

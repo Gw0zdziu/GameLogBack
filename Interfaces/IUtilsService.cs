@@ -1,6 +1,10 @@
-namespace GameLogBack.Services;
+using GameLogBack.Entities;
+
+namespace GameLogBack.Interfaces;
 
 public interface IUtilsService
 {
     string GetRefreshToken();
+
+    string GetToken(UserLogins userLogins);
 }
