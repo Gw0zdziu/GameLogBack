@@ -12,6 +12,8 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Users> Users { get; set; }
     public DbSet<UserLogins> UserLogins { get; set; }
     
+    public DbSet<RefreshTokenInfo> RefreshTokens { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region Users
@@ -68,6 +70,39 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .Property(p => p.Password)
             .IsRequired()
             .HasMaxLength(100);
+        #endregion
+
+        #region RefreshTokenInfo
+
+        modelBuilder.Entity<RefreshTokenInfo>().ToTable("refresh_token_info");
+        modelBuilder.Entity<RefreshTokenInfo>(entity =>
+        {
+            entity.Property(p => p.UserId).HasColumnName("user_id");
+            entity.Property(p => p.RefreshTokenId).HasColumnName("refresh_token_id");
+            entity.Property(p => p.ExpiryDate).HasColumnName("expiry_date");
+            entity.Property(p => p.RefreshToken).HasColumnName("refresh_token");
+        });
+        modelBuilder.Entity<RefreshTokenInfo>()
+            .HasKey(k => k.RefreshTokenId);
+        modelBuilder.Entity<RefreshTokenInfo>()
+            .HasOne(r => r.User)
+            .WithOne(u => u.RefreshTokens)
+            .HasForeignKey<RefreshTokenInfo>(k => k.UserId);
+        modelBuilder.Entity<RefreshTokenInfo>()
+            .Property(p => p.RefreshTokenId)
+            .IsRequired()
+            .HasMaxLength(100);
+        modelBuilder.Entity<RefreshTokenInfo>()
+            .Property(p => p.UserId)
+            .IsRequired()
+            .HasMaxLength(100);
+        modelBuilder.Entity<RefreshTokenInfo>()
+            .Property(p => p.ExpiryDate)
+            .IsRequired();
+        modelBuilder.Entity<RefreshTokenInfo>()
+            .Property(p => p.RefreshToken)
+            .IsRequired();
+
         #endregion
     }
     
