@@ -41,4 +41,20 @@ public class UtilsService : IUtilsService
         var token = tokenHandler.WriteToken(jwtToken);
         return token;
     }
+
+    public string GetAccessToken(UserLogins userLogins, string refreshToken)
+    {
+        var claims = new List<Claim>()
+        {
+            new Claim(ClaimTypes.Name, userLogins.UserName),
+            new Claim(ClaimTypes.NameIdentifier, userLogins.UserId),
+        };
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(refreshToken));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var expires = DateTime.Now.AddDays(_authenticationSettings.JwtAccessTokenExpireDays);
+        var jwtAccessToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires, signingCredentials: credentials);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var accessToken = tokenHandler.WriteToken(jwtAccessToken);
+        return accessToken;   
+    }
 }
