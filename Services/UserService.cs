@@ -70,11 +70,54 @@ public class UserService : IUserService
 
         var token = _utilsService.GetToken(user);
         var refreshToken = _utilsService.GetRefreshToken();
+        var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == user.UserId);
+        if (refreshTokenInfo is null)
+        {
+            _context.RefreshTokens.Add(new RefreshTokenInfo()
+            {
+                UserId = user.UserId,
+                RefreshTokenId = Guid.NewGuid().ToString(),
+                RefreshToken = refreshToken,
+                ExpiryDate = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
+            });
+            _context.SaveChanges();
+        }
         var loginResponse = new LoginResponseDto()
         {
             Token = token,
             RefreshToken = refreshToken,
         };
         return loginResponse;
+    }
+
+    public TokenInfoDto GetRefreshToken(TokenInfoDto tokenInfo)
+    {
+        try
+        {
+            var principal = _utilsService.GetPrincipalFromExpiredToken(tokenInfo.AccessToken);
+            var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
+            if (refreshTokenInfo is null || refreshTokenInfo.RefreshToken != tokenInfo.RefreshToken || refreshTokenInfo.ExpiryDate < DateTime.Now)
+            {
+                throw new BadHttpRequestException("Refresh token is expired");
+            }
+
+            var user = _context.UserLogins.FirstOrDefault(x => x.UserId == userId);
+            var token = _utilsService.GetToken(user);
+            var newRefreshToken = _utilsService.GetRefreshToken();
+            refreshTokenInfo.RefreshToken = newRefreshToken;
+            _context.SaveChanges();
+            var tokenInfoDto = new TokenInfoDto()
+            {
+                AccessToken = token,
+                RefreshToken = newRefreshToken
+            };
+            return tokenInfoDto;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }    
     }
 }

@@ -3,6 +3,7 @@ using System;
 using GameLogBack.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameLogBack.Migrations
 {
     [DbContext(typeof(GameLogDbContext))]
-    partial class GameLogDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250622180803_AddRefreshLoginInfo")]
+    partial class AddRefreshLoginInfo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,11 +36,6 @@ namespace GameLogBack.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiry_date");
 
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("refresh_token");
-
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -45,9 +43,6 @@ namespace GameLogBack.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("RefreshTokenId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
 
                     b.ToTable("refresh_token_info", (string)null);
                 });
@@ -108,7 +103,7 @@ namespace GameLogBack.Migrations
                 {
                     b.HasOne("GameLogBack.Entities.Users", "User")
                         .WithOne("RefreshTokens")
-                        .HasForeignKey("GameLogBack.Entities.RefreshTokenInfo", "UserId")
+                        .HasForeignKey("GameLogBack.Entities.RefreshTokenInfo", "RefreshTokenId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

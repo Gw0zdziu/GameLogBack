@@ -1,5 +1,7 @@
+using GameLogBack.Authentication;
 using GameLogBack.Interfaces;
 using GameLogBack.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameLogBack.Controllers;
@@ -9,10 +11,12 @@ namespace GameLogBack.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly AuthenticationSettings _authenticationSettings;
     
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, AuthenticationSettings authenticationSettings)
     {
         _userService = userService;
+        _authenticationSettings = authenticationSettings;
     }
 
     [HttpPost("register")]
@@ -26,6 +30,42 @@ public class UserController : ControllerBase
     public ActionResult LoginUser([FromBody] LoginUserDto loginUserDto)
     {
         var token = _userService.LoginUser(loginUserDto);
-        return Ok(token);
+        Response.Cookies.Append("refreshToken", token.RefreshToken, new CookieOptions()
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.Now.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
+        });
+        return Ok(token.Token);
     }
+
+    [HttpPost("refresh-token")]
+    public ActionResult RefreshToken([FromBody] string accessToken)
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+        var tokenInfo = new TokenInfoDto()
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken
+        };
+        var newTokenInfo = _userService.GetRefreshToken(tokenInfo);
+        Response.Cookies.Append("refreshToken", newTokenInfo.RefreshToken, new CookieOptions()
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.Now.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
+        });
+        return Ok(newTokenInfo.AccessToken);   
+    }
+
+    [HttpGet("logout")]
+    [Authorize]
+    public ActionResult Logout()
+    {
+        return Ok();   
+    }
+    
+    
 }

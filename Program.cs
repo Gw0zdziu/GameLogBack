@@ -27,9 +27,14 @@ builder.Services.AddAuthentication(option =>
     config.SaveToken = true;
     config.TokenValidationParameters = new TokenValidationParameters
     {
+        ValidateIssuer = true,
         ValidIssuer = authenticationSettings.JwtIssuer,
+        ValidateAudience = true,
         ValidAudience = authenticationSettings.JwtIssuer,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey)),
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
     };
 });
 builder.Services.AddScoped<IUserService, UserService>();
@@ -51,5 +56,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.Run();

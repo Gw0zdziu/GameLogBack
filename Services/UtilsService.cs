@@ -35,10 +35,55 @@ public class UtilsService : IUtilsService
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.Now.AddMinutes(_authenticationSettings.JwtTokenExpireMinutes);
-        var jwtToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires, signingCredentials: credentials);
+        var expiresTime = DateTime.Now.AddMinutes(_authenticationSettings.JwtTokenExpireMinutes);
+        var jwtToken = new JwtSecurityToken(issuer:_authenticationSettings.JwtIssuer, audience: _authenticationSettings.JwtIssuer, claims: claims, notBefore: null, expires: expiresTime, signingCredentials: credentials);
         var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.WriteToken(jwtToken);
         return token;
+    }
+
+    public string GetAccessToken(UserLogins userLogins, string refreshToken)
+    {
+        var claims = new List<Claim>()
+        {
+            new Claim(ClaimTypes.Name, userLogins.UserName),
+            new Claim(ClaimTypes.NameIdentifier, userLogins.UserId),
+        };
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(refreshToken));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var expires = DateTime.Now.AddDays(_authenticationSettings.JwtAccessTokenExpireDays);
+        var jwtAccessToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer, claims, expires, signingCredentials: credentials);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var accessToken = tokenHandler.WriteToken(jwtAccessToken);
+        return accessToken;   
+    }
+
+    public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+    {
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidAudience = _authenticationSettings.JwtIssuer,
+            ValidIssuer = _authenticationSettings.JwtIssuer,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey)),
+
+            // 🔥 Kluczowa zmiana: nie walidujemy czasu ważności
+            ValidateLifetime = false,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                StringComparison.InvariantCultureIgnoreCase))
+        {
+            throw new SecurityTokenException("Invalid token");
+        }
+
+        return principal;
     }
 }
