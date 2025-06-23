@@ -1,0 +1,7 @@
+namespace GameLogBack.Models;
+
+public class TokenInfoDto
+{
+    public string AccessToken { get; set; }
+    public string RefreshToken { get; set; }
+}
