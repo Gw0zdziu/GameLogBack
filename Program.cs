@@ -3,6 +3,7 @@ using GameLogBack.Authentication;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
+using GameLogBack.Middlewares;
 using GameLogBack.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<GameLogDbContext>(options =>
 var authenticationSettings = new AuthenticationSettings();
 builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
 builder.Services.AddSingleton(authenticationSettings);
+builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddAuthentication(option =>
 {
     option.DefaultAuthenticateScheme = "Bearer";
@@ -55,6 +57,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
