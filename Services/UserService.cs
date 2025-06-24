@@ -4,6 +4,7 @@ using System.Text;
 using GameLogBack.Authentication;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
+using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Models;
 using Microsoft.AspNetCore.Identity;
@@ -33,7 +34,7 @@ public class UserService : IUserService
             .Any(x => x.UserName.ToLower() == registerNewUser.Username.ToLower());
         if (isUserNameExist)
         {
-            throw new BadHttpRequestException("User already exist");
+            throw new BadRequestException("User already exist");
         }
         var newUserId = Guid.NewGuid().ToString();
         var newUser = new Users()
@@ -65,7 +66,7 @@ public class UserService : IUserService
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed)
         {
-            throw new BadHttpRequestException("Data of login is incorrect");
+            throw new BadRequestException("Data of login is incorrect");
         }
 
         var token = _utilsService.GetToken(user);
@@ -92,14 +93,12 @@ public class UserService : IUserService
 
     public TokenInfoDto GetRefreshToken(TokenInfoDto tokenInfo)
     {
-        try
-        {
             var principal = _utilsService.GetPrincipalFromExpiredToken(tokenInfo.AccessToken);
             var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
             var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
             if (refreshTokenInfo is null || refreshTokenInfo.RefreshToken != tokenInfo.RefreshToken || refreshTokenInfo.ExpiryDate < DateTime.Now)
             {
-                throw new BadHttpRequestException("Refresh token is expired");
+                throw new BadRequestException("Refresh token is expired");
             }
 
             var user = _context.UserLogins.FirstOrDefault(x => x.UserId == userId);
@@ -113,11 +112,5 @@ public class UserService : IUserService
                 RefreshToken = newRefreshToken
             };
             return tokenInfoDto;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }    
     }
 }

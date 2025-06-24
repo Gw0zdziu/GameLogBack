@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using GameLogBack.Authentication;
 using GameLogBack.Entities;
+using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
@@ -68,8 +69,6 @@ public class UtilsService : IUtilsService
             ValidIssuer = _authenticationSettings.JwtIssuer,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey)),
-
-            // 🔥 Kluczowa zmiana: nie walidujemy czasu ważności
             ValidateLifetime = false,
             ClockSkew = TimeSpan.Zero
         };
@@ -81,7 +80,7 @@ public class UtilsService : IUtilsService
             !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                 StringComparison.InvariantCultureIgnoreCase))
         {
-            throw new SecurityTokenException("Invalid token");
+            throw new BadRequestException("Invalid token");
         }
 
         return principal;
