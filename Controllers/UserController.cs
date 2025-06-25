@@ -64,8 +64,7 @@ public class UserController : ControllerBase
     [Authorize]
     public ActionResult Logout()
     {
-        return Ok();   
+        Response.Cookies.Delete("refreshToken");
     }
-    
     
 }
