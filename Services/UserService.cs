@@ -124,4 +124,17 @@ public class UserService : IUserService
         _context.RefreshTokens.Remove(refreshTokenInfo);
         _context.SaveChanges();
     }
+
+    public void UpdateUser(UpdateUserDto updateUserDto, string userId)
+    {
+        var user = _context.Users.FirstOrDefault(x => x.UserId == userId);
+        if (user is null)
+        {
+            throw new BadRequestException("User not found");
+        }
+        user.FirstName = updateUserDto.FirstName;
+        user.LastName = updateUserDto.LastName;
+        user.UserEmail = updateUserDto.UserEmail;
+        _context.SaveChanges();
+    }
 }
