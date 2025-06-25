@@ -33,6 +33,7 @@ public class UtilsService : IUtilsService
         {
             new Claim(ClaimTypes.Name, userLogins.UserName),
             new Claim(ClaimTypes.NameIdentifier, userLogins.UserId),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
