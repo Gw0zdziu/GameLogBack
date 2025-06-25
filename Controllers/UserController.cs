@@ -67,5 +67,12 @@ public class UserController : ControllerBase
         Response.Cookies.Delete("refreshToken");
         return Ok();   
     }
+
+    [HttpPatch("update/{userId}")]
+    public ActionResult UpdateUser([FromRoute] string userId)
+    {
+        
+        return Ok();  
+    }
     
 }
