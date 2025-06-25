@@ -113,4 +113,15 @@ public class UserService : IUserService
             };
             return tokenInfoDto;
     }
+    
+    public void LogoutUser(string userId)
+    {
+        var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
+        if (refreshTokenInfo is null)
+        {
+            throw new BadRequestException("Refresh token is expired");
+        }
+        _context.RefreshTokens.Remove(refreshTokenInfo);
+        _context.SaveChanges();
+    }
 }
