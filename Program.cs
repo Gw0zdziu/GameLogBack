@@ -1,5 +1,6 @@
 using System.Text;
 using GameLogBack.Authentication;
+using GameLogBack.Configurations;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 var authenticationSettings = new AuthenticationSettings();
 builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));;
 builder.Services.AddSingleton(authenticationSettings);
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddAuthentication(option =>
