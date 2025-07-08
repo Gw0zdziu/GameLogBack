@@ -60,11 +60,18 @@ public class UserController : ControllerBase
         return Ok(newTokenInfo.AccessToken);   
     }
     
-    [HttpGet("confirm-code/{userId}")]
-    public ActionResult ConfirmCode([FromRoute] string userId)
+    [HttpGet("resend-code/{userId}")]
+    public ActionResult ResendCode([FromRoute] string userId)
     {
         _userService.ResendNewConfirmCode(userId);
         return Ok();   
+    }
+
+    [HttpPost("confirm-code")]
+    public ActionResult ConfirmUser([FromBody] ConfirmCodeDto confirmCodeDto)
+    {
+        _userService.ConfirmUser(confirmCodeDto);
+        return Ok(); 
     }
 
     [HttpGet("logout")]
