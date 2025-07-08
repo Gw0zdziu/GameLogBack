@@ -67,10 +67,8 @@ public class UserService : IUserService
         };
         var passwordHash = _passwordHasher.HashPassword(newUser.UserLogins, registerNewUser.Password);
         newUser.UserLogins.Password = passwordHash;
-        
         _context.Users.Add(newUser);
         _context.SaveChanges(); 
-        _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika", $"Twój kod potwierdzający to : {code}");
     }
 
     public LoginResponseDto LoginUser(LoginUserDto loginUserDto)
@@ -130,7 +128,22 @@ public class UserService : IUserService
             };
             return tokenInfoDto;
     }
-    
+
+    public void ResendNewConfirmCode(string userId)
+    {
+        var user = _context.ConfirmCodeUsers.FirstOrDefault(x => x.UserId == userId);
+        if (user is null)
+        {
+            throw new BadRequestException("User not found");       
+        }
+        var userEmail = _context.Users.Where(x => x.UserId == userId).Select(x => x.UserEmail).FirstOrDefault();
+        var code = _utilsService.GenerateCodeToConfirmEmail();
+        user.ConfirmCode = code;
+        user.ExpiryDate = DateTime.UtcNow.AddMinutes(15);
+        _context.SaveChanges();
+        _emailSenderHelper.SendEmail(userEmail, "Kod potwierdzający użytkownika", $"Twój kod potwierdzający to : {code}");
+    }
+
     public void LogoutUser(string userId)
     {
         var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
