@@ -44,6 +44,7 @@ public class UserService : IUserService
             throw new BadRequestException("User with this email already exist");
         }
         var newUserId = Guid.NewGuid().ToString();
+        var code = _utilsService.GenerateCodeToConfirmEmail();
         var newUser = new Users()
         {
             UserId = newUserId,
@@ -55,13 +56,20 @@ public class UserService : IUserService
                 UserId = newUserId,
                 UserName = registerNewUser.Username,
                 Password = registerNewUser.Password,
+            },
+            ConfirmCode = new ConfirmCodeUsers()
+            {
+                ConfirmCodeId = Guid.NewGuid().ToString(),
+                ExpiryDate = DateTime.UtcNow.AddMinutes(15),
+                UserId = newUserId,
+                ConfirmCode = code
             }
         };
         var passwordHash = _passwordHasher.HashPassword(newUser.UserLogins, registerNewUser.Password);
         newUser.UserLogins.Password = passwordHash;
+        
         _context.Users.Add(newUser);
         _context.SaveChanges(); 
-        var code = _utilsService.GenerateCodeToConfirmEmail();
         _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika", $"Twój kod potwierdzający to : {code}");
     }
 
