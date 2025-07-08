@@ -86,4 +86,10 @@ public class UtilsService : IUtilsService
 
         return principal;
     }
+
+    public string GenerateCodeToConfirmEmail()
+    {
+        Random randomNumber = new Random();
+        return randomNumber.Next(0, 9999).ToString("D4");
+    }
 }

@@ -12,4 +12,6 @@ public interface IUtilsService
     string GetAccessToken(UserLogins userLogins, string refreshToken);
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
+    
+    public string GenerateCodeToConfirmEmail();
 }
