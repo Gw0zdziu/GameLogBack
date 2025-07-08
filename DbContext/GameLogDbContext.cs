@@ -108,6 +108,39 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .IsRequired();
 
         #endregion
+
+        #region ConfirmCodeUsers
+        
+        modelBuilder.Entity<ConfirmCodeUsers>().ToTable("confirm_code_users");
+        modelBuilder.Entity<ConfirmCodeUsers>(entity =>
+        {
+            entity.Property(p => p.UserId).HasColumnName("user_id");
+            entity.Property(p => p.ConfirmCode).HasColumnName("confirm_code");
+            entity.Property(p => p.ConfirmCodeId).HasColumnName("confirm_code_id");
+            entity.Property(p => p.ExpiryDate).HasColumnName("expiry_date");
+        });
+        modelBuilder.Entity<ConfirmCodeUsers>()
+            .HasKey(k => k.ConfirmCodeId);
+        modelBuilder.Entity<ConfirmCodeUsers>()
+            .HasOne(r => r.User)
+            .WithOne(r => r.ConfirmCode)
+            .HasForeignKey<ConfirmCodeUsers>(k => k.UserId);
+        modelBuilder.Entity<ConfirmCodeUsers>()
+            .Property(p => p.ConfirmCodeId)
+            .IsRequired();
+        modelBuilder.Entity<ConfirmCodeUsers>()
+            .Property(p => p.ConfirmCode)
+            .IsRequired()
+            .HasMaxLength(4);
+        modelBuilder.Entity<ConfirmCodeUsers>()
+            .Property(p => p.UserId)
+            .IsRequired();
+        modelBuilder.Entity<ConfirmCodeUsers>()
+            .Property(p => p.ExpiryDate)
+            .IsRequired();
+
+        #endregion
+
     }
     
     
