@@ -19,13 +19,15 @@ public class UserService : IUserService
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly AuthenticationSettings _authenticationSettings;
     private readonly IUtilsService _utilsService;
+    private readonly IEmailSenderHelper _emailSenderHelper;
     
-    public UserService(GameLogDbContext context, IPasswordHasher<UserLogins> passwordHasher, AuthenticationSettings authenticationSettings, IUtilsService utilsService)
+    public UserService(GameLogDbContext context, IPasswordHasher<UserLogins> passwordHasher, AuthenticationSettings authenticationSettings, IUtilsService utilsService, IEmailSenderHelper emailSenderHelper)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _authenticationSettings = authenticationSettings;
         _utilsService = utilsService;
+        _emailSenderHelper = emailSenderHelper;
     } 
     
     public void RegisterUser(RegisterNewUserDto registerNewUser)
@@ -34,7 +36,12 @@ public class UserService : IUserService
             .Any(x => x.UserName.ToLower() == registerNewUser.Username.ToLower());
         if (isUserNameExist)
         {
-            throw new BadRequestException("User already exist");
+            throw new BadRequestException("User with this username already exist");
+        }
+        var isUserEmailExist = _context.Users.Any(x => x.UserEmail.ToLower() == registerNewUser.UserEmail.ToLower());
+        if (isUserEmailExist)
+        {
+            throw new BadRequestException("User with this email already exist");
         }
         var newUserId = Guid.NewGuid().ToString();
         var newUser = new Users()
@@ -54,6 +61,8 @@ public class UserService : IUserService
         newUser.UserLogins.Password = passwordHash;
         _context.Users.Add(newUser);
         _context.SaveChanges(); 
+        var code = _utilsService.GenerateCodeToConfirmEmail();
+        _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika", $"Twój kod potwierdzający to : {code}");
     }
 
     public LoginResponseDto LoginUser(LoginUserDto loginUserDto)
