@@ -59,6 +59,13 @@ public class UserController : ControllerBase
         });
         return Ok(newTokenInfo.AccessToken);   
     }
+    
+    [HttpGet("confirm-code/{userId}")]
+    public ActionResult ConfirmCode([FromRoute] string userId)
+    {
+        _userService.ResendNewConfirmCode(userId);
+        return Ok();   
+    }
 
     [HttpGet("logout")]
     [Authorize]
