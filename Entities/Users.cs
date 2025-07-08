@@ -10,4 +10,6 @@ public class Users
     public string UserEmail { get; set; }
     public UserLogins UserLogins { get; set; }
     public RefreshTokenInfo RefreshTokens { get; set; }
+    public string IsActive { get; set; }
+    
 }
