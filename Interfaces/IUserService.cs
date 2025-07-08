@@ -9,4 +9,5 @@ public interface IUserService
     public LoginResponseDto LoginUser(LoginUserDto loginUserDto);
     public TokenInfoDto GetRefreshToken(TokenInfoDto tokenInfo);
     public void ResendNewConfirmCode(string userId);
+    public void ConfirmUser(ConfirmCodeDto confirmCodeDto);
 }
