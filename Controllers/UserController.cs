@@ -74,18 +74,19 @@ public class UserController : ControllerBase
         return Ok(); 
     }
 
-    [HttpGet("logout")]
+    [HttpGet("logout/{userId}")]
     [Authorize]
-    public ActionResult Logout()
+    public ActionResult Logout([FromRoute] string userId)
     {
+        _userService.LogoutUser(userId);
         Response.Cookies.Delete("refreshToken");
         return Ok();   
     }
 
-    [HttpPatch("update/{userId}")]
-    public ActionResult UpdateUser([FromRoute] string userId)
+    [HttpPut("update/{userId}")]
+    public ActionResult UpdateUser([FromBody]UpdateUserDto updateUserDto, [FromRoute] string userId)
     {
-        
+        _userService.UpdateUser(updateUserDto, userId);
         return Ok();  
     }
     
