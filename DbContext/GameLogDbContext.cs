@@ -40,6 +40,10 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .Property(p => p.LastName)
             .IsRequired()
             .HasMaxLength(100);
+        modelBuilder.Entity<Users>()
+            .Property(p => p.IsActive)
+            .IsRequired()
+            .HasDefaultValue(false);
 
         #endregion
 
