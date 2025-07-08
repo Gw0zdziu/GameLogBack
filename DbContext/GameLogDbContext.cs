@@ -11,8 +11,8 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
 
     public DbSet<Users> Users { get; set; }
     public DbSet<UserLogins> UserLogins { get; set; }
-    
     public DbSet<RefreshTokenInfo> RefreshTokens { get; set; }
+    public DbSet<ConfirmCodeUsers> ConfirmCodeUsers { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
