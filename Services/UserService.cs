@@ -144,6 +144,25 @@ public class UserService : IUserService
         _emailSenderHelper.SendEmail(userEmail, "Kod potwierdzający użytkownika", $"Twój kod potwierdzający to : {code}");
     }
 
+    public void ConfirmUser(ConfirmCodeDto confirmCodeDto)
+    {
+        var user = _context.ConfirmCodeUsers.FirstOrDefault(x => x.UserId == confirmCodeDto.UserId);
+        if (user is null)
+        {
+            throw new BadRequestException("User not found");       
+        }
+        if (user.ExpiryDate < DateTime.UtcNow)
+        {
+            throw new BadRequestException("Confirm code is expired. You must generate new code");  
+        }
+        if (user.ConfirmCode != confirmCodeDto.ConfirmCode)
+        {
+            throw new BadRequestException("Confirm code is incorrect");
+        }
+        user.ConfirmCode = null;
+        _context.SaveChanges();
+    }
+
     public void LogoutUser(string userId)
     {
         var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
