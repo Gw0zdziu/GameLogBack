@@ -9,7 +9,7 @@ public class Users
     public string LastName { get; set; }
     public string UserEmail { get; set; }
     public UserLogins UserLogins { get; set; }
-    public string IsActive { get; set; }
+    public bool IsActive { get; set; }
     
     public RefreshTokenInfo RefreshTokens { get; set; }
     public ConfirmCodeUsers ConfirmCode { get; set; }
