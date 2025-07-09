@@ -146,20 +146,26 @@ public class UserService : IUserService
 
     public void ConfirmUser(ConfirmCodeDto confirmCodeDto)
     {
-        var user = _context.ConfirmCodeUsers.FirstOrDefault(x => x.UserId == confirmCodeDto.UserId);
+        var confirmCodeUser = _context.ConfirmCodeUsers.FirstOrDefault(x => x.UserId == confirmCodeDto.UserId);
+        if (confirmCodeUser is null)
+        {
+            throw new BadRequestException("Confirm code not found");       
+        }
+        if (confirmCodeUser.ExpiryDate < DateTime.UtcNow)
+        {
+            throw new BadRequestException("Confirm code is expired. You must generate new code");  
+        }
+        if (confirmCodeUser.ConfirmCode != confirmCodeDto.ConfirmCode)
+        {
+            throw new BadRequestException("Confirm code is incorrect");
+        }
+        var user = _context.Users.FirstOrDefault(x => x.UserId == confirmCodeDto.UserId);
         if (user is null)
         {
             throw new BadRequestException("User not found");       
         }
-        if (user.ExpiryDate < DateTime.UtcNow)
-        {
-            throw new BadRequestException("Confirm code is expired. You must generate new code");  
-        }
-        if (user.ConfirmCode != confirmCodeDto.ConfirmCode)
-        {
-            throw new BadRequestException("Confirm code is incorrect");
-        }
-        user.ConfirmCode = null;
+        user.IsActive = true;
+        confirmCodeUser.ConfirmCode = null;
         _context.SaveChanges();
     }
 
