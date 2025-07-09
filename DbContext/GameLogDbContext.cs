@@ -25,6 +25,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(p => p.UserEmail).HasColumnName("user_email");
             entity.Property(p => p.FirstName).HasColumnName("firstname");
             entity.Property(p => p.LastName).HasColumnName("lastname");
+            entity.Property(p => p.IsActive).HasColumnName("is_active");
         });
         modelBuilder.Entity<Users>()
             .HasKey(k => k.UserId);
@@ -32,6 +33,9 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .Property(p => p.UserId)
             .IsRequired()
             .HasMaxLength(100);
+        modelBuilder.Entity<Users>()
+            .Property(p => p.UserEmail)
+            .IsRequired();
         modelBuilder.Entity<Users>()
             .Property(p => p.FirstName)
             .IsRequired()
