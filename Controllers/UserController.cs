@@ -67,7 +67,7 @@ public class UserController : ControllerBase
         return Ok();   
     }
 
-    [HttpPost("confirm-code")]
+    [HttpPost("confirm-user")]
     public ActionResult ConfirmUser([FromBody] ConfirmCodeDto confirmCodeDto)
     {
         _userService.ConfirmUser(confirmCodeDto);
