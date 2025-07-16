@@ -20,6 +20,15 @@ builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));;
 builder.Services.AddSingleton(authenticationSettings);
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularApp", policy =>
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+    );
+});
 builder.Services.AddAuthentication(option =>
 {
     option.DefaultAuthenticateScheme = "Bearer";
@@ -61,6 +70,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseCors("AngularApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
