@@ -20,14 +20,14 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public ActionResult RegisterUser([FromBody] RegisterNewUserDto registerNewUser)
+    public ActionResult<string> RegisterUser([FromBody] RegisterNewUserDto registerNewUser)
     {
-        _userService.RegisterUser(registerNewUser);
-        return Ok();
+        var userId = _userService.RegisterUser(registerNewUser);
+        return Ok(userId);
     }
 
     [HttpPost("login")]
-    public ActionResult LoginUser([FromBody] LoginUserDto loginUserDto)
+    public ActionResult<string> LoginUser([FromBody] LoginUserDto loginUserDto)
     {
         var token = _userService.LoginUser(loginUserDto);
         Response.Cookies.Append("refreshToken", token.RefreshToken, new CookieOptions()
@@ -60,10 +60,10 @@ public class UserController : ControllerBase
         return Ok(newTokenInfo.AccessToken);   
     }
     
-    [HttpGet("resend-code/{userId}")]
-    public ActionResult ResendCode([FromRoute] string userId)
+    [HttpPost("resend-code")]
+    public ActionResult ResendCode([FromBody] ResendCodeDto resendCodeDto)
     {
-        _userService.ResendNewConfirmCode(userId);
+        _userService.ResendNewConfirmCode(resendCodeDto.UserId);
         return Ok();   
     }
 
