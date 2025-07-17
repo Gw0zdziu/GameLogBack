@@ -21,6 +21,13 @@ public class UserController : ControllerBase
         var userId = _userService.RegisterUser(registerNewUser);
         return Ok(userId);
     }
+
+    [HttpGet("get-user/{userId}")]
+    public ActionResult<GetUserDto> GetUser([FromRoute] string userId)
+    {
+        var user = _userService.GetUser(userId);
+        return Ok(user);
+    }
     
     [HttpPut("update/{userId}")]
     public ActionResult UpdateUser([FromBody]UpdateUserDto updateUserDto, [FromRoute] string userId)
