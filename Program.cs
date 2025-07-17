@@ -51,6 +51,7 @@ builder.Services.AddAuthentication(option =>
     };
 });
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher<UserLogins>, PasswordHasher<UserLogins>>();
 builder.Services.AddScoped<IUtilsService, UtilsService>();
 builder.Services.AddScoped<IEmailSenderHelper, EmailSenderHelper>();
