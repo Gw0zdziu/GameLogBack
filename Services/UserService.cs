@@ -8,6 +8,7 @@ using GameLogBack.Interfaces;
 using GameLogBack.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GameLogBack.Services;
@@ -69,7 +70,26 @@ public class UserService : IUserService
         _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika", $"Twój kod potwierdzający to : {code}");
         return newUserId;
     }
-    
+
+    public GetUserDto GetUser(string userId)
+    {
+        var user = _context.UserLogins.Join(_context.Users, userLogins => userLogins.UserId, users => users.UserId,
+            (userLogins, users) => new GetUserDto()
+            {
+                UserId = users.UserId,
+                UserName = userLogins.UserName,
+                UserEmail = users.UserEmail,
+                IsActive = users.IsActive,
+                FirstName = users.FirstName,
+                LastName = users.LastName
+            }).FirstOrDefault(x => x.UserId == userId);
+        if (user is null)
+        {
+            throw new BadRequestException("User not found");       
+        }
+        return user;       
+    }
+
     public void ResendNewConfirmCode(string userId)
     {
         var user = _context.ConfirmCodeUsers.FirstOrDefault(x => x.UserId == userId);
