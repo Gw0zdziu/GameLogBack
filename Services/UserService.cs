@@ -30,7 +30,7 @@ public class UserService : IUserService
         _emailSenderHelper = emailSenderHelper;
     } 
     
-    public void RegisterUser(RegisterNewUserDto registerNewUser)
+    public string RegisterUser(RegisterNewUserDto registerNewUser)
     {
         var isUserNameExist = _context.UserLogins
             .Any(x => x.UserName.ToLower() == registerNewUser.Username.ToLower());
@@ -68,7 +68,9 @@ public class UserService : IUserService
         var passwordHash = _passwordHasher.HashPassword(newUser.UserLogins, registerNewUser.Password);
         newUser.UserLogins.Password = passwordHash;
         _context.Users.Add(newUser);
-        _context.SaveChanges(); 
+        _context.SaveChanges();
+        _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika", $"Twój kod potwierdzający to : {code}");
+        return newUserId;
     }
 
     public LoginResponseDto LoginUser(LoginUserDto loginUserDto)
@@ -165,7 +167,6 @@ public class UserService : IUserService
             throw new BadRequestException("User not found");       
         }
         user.IsActive = true;
-        confirmCodeUser.ConfirmCode = null;
         _context.SaveChanges();
     }
 
