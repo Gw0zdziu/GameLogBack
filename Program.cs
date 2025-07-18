@@ -38,7 +38,7 @@ builder.Services.AddAuthentication(option =>
 {
     config.RequireHttpsMetadata = false;
     config.SaveToken = true;
-upd    config.UseSecurityTokenValidators = true;
+    config.UseSecurityTokenValidators = true;
     config.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
