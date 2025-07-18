@@ -50,12 +50,18 @@ public class AuthService : IAuthService
                 RefreshToken = refreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
             });
-            _context.SaveChanges();
         }
+        else
+        {
+            refreshTokenInfo.RefreshToken = refreshToken;
+            refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays);
+        }
+        _context.SaveChanges();
         var loginResponse = new LoginResponseDto()
         {
             Token = token,
             RefreshToken = refreshToken,
+            UserId = user.UserId
         };
         return loginResponse;
     }

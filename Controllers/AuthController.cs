@@ -30,7 +30,12 @@ public class AuthController : ControllerBase
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.Now.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
         });
-        return Ok(token.Token);
+        var login = new
+        {
+            token.Token,
+            token.UserId
+        };
+        return Ok(login);
     }
 
     [HttpPost("refresh-token")]
@@ -54,7 +59,7 @@ public class AuthController : ControllerBase
     }
     
 
-    [HttpGet("logout/{userId}")]
+    [HttpDelete("logout/{userId}")]
     [Authorize]
     public ActionResult Logout([FromRoute] string userId)
     {
