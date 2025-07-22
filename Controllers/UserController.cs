@@ -1,5 +1,5 @@
+using GameLogBack.Dtos;
 using GameLogBack.Interfaces;
-using GameLogBack.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameLogBack.Controllers;
@@ -28,25 +28,25 @@ public class UserController : ControllerBase
         var user = _userService.GetUser(userId);
         return Ok(user);
     }
-    
+
     [HttpPut("update/{userId}")]
-    public ActionResult UpdateUser([FromBody]UpdateUserDto updateUserDto, [FromRoute] string userId)
+    public ActionResult UpdateUser([FromBody] UpdateUserDto updateUserDto, [FromRoute] string userId)
     {
         _userService.UpdateUser(updateUserDto, userId);
-        return Ok();  
+        return Ok();
     }
-    
+
     [HttpPost("resend-code")]
     public ActionResult ResendCode([FromBody] ResendCodeDto resendCodeDto)
     {
         _userService.ResendNewConfirmCode(resendCodeDto.UserId);
-        return Ok();   
+        return Ok();
     }
 
     [HttpPost("confirm-user")]
     public ActionResult ConfirmUser([FromBody] ConfirmCodeDto confirmCodeDto)
     {
         _userService.ConfirmUser(confirmCodeDto);
-        return Ok(); 
+        return Ok();
     }
 }

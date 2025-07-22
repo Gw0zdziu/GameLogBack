@@ -1,4 +1,4 @@
-using GameLogBack.Models;
+using GameLogBack.Dtos;
 
 namespace GameLogBack.Interfaces;
 
