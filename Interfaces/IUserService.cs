@@ -1,5 +1,4 @@
-using GameLogBack.Entities;
-using GameLogBack.Models;
+using GameLogBack.Dtos;
 
 namespace GameLogBack.Interfaces;
 

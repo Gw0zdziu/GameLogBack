@@ -1,4 +1,4 @@
-namespace GameLogBack.Models;
+namespace GameLogBack.Dtos;
 
 public class LoginResponseDto
 {
