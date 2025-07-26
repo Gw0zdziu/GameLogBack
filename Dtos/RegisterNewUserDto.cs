@@ -23,12 +23,12 @@ public class RegisterNewUserDto
 
     [Required(ErrorMessage = "Password is required")]
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
-    [PasswordValidation("Password")]
+    //[PasswordValidation("Password")]
     public string Password { get; set; }
 
     [Required(ErrorMessage = "ConfirmPassword is required")]
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
     [Compare("Password", ErrorMessage = "Passwords do not match")]
-    [PasswordValidation("Confirm password")]
+    //[PasswordValidation("Confirm password")]
     public string ConfirmPassword { get; set; }
 }
