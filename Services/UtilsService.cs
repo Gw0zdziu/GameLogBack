@@ -13,10 +13,12 @@ namespace GameLogBack.Services;
 public class UtilsService : IUtilsService
 {
     private readonly AuthenticationSettings _authenticationSettings;
+    private readonly IConfiguration _configuration;
 
-    public UtilsService(AuthenticationSettings authenticationSettings)
+    public UtilsService(AuthenticationSettings authenticationSettings, IConfiguration configuration)
     {
         _authenticationSettings = authenticationSettings;
+        _configuration = configuration;
     }
 
     public string GetRefreshToken()
@@ -91,5 +93,21 @@ public class UtilsService : IUtilsService
     {
         Random randomNumber = new Random();
         return randomNumber.Next(0, 9999).ToString("D4");
+    }
+
+    public string GenerateCodeToRecoverPassword()
+    {
+        var randomByte = new byte[8];
+        var randomNumber = RandomNumberGenerator.Create();
+        randomNumber.GetBytes(randomByte);
+        var code = Convert.ToBase64String(randomByte);
+        return code;
+    }
+
+    public string GenerateLinkToRecoverPassword(string recoverCode)
+    {
+        var link = _configuration.GetSection("FrontendRecoveryPasswordUrl").Value;
+        var linkWithCode = link + recoverCode;
+        return linkWithCode;
     }
 }
