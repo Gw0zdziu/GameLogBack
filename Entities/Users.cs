@@ -11,6 +11,8 @@ public class Users
     public bool IsActive { get; set; }
     public UserLogins UserLogins { get; set; }
     public RefreshTokenInfo RefreshTokens { get; set; }
-    public ConfirmCodeUsers ConfirmCode { get; set; }
+    public CodeConfirmUsers CodeConfirm { get; set; }
+    
+    public CodeRecoveryPassword CodeRecoveryPassword { get; set; }
     
 }

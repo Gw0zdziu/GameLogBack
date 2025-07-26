@@ -12,7 +12,8 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Users> Users { get; set; }
     public DbSet<UserLogins> UserLogins { get; set; }
     public DbSet<RefreshTokenInfo> RefreshTokens { get; set; }
-    public DbSet<ConfirmCodeUsers> ConfirmCodeUsers { get; set; }
+    public DbSet<CodeConfirmUsers> CodeConfirmUsers { get; set; }
+    public DbSet<CodeRecoveryPassword> CodeRecoveryPasswords { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -113,35 +114,65 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
 
         #endregion
 
-        #region ConfirmCodeUsers
+        #region CodeConfirmUsers
         
-        modelBuilder.Entity<ConfirmCodeUsers>().ToTable("confirm_code_users");
-        modelBuilder.Entity<ConfirmCodeUsers>(entity =>
+        modelBuilder.Entity<CodeConfirmUsers>().ToTable("confirm_confirm_users");
+        modelBuilder.Entity<CodeConfirmUsers>(entity =>
         {
             entity.Property(p => p.UserId).HasColumnName("user_id");
-            entity.Property(p => p.ConfirmCode).HasColumnName("confirm_code");
-            entity.Property(p => p.ConfirmCodeId).HasColumnName("confirm_code_id");
+            entity.Property(p => p.Code).HasColumnName("confirm_code");
+            entity.Property(p => p.CodeId).HasColumnName("confirm_code_id");
             entity.Property(p => p.ExpiryDate).HasColumnName("expiry_date");
         });
-        modelBuilder.Entity<ConfirmCodeUsers>()
-            .HasKey(k => k.ConfirmCodeId);
-        modelBuilder.Entity<ConfirmCodeUsers>()
+        modelBuilder.Entity<CodeConfirmUsers>()
+            .HasKey(k => k.CodeId);
+        modelBuilder.Entity<CodeConfirmUsers>()
             .HasOne(r => r.User)
-            .WithOne(r => r.ConfirmCode)
-            .HasForeignKey<ConfirmCodeUsers>(k => k.UserId);
-        modelBuilder.Entity<ConfirmCodeUsers>()
-            .Property(p => p.ConfirmCodeId)
+            .WithOne(r => r.CodeConfirm)
+            .HasForeignKey<CodeConfirmUsers>(k => k.UserId);
+        modelBuilder.Entity<CodeConfirmUsers>()
+            .Property(p => p.CodeId)
             .IsRequired();
-        modelBuilder.Entity<ConfirmCodeUsers>()
-            .Property(p => p.ConfirmCode)
-            .IsRequired()
+        modelBuilder.Entity<CodeConfirmUsers>()
+            .Property(p => p.Code)
             .HasMaxLength(4);
-        modelBuilder.Entity<ConfirmCodeUsers>()
+        modelBuilder.Entity<CodeConfirmUsers>()
             .Property(p => p.UserId)
             .IsRequired();
-        modelBuilder.Entity<ConfirmCodeUsers>()
+        modelBuilder.Entity<CodeConfirmUsers>()
             .Property(p => p.ExpiryDate)
             .IsRequired();
+
+        #endregion
+
+        #region CodeRecoveryPassword
+
+        modelBuilder.Entity<CodeRecoveryPassword>().ToTable("code_recovery_password");
+        modelBuilder.Entity<CodeRecoveryPassword>(entities =>
+        {
+            entities.Property(p => p.UserId).HasColumnName("user_id");
+            entities.Property(p => p.Code).HasColumnName("recovery_code");
+            entities.Property(p => p.CodeId).HasColumnName("recovery_code_id");
+            entities.Property(p => p.ExpiryDate).HasColumnName("expiry_date");
+        });
+        modelBuilder.Entity<CodeRecoveryPassword>()
+            .HasKey(k => k.CodeId);
+        modelBuilder.Entity<CodeRecoveryPassword>()
+            .HasOne(r => r.User)
+            .WithOne(r => r.CodeRecoveryPassword)
+            .HasForeignKey<CodeRecoveryPassword>(k => k.UserId);
+        modelBuilder.Entity<CodeRecoveryPassword>()
+            .Property(p => p.CodeId)
+            .IsRequired();
+        modelBuilder.Entity<CodeRecoveryPassword>()
+            .Property(p => p.Code);
+        modelBuilder.Entity<CodeRecoveryPassword>()
+            .Property(p => p.UserId)
+            .IsRequired();
+        modelBuilder.Entity<CodeRecoveryPassword>()
+            .Property(p => p.ExpiryDate)
+            .IsRequired();
+        
 
         #endregion
 
