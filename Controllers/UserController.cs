@@ -49,4 +49,11 @@ public class UserController : ControllerBase
         _userService.ConfirmUser(confirmCodeDto);
         return Ok();
     }
+
+    [HttpPost("recover-password")]
+    public ActionResult RecoverPassword([FromBody] EmailRecoveryPasswordDto userEmail)
+    {
+        _userService.RecoverPassword(userEmail.UserEmail);
+        return Ok();
+    }
 }
