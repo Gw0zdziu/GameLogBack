@@ -9,4 +9,5 @@ public interface IUserService
     public GetUserDto GetUser(string userId);
     public void ResendNewConfirmCode(string userId);
     public void ConfirmUser(ConfirmCodeDto confirmCodeDto);
-}
+    public void RecoverPassword(string userEmail);
+}   

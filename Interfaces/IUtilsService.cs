@@ -14,4 +14,8 @@ public interface IUtilsService
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
     
     public string GenerateCodeToConfirmEmail();
+    
+    public string GenerateCodeToRecoverPassword();
+    
+    public string GenerateLinkToRecoverPassword(string recoverCode);
 }
