@@ -3,6 +3,7 @@ using System;
 using GameLogBack.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameLogBack.Migrations
 {
     [DbContext(typeof(GameLogDbContext))]
-    partial class GameLogDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250726185048_AddCodeRecoveryPasswordTable")]
+    partial class AddCodeRecoveryPasswordTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,7 +60,8 @@ namespace GameLogBack.Migrations
                         .HasColumnName("recovery_code_id");
 
                     b.Property<string>("Code")
-                        .HasColumnType("text")
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)")
                         .HasColumnName("recovery_code");
 
                     b.Property<DateTime>("ExpiryDate")

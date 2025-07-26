@@ -44,12 +44,12 @@ public class UserService : IUserService
                 UserName = registerNewUser.Username,
                 Password = registerNewUser.Password
             },
-            ConfirmCode = new ConfirmCodeUsers
+            CodeConfirm = new CodeConfirmUsers
             {
-                ConfirmCodeId = Guid.NewGuid().ToString(),
+                CodeId = Guid.NewGuid().ToString(),
                 ExpiryDate = DateTime.UtcNow.AddMinutes(15),
                 UserId = newUserId,
-                ConfirmCode = code
+                Code = code
             }
         };
         var passwordHash = _passwordHasher.HashPassword(newUser.UserLogins, registerNewUser.Password);
@@ -79,11 +79,11 @@ public class UserService : IUserService
 
     public void ResendNewConfirmCode(string userId)
     {
-        var user = _context.ConfirmCodeUsers.FirstOrDefault(x => x.UserId == userId);
+        var user = _context.CodeConfirmUsers.FirstOrDefault(x => x.UserId == userId);
         if (user is null) throw new BadRequestException("User not found");
         var userEmail = _context.Users.Where(x => x.UserId == userId).Select(x => x.UserEmail).FirstOrDefault();
         var code = _utilsService.GenerateCodeToConfirmEmail();
-        user.ConfirmCode = code;
+        user.Code = code;
         user.ExpiryDate = DateTime.UtcNow.AddMinutes(15);
         _context.SaveChanges();
         _emailSenderHelper.SendEmail(userEmail, "Kod potwierdzający użytkownika",
@@ -92,16 +92,50 @@ public class UserService : IUserService
 
     public void ConfirmUser(ConfirmCodeDto confirmCodeDto)
     {
-        var confirmCodeUser = _context.ConfirmCodeUsers.FirstOrDefault(x => x.UserId == confirmCodeDto.UserId);
+        var confirmCodeUser = _context.CodeConfirmUsers.FirstOrDefault(x => x.UserId == confirmCodeDto.UserId);
         if (confirmCodeUser is null) throw new BadRequestException("Confirm code not found");
         if (confirmCodeUser.ExpiryDate < DateTime.UtcNow)
             throw new BadRequestException("Confirm code is expired. You must generate new code");
-        if (confirmCodeUser.ConfirmCode != confirmCodeDto.ConfirmCode)
+        if (confirmCodeUser.Code != confirmCodeDto.ConfirmCode)
             throw new BadRequestException("Confirm code is incorrect");
         var user = _context.Users.FirstOrDefault(x => x.UserId == confirmCodeDto.UserId);
         if (user is null) throw new BadRequestException("User not found");
         user.IsActive = true;
         _context.SaveChanges();
+    }
+
+    public void RecoverPassword(string userEmail)
+    {
+        var user  = _context.Users.FirstOrDefault(x => x.UserEmail == userEmail);
+        if (user is null) 
+        {
+            throw new BadRequestException("User not found");
+        }
+        var code = _utilsService.GenerateCodeToRecoverPassword();
+        var link = _utilsService.GenerateLinkToRecoverPassword(code);
+        var recoveryCode = _context.CodeRecoveryPasswords.FirstOrDefault(x => x.UserId == user.UserId);
+        if (recoveryCode is not null)
+        {
+            recoveryCode.Code = code;
+            recoveryCode.ExpiryDate = DateTime.UtcNow.AddMinutes(15);
+            recoveryCode.IsUsed = false;
+            _context.SaveChanges();
+            _emailSenderHelper.SendEmail(userEmail, "Recovery password", link);
+        }
+        else
+        {
+            var newRecoveryPasswordCode = new CodeRecoveryPassword()
+            {
+                CodeId = Guid.NewGuid().ToString(),
+                ExpiryDate = DateTime.UtcNow.AddMinutes(15),
+                UserId = user.UserId,
+                Code = code,
+                IsUsed = false
+            };
+            _context.Add(newRecoveryPasswordCode);
+            _context.SaveChanges();
+            _emailSenderHelper.SendEmail(userEmail, "Recovery password", link);
+        }
     }
 
 
