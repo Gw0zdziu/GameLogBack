@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using GameLogBack.Dtos;
 using GameLogBack.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameLogBack.Controllers;
@@ -22,9 +24,11 @@ public class UserController : ControllerBase
         return Ok(userId);
     }
 
-    [HttpGet("get-user/{userId}")]
-    public ActionResult<GetUserDto> GetUser([FromRoute] string userId)
+    [HttpGet("get-user")]
+    [Authorize]
+    public ActionResult<GetUserDto> GetUser()
     {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var user = _userService.GetUser(userId);
         return Ok(user);
     }
