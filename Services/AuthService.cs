@@ -68,7 +68,7 @@ public class AuthService : IAuthService
         var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
         var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
         if (refreshTokenInfo is null || refreshTokenInfo.RefreshToken != tokenInfo.RefreshToken ||
-            refreshTokenInfo.ExpiryDate < DateTime.Now) throw new BadRequestException("Refresh token is expired");
+            refreshTokenInfo.ExpiryDate < DateTime.UtcNow) throw new BadRequestException("Refresh token is expired");
 
         var user = _context.UserLogins.FirstOrDefault(x => x.UserId == userId);
         var token = _utilsService.GetToken(user);

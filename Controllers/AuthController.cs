@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.Strict,
-            Expires = DateTime.Now.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
+            Expires = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
         });
         var login = new
         {
@@ -39,9 +39,10 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh-token")]
-    public ActionResult RefreshToken([FromBody] string accessToken)
+    public ActionResult RefreshToken()
     {
         var refreshToken = Request.Cookies["refreshToken"];
+        var accessToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
         var tokenInfo = new TokenInfoDto
         {
             AccessToken = accessToken,
@@ -53,7 +54,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.Strict,
-            Expires = DateTime.Now.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
+            Expires = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
         });
         return Ok(newTokenInfo.AccessToken);
     }
