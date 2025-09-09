@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using GameLogBack.Authentication;
 using GameLogBack.Dtos;
 using GameLogBack.Interfaces;
@@ -60,10 +61,11 @@ public class AuthController : ControllerBase
     }
 
 
-    [HttpDelete("logout/{userId}")]
+    [HttpDelete("logout")]
     [Authorize]
-    public ActionResult Logout([FromRoute] string userId)
+    public ActionResult Logout()
     {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         _authService.LogoutUser(userId);
         Response.Cookies.Delete("refreshToken");
         return Ok();
