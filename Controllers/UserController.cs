@@ -33,9 +33,10 @@ public class UserController : ControllerBase
         return Ok(user);
     }
 
-    [HttpPut("update/{userId}")]
-    public ActionResult UpdateUser([FromBody] UpdateUserDto updateUserDto, [FromRoute] string userId)
+    [HttpPut("update")]
+    public ActionResult UpdateUser([FromBody] UpdateUserDto updateUserDto)
     {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         _userService.UpdateUser(updateUserDto, userId);
         return Ok();
     }
