@@ -39,7 +39,7 @@ public class UtilsService : IUtilsService
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expiresTime = DateTime.UtcNow.AddMinutes(/*_authenticationSettings.JwtTokenExpireMinutes*/1);
+        var expiresTime = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtTokenExpireMinutes);
         var jwtToken = new JwtSecurityToken(issuer:_authenticationSettings.JwtIssuer, audience: _authenticationSettings.JwtIssuer, claims: claims, notBefore: null, expires: expiresTime, signingCredentials: credentials);
         var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.WriteToken(jwtToken);
