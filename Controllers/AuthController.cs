@@ -44,6 +44,10 @@ public class AuthController : ControllerBase
     {
         var refreshToken = Request.Cookies["refreshToken"];
         var accessToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            throw new UnauthorizedAccessException();
+        }
         var tokenInfo = new TokenInfoDto
         {
             AccessToken = accessToken,
@@ -69,5 +73,12 @@ public class AuthController : ControllerBase
         _authService.LogoutUser(userId);
         Response.Cookies.Delete("refreshToken");
         return Ok();
+    }
+
+    [HttpGet("verify")]
+    [Authorize]
+    public ActionResult Verify()
+    {
+        return Ok(true);
     }
 }
