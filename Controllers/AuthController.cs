@@ -36,7 +36,7 @@ public class AuthController : ControllerBase
             token.Token,
             token.UserId
         };
-        return Ok(login);
+        return Ok(login.Token);
     }
 
     [HttpPost("refresh-token")]
@@ -65,8 +65,7 @@ public class AuthController : ControllerBase
     }
 
 
-    [HttpDelete("logout")]
-    [Authorize]
+    [HttpDelete("logout")] 
     public ActionResult Logout()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
