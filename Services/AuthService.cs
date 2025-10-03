@@ -29,7 +29,7 @@ public class AuthService : IAuthService
     public LoginResponseDto LoginUser(LoginUserDto loginUserDto)
     {
         var user = _context.UserLogins.FirstOrDefault(x => x.UserName == loginUserDto.UserName);
-        if (user is null) throw new BadHttpRequestException("Data of login is incorrect");
+        if (user is null) throw new BadRequestException("Data of login is incorrect");
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect");
 
@@ -67,9 +67,10 @@ public class AuthService : IAuthService
         var principal = _utilsService.GetPrincipalFromExpiredToken(tokenInfo.AccessToken);
         var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
         var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
-        if (refreshTokenInfo is null || refreshTokenInfo.RefreshToken != tokenInfo.RefreshToken ||
-            refreshTokenInfo.ExpiryDate < DateTime.UtcNow) throw new BadRequestException("Refresh token is expired");
-
+        if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
+        {
+            throw new BadRequestException("Refresh token is expired");
+        }
         var user = _context.UserLogins.FirstOrDefault(x => x.UserId == userId);
         var token = _utilsService.GetToken(user);
         var newRefreshToken = _utilsService.GetRefreshToken();
@@ -86,7 +87,7 @@ public class AuthService : IAuthService
     public void LogoutUser(string userId)
     {
         var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
-        if (refreshTokenInfo is null) throw new BadRequestException("Refresh token is expired");
+        if (refreshTokenInfo is null) throw new BadRequestException("");
         _context.RefreshTokens.Remove(refreshTokenInfo);
         _context.SaveChanges();
     }
