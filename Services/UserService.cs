@@ -4,6 +4,8 @@ using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace GameLogBack.Services;
 
@@ -112,7 +114,7 @@ public class UserService : IUserService
             throw new BadRequestException("User not found");
         }
         var code = _utilsService.GenerateCodeToRecoverPassword();
-        var link = _utilsService.GenerateLinkToRecoverPassword(code);
+        var link = _utilsService.GenerateLinkToRecoveryPassword(code,user.UserId);
         var recoveryCode = _context.CodeRecoveryPasswords.FirstOrDefault(x => x.UserId == user.UserId);
         if (recoveryCode is not null)
         {
@@ -136,6 +138,28 @@ public class UserService : IUserService
             _context.SaveChanges();
             _emailSenderHelper.SendEmail(userEmail, "Recovery password", link);
         }
+    }
+
+    public void RecoveryUpdatePassword(RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
+    {
+        if (recoveryUpdatePasswordDto.NewPassword != recoveryUpdatePasswordDto.ConfirmPassword)
+        {
+            throw new BadRequestException("Passwords are not equal");
+        }
+
+        var user = _context.Users
+            .Include(x => x.UserLogins)
+            .Include(x => x.CodeRecoveryPassword)
+            .FirstOrDefault(x => x.UserId == recoveryUpdatePasswordDto.UserId && x.CodeRecoveryPassword.Code == recoveryUpdatePasswordDto.Token);
+        if (user is null) throw new BadRequestException("User not found");
+        if (user.CodeRecoveryPassword.IsUsed) throw new BadRequestException("Recovery code is used");
+        if (user.CodeRecoveryPassword.ExpiryDate < DateTime.UtcNow) throw new BadRequestException("Recovery code is expired");
+        var newPassword = _passwordHasher.HashPassword(user.UserLogins, recoveryUpdatePasswordDto.NewPassword);
+        user.UserLogins.Password = newPassword;
+        user.CodeRecoveryPassword.IsUsed = true;
+        _context.SaveChanges();
+        _emailSenderHelper.SendEmail(user.UserEmail, "Aktualizacja hasła",
+            "Pomyślnie zaktualizowano hasło");
     }
 
 
