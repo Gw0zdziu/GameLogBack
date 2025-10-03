@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GameLogBack.Authentication;
 using GameLogBack.Dtos;
+using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,11 +44,12 @@ public class AuthController : ControllerBase
     public ActionResult RefreshToken()
     {
         var refreshToken = Request.Cookies["refreshToken"];
-        var accessToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var accessToken = Request.Headers["Authorization"].ToString();
         if (string.IsNullOrWhiteSpace(accessToken))
         {
-            throw new UnauthorizedAccessException();
+            throw new BadRequestException("Access token is empty");
         }
+        accessToken = accessToken.Replace("Bearer ", "");
         var tokenInfo = new TokenInfoDto
         {
             AccessToken = accessToken,
