@@ -10,4 +10,5 @@ public interface IUserService
     public void ResendNewConfirmCode(string userId);
     public void ConfirmUser(ConfirmCodeDto confirmCodeDto);
     public void RecoverPassword(string userEmail);
+    public void RecoveryUpdatePassword(RecoveryUpdatePasswordDto recoveryUpdatePasswordDto);
 }   

@@ -17,5 +17,5 @@ public interface IUtilsService
     
     public string GenerateCodeToRecoverPassword();
     
-    public string GenerateLinkToRecoverPassword(string recoverCode);
+    public string GenerateLinkToRecoveryPassword(string recoverCode, string user);
 }
