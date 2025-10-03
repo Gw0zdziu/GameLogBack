@@ -54,11 +54,17 @@ public class UserController : ControllerBase
         _userService.ConfirmUser(confirmCodeDto);
         return Ok();
     }
-
-    [HttpPost("recover-password")]
+    [HttpPost("recovery-password")]
     public ActionResult RecoverPassword([FromBody] EmailRecoveryPasswordDto userEmail)
     {
         _userService.RecoverPassword(userEmail.UserEmail);
+        return Ok();
+    }
+
+    [HttpPost("recovery-update-password")]
+    public ActionResult RecoveryUpdatePassword([FromBody] RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
+    {
+        _userService.RecoveryUpdatePassword(recoveryUpdatePasswordDto);
         return Ok();
     }
 }
