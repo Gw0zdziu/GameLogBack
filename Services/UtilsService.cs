@@ -104,10 +104,12 @@ public class UtilsService : IUtilsService
         return code;
     }
 
-    public string GenerateLinkToRecoverPassword(string recoverCode)
+    public string GenerateLinkToRecoveryPassword(string recoverCode, string userId)
     {
-        var link = _configuration.GetSection("FrontendRecoveryPasswordUrl").Value;
-        var linkWithCode = link + recoverCode;
+        var frontedUrl = _configuration.GetSection("FrontendUrl").Value;
+        var recoveryPasswordEndpoint = _configuration.GetSection("RecoveryPasswordEndpoint").Value;
+        recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token", recoverCode);
+        var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
         return linkWithCode;
     }
 }
