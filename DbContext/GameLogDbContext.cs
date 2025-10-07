@@ -15,6 +15,10 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<CodeConfirmUsers> CodeConfirmUsers { get; set; }
     public DbSet<CodeRecoveryPassword> CodeRecoveryPasswords { get; set; }
     
+    public DbSet<Categories> Categories { get; set; }
+    
+    
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region Users
@@ -173,6 +177,35 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .Property(p => p.ExpiryDate)
             .IsRequired();
         
+
+        #endregion
+        
+        #region Categories
+        modelBuilder.Entity<Categories>().ToTable("categories");
+        modelBuilder.Entity<Categories>(entity =>
+        {
+            entity.Property(p => p.CategoryId).HasColumnName("category_id");
+            entity.Property(p => p.CategoryName).HasColumnName("category_name");
+            entity.Property(p => p.CreatedBy).HasColumnName("created_by");
+            entity.Property(p => p.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(p => p.CreatedDate).HasColumnName("created_date");
+            entity.Property(p => p.UpdatedDate).HasColumnName("updated_date");
+            entity.Property(p => p.Description).HasColumnName("description");
+            entity.Property(p => p.UserId).HasColumnName("user_id");
+        });
+        modelBuilder.Entity<Categories>()
+            .HasKey(k => k.CategoryId);
+        modelBuilder.Entity<Categories>()
+            .Property(p => p.CategoryId)
+            .IsRequired()
+            .HasMaxLength(100);
+        modelBuilder.Entity<Categories>()
+            .Property(p => p.CategoryName)
+            .IsRequired()
+            .HasMaxLength(100);
+        modelBuilder.Entity<Categories>()
+            .Property(p => p.UserId)
+            .IsRequired();
 
         #endregion
 
