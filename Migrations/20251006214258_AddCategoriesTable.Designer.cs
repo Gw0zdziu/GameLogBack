@@ -3,6 +3,7 @@ using System;
 using GameLogBack.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameLogBack.Migrations
 {
     [DbContext(typeof(GameLogDbContext))]
-    partial class GameLogDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251006214258_AddCategoriesTable")]
+    partial class AddCategoriesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,12 +60,14 @@ namespace GameLogBack.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("user_id");
+                        .HasColumnType("text");
+
+                    b.Property<string>("UsersUserId")
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("CategoryId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UsersUserId");
 
                     b.ToTable("categories", (string)null);
                 });
@@ -216,13 +221,9 @@ namespace GameLogBack.Migrations
 
             modelBuilder.Entity("GameLogBack.Entities.Categories", b =>
                 {
-                    b.HasOne("GameLogBack.Entities.Users", "User")
+                    b.HasOne("GameLogBack.Entities.Users", null)
                         .WithMany("Categories")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                        .HasForeignKey("UsersUserId");
                 });
 
             modelBuilder.Entity("GameLogBack.Entities.CodeConfirmUsers", b =>
