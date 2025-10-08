@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using GameLogBack.Validators;
 
-namespace GameLogBack.Dtos;
+namespace GameLogBack.Dtos.User;
 
 public class RegisterNewUserDto
 {
