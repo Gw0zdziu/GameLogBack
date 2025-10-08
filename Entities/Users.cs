@@ -9,10 +9,10 @@ public class Users
     public string LastName { get; set; }
     public string UserEmail { get; set; }
     public bool IsActive { get; set; }
-    public UserLogins UserLogins { get; set; }
-    public RefreshTokenInfo RefreshTokens { get; set; }
-    public CodeConfirmUsers CodeConfirm { get; set; }
-    
-    public CodeRecoveryPassword CodeRecoveryPassword { get; set; }
+    public virtual UserLogins UserLogins { get; set; }
+    public virtual RefreshTokenInfo RefreshTokens { get; set; }
+    public virtual CodeConfirmUsers CodeConfirm { get; set; }
+    public virtual CodeRecoveryPassword CodeRecoveryPassword { get; set; }
+    public virtual ICollection<Categories> Categories { get; set; }
     
 }

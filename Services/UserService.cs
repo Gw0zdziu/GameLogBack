@@ -1,5 +1,6 @@
 using GameLogBack.DbContext;
 using GameLogBack.Dtos;
+using GameLogBack.Dtos.User;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;

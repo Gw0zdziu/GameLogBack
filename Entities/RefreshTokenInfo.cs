@@ -6,5 +6,5 @@ public class RefreshTokenInfo
     public string UserId { get; set; }
     public string RefreshToken { get; set; }
     public DateTime ExpiryDate { get; set; }
-    public Users User { get; set; }
+    public virtual Users User { get; set; }
 }
