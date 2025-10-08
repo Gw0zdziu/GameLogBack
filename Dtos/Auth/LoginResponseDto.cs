@@ -1,4 +1,4 @@
-namespace GameLogBack.Dtos;
+namespace GameLogBack.Dtos.Auth;
 
 public class LoginResponseDto
 {
