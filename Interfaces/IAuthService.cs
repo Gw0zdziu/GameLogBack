@@ -1,4 +1,5 @@
 using GameLogBack.Dtos;
+using GameLogBack.Dtos.Auth;
 
 namespace GameLogBack.Interfaces;
 

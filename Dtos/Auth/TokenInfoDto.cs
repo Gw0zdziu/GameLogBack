@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace GameLogBack.Dtos;
+namespace GameLogBack.Dtos.Auth;
 
 public class TokenInfoDto
 {

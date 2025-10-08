@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameLogBack.Dtos;
+using GameLogBack.Dtos.User;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

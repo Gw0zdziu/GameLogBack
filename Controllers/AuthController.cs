@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GameLogBack.Authentication;
 using GameLogBack.Dtos;
+using GameLogBack.Dtos.Auth;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Authorization;
