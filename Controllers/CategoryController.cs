@@ -20,7 +20,7 @@ namespace GameLogBack.Controllers
             _categoryService = categoryService;
         }
 
-        [HttpGet("user-categories")]
+        [HttpGet("get-user-categories")]
         [Authorize]
         public ActionResult<IEnumerable<CategoryDto>> GetUserCategories()
         {
@@ -46,7 +46,7 @@ namespace GameLogBack.Controllers
             return Ok();
         }
         
-        [HttpPut("update-category/{categoryId}")]
+        [HttpPut("update/{categoryId}")]
 
         public ActionResult UpdateCategory([FromBody] CategoryPutDto categoryPutDto, [FromRoute] string categoryId)
         {
@@ -55,7 +55,7 @@ namespace GameLogBack.Controllers
             return Ok();
         }
 
-        [HttpDelete("{categoryId}")]
+        [HttpDelete("delete/{categoryId}")]
         public ActionResult DeleteCategory([FromRoute] string categoryId)
         {
             _categoryService.DeleteCategory(categoryId);
