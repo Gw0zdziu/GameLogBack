@@ -55,7 +55,7 @@ public class CategoryService : ICategoryService
 
     public void CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
-        var isCategoryExist = _context.Categories.Any(x => x.CategoryName == categoryPostDto.CategoryName);
+        var isCategoryExist = _context.Categories.Any(x => x.CategoryName == categoryPostDto.CategoryName && x.UserId == userId);
         if (isCategoryExist)
         {
             throw new BadRequestException("Category with this name already exist");
@@ -78,10 +78,16 @@ public class CategoryService : ICategoryService
 
     public void UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
-        var category = _context.Categories.FirstOrDefault(x => x.CategoryId == categoryId);
+        var categories = _context.Categories.Where(x => x.UserId == userId).ToList();
+        var category = categories.FirstOrDefault(x => x.CategoryId == categoryId);
         if (category is null)
         {
             throw new BadRequestException("Category not found");
+        }
+        var isCategoryNameExist = categories.Any(x => x.CategoryName == categoryPutDto.CategoryName && x.CategoryId != categoryId);
+        if (isCategoryNameExist)
+        {
+            throw new BadRequestException("Category with this name already exist");       
         }
         category.CategoryName = categoryPutDto.CategoryName;
         category.Description = categoryPutDto.Description;
