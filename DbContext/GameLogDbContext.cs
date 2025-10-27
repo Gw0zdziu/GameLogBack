@@ -14,8 +14,8 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<RefreshTokenInfo> RefreshTokens { get; set; }
     public DbSet<CodeConfirmUsers> CodeConfirmUsers { get; set; }
     public DbSet<CodeRecoveryPassword> CodeRecoveryPasswords { get; set; }
-    
     public DbSet<Categories> Categories { get; set; }
+    public DbSet<Games> Games { get; set; }
     
     
     
@@ -181,7 +181,8 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         #endregion
         
         #region Categories
-        modelBuilder.Entity<Categories>().ToTable("categories");
+        modelBuilder.Entity<Categories>()
+            .ToTable("categories");
         modelBuilder.Entity<Categories>(entity =>
         {
             entity.Property(p => p.CategoryId).HasColumnName("category_id");
@@ -207,6 +208,33 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .Property(p => p.UserId)
             .IsRequired();
 
+        #endregion
+        
+        #region Games
+        
+        modelBuilder.Entity<Games>()
+            .ToTable("games");
+        modelBuilder.Entity<Games>(entity =>
+        {
+            entity.Property(p => p.GameId).HasColumnName("game_id");
+            entity.Property(p => p.GameName).HasColumnName("game_name");
+            entity.Property(p => p.CreatedDate).HasColumnName("created_date");
+            entity.Property(p => p.CreatedBy).HasColumnName("created_by");
+            entity.Property(p => p.UpdatedDate).HasColumnName("updated_date");
+            entity.Property(p => p.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(p => p.CategoryId).HasColumnName("category_id");
+            entity.Property(p => p.UserId).HasColumnName("user_id");
+        });
+        modelBuilder.Entity<Games>()
+            .HasKey(k => k.GameId);
+        modelBuilder.Entity<Games>()
+            .Property(p => p.GameId)
+            .IsRequired()
+            .HasMaxLength(100);
+        modelBuilder.Entity<Games>()
+            .Property(p => p.GameName)
+            .IsRequired()
+            .HasMaxLength(100);
         #endregion
 
     }
