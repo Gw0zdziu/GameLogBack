@@ -57,6 +57,7 @@ builder.Services.AddScoped<IPasswordHasher<UserLogins>, PasswordHasher<UserLogin
 builder.Services.AddScoped<IUtilsService, UtilsService>();
 builder.Services.AddScoped<IEmailSenderHelper, EmailSenderHelper>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IGameService, GameService>();
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
