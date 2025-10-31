@@ -53,7 +53,7 @@ public class CategoryService : ICategoryService
         return category;
     }
 
-    public void CreateCategory(CategoryPostDto categoryPostDto, string userId)
+    public CategoryDto CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
         var isCategoryExist = _context.Categories.Any(x => x.CategoryName == categoryPostDto.CategoryName && x.UserId == userId);
         if (isCategoryExist)
@@ -74,9 +74,19 @@ public class CategoryService : ICategoryService
         };
         _context.Categories.Add(newCategory);
         _context.SaveChanges();
+        return new CategoryDto()
+        {
+            CategoryId = newCategory.CategoryId,
+            CategoryName = newCategory.CategoryName,
+            Description = newCategory.Description,
+            CreatedDate = newCategory.CreatedDate,
+            UpdatedDate = newCategory.UpdatedDate,
+            CreatedBy = newCategory.CreatedBy,
+            UpdatedBy = newCategory.UpdatedBy,
+        };
     }
 
-    public void UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
+    public CategoryDto UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
         var categories = _context.Categories.Where(x => x.UserId == userId).ToList();
         var category = categories.FirstOrDefault(x => x.CategoryId == categoryId);
@@ -94,6 +104,16 @@ public class CategoryService : ICategoryService
         category.UpdatedBy = userId;
         category.UpdatedDate = DateTime.UtcNow;
         _context.SaveChanges();
+        return new CategoryDto()
+        {
+            CategoryId = category.CategoryId,
+            CategoryName = category.CategoryName,
+            Description = category.Description,
+            CreatedDate = category.CreatedDate,
+            UpdatedDate = category.UpdatedDate,
+            CreatedBy = category.CreatedBy,
+            UpdatedBy = category.UpdatedBy,
+        };
     }
 
     public void DeleteCategory(string categoryId)
