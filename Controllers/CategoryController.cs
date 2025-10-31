@@ -39,20 +39,20 @@ namespace GameLogBack.Controllers
 
         [HttpPost("create-category")]
         [Authorize]
-        public ActionResult CreateCategory([FromBody] CategoryPostDto newCategory)
+        public ActionResult<CategoryDto> CreateCategory([FromBody] CategoryPostDto newCategory)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            _categoryService.CreateCategory(newCategory, userId);
-            return Ok();
+            var category = _categoryService.CreateCategory(newCategory, userId);
+            return Ok(category);
         }
         
         [HttpPut("update/{categoryId}")]
 
-        public ActionResult UpdateCategory([FromBody] CategoryPutDto categoryPutDto, [FromRoute] string categoryId)
+        public ActionResult<CategoryDto> UpdateCategory([FromBody] CategoryPutDto categoryPutDto, [FromRoute] string categoryId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            _categoryService.UpdateCategory(categoryPutDto, categoryId, userId);
-            return Ok();
+            var category = _categoryService.UpdateCategory(categoryPutDto, categoryId, userId);
+            return Ok(category);
         }
 
         [HttpDelete("delete/{categoryId}")]
