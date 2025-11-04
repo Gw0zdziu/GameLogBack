@@ -72,6 +72,7 @@ public class GameService : IGameService
             GameId = Guid.NewGuid().ToString(),
             GameName = gamePostDto.GameName,
             UserId = userId,
+            CategoryId = gamePostDto.CategoryId,
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
             CreatedBy = userId,
@@ -100,6 +101,7 @@ public class GameService : IGameService
         }
         gameToUpdate.GameName = gamePutDto.GameName;
         gameToUpdate.UpdatedBy = userId;
+        gameToUpdate.CategoryId = gamePutDto.CategoryId;       
         gameToUpdate.UpdatedDate = DateTime.UtcNow;
         _context.SaveChanges();
     }
