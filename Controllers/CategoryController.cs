@@ -22,43 +22,43 @@ namespace GameLogBack.Controllers
 
         [HttpGet("get-user-categories")]
         [Authorize]
-        public ActionResult<IEnumerable<CategoryDto>> GetUserCategories()
+        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetUserCategories()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var categories = _categoryService.GetUserCategories(userId);
+            var categories = await _categoryService.GetUserCategories(userId);
             return Ok(categories);
         }
 
         [HttpGet("get-category/{categoryId}")]
         [Authorize]
-        public ActionResult<CategoryDto> GetCategory([FromRoute]string categoryId)
+        public async Task<ActionResult<CategoryDto>> GetCategory([FromRoute]string categoryId)
         {
-            var category = _categoryService.GetCategory(categoryId);
+            var category = await _categoryService.GetCategory(categoryId);
             return Ok(category);       
         }
 
         [HttpPost("create-category")]
         [Authorize]
-        public ActionResult<CategoryDto> CreateCategory([FromBody] CategoryPostDto newCategory)
+        public async Task<ActionResult<CategoryDto>> CreateCategory([FromBody] CategoryPostDto newCategory)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var category = _categoryService.CreateCategory(newCategory, userId);
+            var category = await _categoryService.CreateCategory(newCategory, userId);
             return Ok(category);
         }
         
         [HttpPut("update/{categoryId}")]
 
-        public ActionResult<CategoryDto> UpdateCategory([FromBody] CategoryPutDto categoryPutDto, [FromRoute] string categoryId)
+        public async Task<ActionResult<CategoryDto>> UpdateCategory([FromBody] CategoryPutDto categoryPutDto, [FromRoute] string categoryId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var category = _categoryService.UpdateCategory(categoryPutDto, categoryId, userId);
+            var category = await _categoryService.UpdateCategory(categoryPutDto, categoryId, userId);
             return Ok(category);
         }
 
         [HttpDelete("delete/{categoryId}")]
-        public ActionResult DeleteCategory([FromRoute] string categoryId)
+        public async Task<IActionResult> DeleteCategory([FromRoute] string categoryId)
         {
-            _categoryService.DeleteCategory(categoryId);
+            await _categoryService.DeleteCategory(categoryId);
             return Ok();       
         }
     }

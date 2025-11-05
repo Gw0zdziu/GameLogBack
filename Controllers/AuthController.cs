@@ -23,9 +23,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public ActionResult<string> LoginUser([FromBody] LoginUserDto loginUserDto)
+    public async Task<ActionResult<string>> LoginUser([FromBody] LoginUserDto loginUserDto)
     {
-        var token = _authService.LoginUser(loginUserDto);
+        var token = await _authService.LoginUser(loginUserDto);
         Response.Cookies.Append("refreshToken", token.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh-token")]
-    public ActionResult RefreshToken()
+    public async Task<IActionResult> RefreshToken()
     {
         var refreshToken = Request.Cookies["refreshToken"];
         var accessToken = Request.Headers["Authorization"].ToString();
@@ -56,7 +56,7 @@ public class AuthController : ControllerBase
             AccessToken = accessToken,
             RefreshToken = refreshToken
         };
-        var newTokenInfo = _authService.GetRefreshToken(tokenInfo);
+        var newTokenInfo = await _authService.GetRefreshToken(tokenInfo);
         Response.Cookies.Append("refreshToken", newTokenInfo.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
@@ -69,7 +69,7 @@ public class AuthController : ControllerBase
 
 
     [HttpDelete("logout")] 
-    public ActionResult Logout()
+    public IActionResult Logout()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         _authService.LogoutUser(userId);
@@ -79,7 +79,7 @@ public class AuthController : ControllerBase
 
     [HttpGet("verify")]
     [Authorize]
-    public ActionResult Verify()
+    public IActionResult Verify()
     {
         return Ok(true);
     }
