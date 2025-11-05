@@ -15,7 +15,7 @@ public class EmailSenderHelper : IEmailSenderHelper
         _smtpSettings = smtpSettings.Value;
     }
 
-    public void SendEmail(string to, string subject, string message)
+    public async Task SendEmail(string to, string subject, string message)
     {
         MailMessage mailMessage = new MailMessage();
         mailMessage.From = new MailAddress(_smtpSettings.Address);
@@ -26,6 +26,6 @@ public class EmailSenderHelper : IEmailSenderHelper
         smtpClient.EnableSsl = true;
         smtpClient.UseDefaultCredentials = false;
         smtpClient.Credentials = new NetworkCredential(_smtpSettings.Address, _smtpSettings.Password);
-        smtpClient.Send(mailMessage);
+        await smtpClient.SendMailAsync(mailMessage);
     }
 }
