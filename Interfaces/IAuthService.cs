@@ -5,7 +5,7 @@ namespace GameLogBack.Interfaces;
 
 public interface IAuthService
 {
-    public LoginResponseDto LoginUser(LoginUserDto loginUserDto);
-    public TokenInfoDto GetRefreshToken(TokenInfoDto tokenInfo);
-    public void LogoutUser(string userId);
+    public Task<LoginResponseDto> LoginUser(LoginUserDto loginUserDto);
+    public Task<TokenInfoDto> GetRefreshToken(TokenInfoDto tokenInfo);
+    public Task LogoutUser(string userId);
 }

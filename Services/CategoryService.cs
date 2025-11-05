@@ -4,6 +4,7 @@ using GameLogBack.Dtos.Category;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
@@ -18,9 +19,9 @@ public class CategoryService : ICategoryService
         _context = context;
     }
 
-    public IEnumerable<CategoryDto> GetUserCategories(string userId)
+    public async Task<IEnumerable<CategoryDto>> GetUserCategories(string userId)
     {
-        var categories = _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryDto()
+        var categories = await _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryDto()
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,
@@ -29,14 +30,14 @@ public class CategoryService : ICategoryService
             UpdatedDate = x.UpdatedDate,
             CreatedBy = x.CreatedBy,
             UpdatedBy = x.UpdatedBy,
-        }).ToList();
+        }).ToListAsync();
         
         return categories;
     }
 
-    public CategoryDto GetCategory(string categoryId)
+    public async Task<CategoryDto> GetCategory(string categoryId)
     {
-        var category = _context.Categories.Where(x => x.CategoryId == categoryId).Select(x => new CategoryDto()
+        var category = await _context.Categories.Where(x => x.CategoryId == categoryId).Select(x => new CategoryDto()
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,
@@ -45,7 +46,7 @@ public class CategoryService : ICategoryService
             UpdatedDate = x.UpdatedDate,
             CreatedBy = x.CreatedBy,
             UpdatedBy = x.UpdatedBy,
-        }).FirstOrDefault();
+        }).FirstOrDefaultAsync();
         if (category is null)
         {
             throw new BadRequestException("Category not found");
@@ -53,9 +54,10 @@ public class CategoryService : ICategoryService
         return category;
     }
 
-    public CategoryDto CreateCategory(CategoryPostDto categoryPostDto, string userId)
+    public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
-        var isCategoryExist = _context.Categories.Any(x => x.CategoryName == categoryPostDto.CategoryName && x.UserId == userId);
+        var isCategoryExist = await _context.Categories
+            .AnyAsync(x => x.CategoryName == categoryPostDto.CategoryName && x.UserId == userId);
         if (isCategoryExist)
         {
             throw new BadRequestException("Category with this name already exist");
@@ -73,7 +75,7 @@ public class CategoryService : ICategoryService
             UpdatedBy = userId,
         };
         _context.Categories.Add(newCategory);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
         return new CategoryDto()
         {
             CategoryId = newCategory.CategoryId,
@@ -86,9 +88,9 @@ public class CategoryService : ICategoryService
         };
     }
 
-    public CategoryDto UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
+    public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
-        var categories = _context.Categories.Where(x => x.UserId == userId).ToList();
+        var categories = await _context.Categories.Where(x => x.UserId == userId).ToListAsync();
         var category = categories.FirstOrDefault(x => x.CategoryId == categoryId);
         if (category is null)
         {
@@ -103,7 +105,7 @@ public class CategoryService : ICategoryService
         category.Description = categoryPutDto.Description;
         category.UpdatedBy = userId;
         category.UpdatedDate = DateTime.UtcNow;
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
         return new CategoryDto()
         {
             CategoryId = category.CategoryId,
@@ -116,14 +118,14 @@ public class CategoryService : ICategoryService
         };
     }
 
-    public void DeleteCategory(string categoryId)
+    public async Task DeleteCategory(string categoryId)
     {
-        var category = _context.Categories.FirstOrDefault(x => x.CategoryId == categoryId);
+        var category = await _context.Categories.FirstOrDefaultAsync(x => x.CategoryId == categoryId);
         if (category is null)
         {
             throw new BadRequestException("Category not found");
         }
         _context.Categories.Remove(category);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 }

@@ -19,53 +19,53 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public ActionResult<string> RegisterUser([FromBody] RegisterNewUserDto registerNewUser)
+    public async Task<ActionResult<string>> RegisterUser([FromBody] RegisterNewUserDto registerNewUser)
     {
-        var userId = _userService.RegisterUser(registerNewUser);
+        var userId = await _userService.RegisterUser(registerNewUser);
         return Ok(userId);
     }
 
     [HttpGet("get-user")]
     [Authorize]
-    public ActionResult<GetUserDto> GetUser()
+    public async Task<ActionResult<GetUserDto>> GetUser()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var user = _userService.GetUser(userId);
+        var user = await _userService.GetUser(userId);
         return Ok(user);
     }
 
     [HttpPut("update")]
-    public ActionResult UpdateUser([FromBody] UpdateUserDto updateUserDto)
+    public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto updateUserDto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        _userService.UpdateUser(updateUserDto, userId);
+        await _userService.UpdateUser(updateUserDto, userId);
         return Ok();
     }
 
     [HttpPost("resend-code")]
-    public ActionResult ResendCode([FromBody] ResendCodeDto resendCodeDto)
+    public async Task<IActionResult> ResendCode([FromBody] ResendCodeDto resendCodeDto)
     {
-        _userService.ResendNewConfirmCode(resendCodeDto.UserId);
+        await _userService.ResendNewConfirmCode(resendCodeDto.UserId);
         return Ok();
     }
 
     [HttpPost("confirm-user")]
-    public ActionResult ConfirmUser([FromBody] ConfirmCodeDto confirmCodeDto)
+    public async Task<ActionResult> ConfirmUser([FromBody] ConfirmCodeDto confirmCodeDto)
     {
-        _userService.ConfirmUser(confirmCodeDto);
+        await _userService.ConfirmUser(confirmCodeDto);
         return Ok();
     }
     [HttpPost("recovery-password")]
-    public ActionResult RecoverPassword([FromBody] EmailRecoveryPasswordDto userEmail)
+    public async Task<ActionResult> RecoverPassword([FromBody] EmailRecoveryPasswordDto userEmail)
     {
-        _userService.RecoverPassword(userEmail.UserEmail);
+        await _userService.RecoverPassword(userEmail.UserEmail);
         return Ok();
     }
 
     [HttpPost("recovery-update-password")]
-    public ActionResult RecoveryUpdatePassword([FromBody] RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
+    public async Task<ActionResult> RecoveryUpdatePassword([FromBody] RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
     {
-        _userService.RecoveryUpdatePassword(recoveryUpdatePasswordDto);
+        await _userService.RecoveryUpdatePassword(recoveryUpdatePasswordDto);
         return Ok();
     }
 }

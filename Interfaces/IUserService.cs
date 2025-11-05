@@ -5,11 +5,11 @@ namespace GameLogBack.Interfaces;
 
 public interface IUserService
 {
-    public string RegisterUser(RegisterNewUserDto registerNewUser);
-    public void UpdateUser(UpdateUserDto updateUserDto, string userId);
-    public GetUserDto GetUser(string userId);
-    public void ResendNewConfirmCode(string userId);
-    public void ConfirmUser(ConfirmCodeDto confirmCodeDto);
-    public void RecoverPassword(string userEmail);
-    public void RecoveryUpdatePassword(RecoveryUpdatePasswordDto recoveryUpdatePasswordDto);
+    public Task<string> RegisterUser(RegisterNewUserDto registerNewUser);
+    public Task UpdateUser(UpdateUserDto updateUserDto, string userId);
+    public Task<GetUserDto> GetUser(string userId);
+    public Task ResendNewConfirmCode(string userId);
+    public Task ConfirmUser(ConfirmCodeDto confirmCodeDto);
+    public Task RecoverPassword(string userEmail);
+    public Task RecoveryUpdatePassword(RecoveryUpdatePasswordDto recoveryUpdatePasswordDto);
 }   

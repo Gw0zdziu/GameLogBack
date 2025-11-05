@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using GameLogBack.Authentication;
 using GameLogBack.DbContext;
-using GameLogBack.Dtos;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
@@ -27,16 +27,16 @@ public class AuthService : IAuthService
         _utilsService = utilsService;
     }
 
-    public LoginResponseDto LoginUser(LoginUserDto loginUserDto)
+    public async Task<LoginResponseDto> LoginUser(LoginUserDto loginUserDto)
     {
-        var user = _context.UserLogins.FirstOrDefault(x => x.UserName == loginUserDto.UserName);
+        var user = await _context.UserLogins.FirstOrDefaultAsync(x => x.UserName == loginUserDto.UserName);
         if (user is null) throw new BadRequestException("Data of login is incorrect");
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect");
 
         var token = _utilsService.GetToken(user);
         var refreshToken = _utilsService.GetRefreshToken();
-        var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == user.UserId);
+        var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.UserId);
         if (refreshTokenInfo is null)
         {
             _context.RefreshTokens.Add(new RefreshTokenInfo
@@ -53,7 +53,7 @@ public class AuthService : IAuthService
             refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays);
         }
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
         var loginResponse = new LoginResponseDto
         {
             Token = token,
@@ -63,11 +63,11 @@ public class AuthService : IAuthService
         return loginResponse;
     }
 
-    public TokenInfoDto GetRefreshToken(TokenInfoDto tokenInfo)
+    public async Task<TokenInfoDto> GetRefreshToken(TokenInfoDto tokenInfo)
     {
         var principal = _utilsService.GetPrincipalFromExpiredToken(tokenInfo.AccessToken);
         var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
-        var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
+        var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == userId);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
         {
             throw new BadRequestException("Refresh token is expired");
@@ -76,7 +76,7 @@ public class AuthService : IAuthService
         var token = _utilsService.GetToken(user);
         var newRefreshToken = _utilsService.GetRefreshToken();
         refreshTokenInfo.RefreshToken = newRefreshToken;
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
         var tokenInfoDto = new TokenInfoDto
         {
             AccessToken = token,
@@ -85,11 +85,12 @@ public class AuthService : IAuthService
         return tokenInfoDto;
     }
 
-    public void LogoutUser(string userId)
+
+    public async Task LogoutUser(string userId)
     {
-        var refreshTokenInfo = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId);
+        var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == userId);
         if (refreshTokenInfo is null) throw new BadRequestException("");
         _context.RefreshTokens.Remove(refreshTokenInfo);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 }
