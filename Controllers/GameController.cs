@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameLogBack.Dtos.Game;
+using GameLogBack.Interfaces;
 using GameLogBack.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -37,24 +38,24 @@ namespace GameLogBack.Controllers
         
         [HttpPost("create-game")]
         [Authorize]
-        public ActionResult CreateGame([FromBody] GamePostDto newGame)
+        public ActionResult<GameDto> CreateGame([FromBody] GamePostDto newGame)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            _gameService.PostGame(newGame, userId);
-            return Ok();
+            var game = _gameService.PostGame(newGame, userId);
+            return Ok(game);
         }
 
         [HttpPut("update/{gameId}")]
         [Authorize]
-        public ActionResult UpdateGame([FromBody] GamePutDto gamePutDto, [FromRoute] string gameId)
+        public ActionResult<GameDto> UpdateGame([FromBody] GamePutDto gamePutDto, [FromRoute] string gameId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            _gameService.PutGame(gamePutDto, gameId, userId);
-            return Ok();
+            var game = _gameService.PutGame(gamePutDto, gameId, userId);
+            return Ok(game);
         }
 
         [HttpDelete("delete/{gameId}")]
-        public ActionResult DeleteGame([FromRoute] string gameId)
+        public IActionResult DeleteGame([FromRoute] string gameId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             _gameService.DeleteGame(gameId, userId);
