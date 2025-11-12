@@ -14,5 +14,6 @@ public class Users
     public virtual CodeConfirmUsers CodeConfirm { get; set; }
     public virtual CodeRecoveryPassword CodeRecoveryPassword { get; set; }
     public virtual ICollection<Categories> Categories { get; set; }
+    public virtual ICollection<Games> Games { get; set; }
     
 }
