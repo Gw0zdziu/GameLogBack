@@ -4,9 +4,9 @@ namespace GameLogBack.Interfaces;
 
 public interface IGameService
 {
-    IEnumerable<GameDto> GetGames(string userId);
-    GameDto GetGame(string gameId);
-    GameDto PostGame(GamePostDto gamePostDto, string userId);
-    GameDto PutGame(GamePutDto gamePutDto, string gameId, string userId);
-    void DeleteGame(string gameId, string userId);
+    Task<IEnumerable<GameDto>> GetGames(string userId);
+    Task<GameDto> GetGame(string gameId);
+    Task<GameDto> PostGame(GamePostDto gamePostDto, string userId);
+    Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId);
+    Task DeleteGame(string gameId, string userId);
 }
