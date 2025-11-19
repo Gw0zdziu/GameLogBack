@@ -28,9 +28,11 @@ public class UserService : IUserService
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
     {
-        var isUserNameExist = await _context.UserLogins.AnyAsync(x => x.UserName.ToLower() == registerNewUser.Username.ToLower());
+        var isUserNameExist =
+            await _context.UserLogins.AnyAsync(x => x.UserName.ToLower() == registerNewUser.Username.ToLower());
         if (isUserNameExist) throw new BadRequestException("User with this username already exist");
-        var isUserEmailExist = await _context.Users.AnyAsync(x => x.UserEmail.ToLower() == registerNewUser.UserEmail.ToLower());
+        var isUserEmailExist =
+            await _context.Users.AnyAsync(x => x.UserEmail.ToLower() == registerNewUser.UserEmail.ToLower());
         if (isUserEmailExist) throw new BadRequestException("User with this email already exist");
         var newUserId = Guid.NewGuid().ToString();
         var code = _utilsService.GenerateCodeToConfirmEmail();
@@ -63,44 +65,59 @@ public class UserService : IUserService
         return newUserId;
     }
 
+
     public async Task<GetUserDto> GetUser(string userId)
     {
-        var user = await _context.UserLogins.Join(_context.Users, userLogins => userLogins.UserId, users => users.UserId,
-            (userLogins, users) => new GetUserDto
-            {
-                UserId = users.UserId,
-                UserName = userLogins.UserName,
-                UserEmail = users.UserEmail,
-                IsActive = users.IsActive,
-                FirstName = users.FirstName,
-                LastName = users.LastName
-            }).FirstOrDefaultAsync(x => x.UserId == userId);
-        if (user is null) throw new BadRequestException("User not found");
-        return user;
+        var user = await _context.UserLogins.Select(x => new GetUserDto
+        {
+            UserId = x.UserId,
+            UserName = x.UserName,
+            UserEmail = x.User.UserEmail,
+            IsActive = x.User.IsActive,
+            FirstName = x.User.FirstName,
+            LastName = x.User.LastName
+        }).FirstOrDefaultAsync(x => x.UserId == userId);
+        return user ?? throw new BadRequestException("User not found");
     }
 
     public async Task ResendNewConfirmCode(string userId)
     {
-        var user = await _context.CodeConfirmUsers.FirstOrDefaultAsync(x => x.UserId == userId);
+        var user = await _context.Users
+            .Include(u => u.CodeConfirm)
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
         if (user is null) throw new BadRequestException("User not found");
-        var userEmail = _context.Users.Where(x => x.UserId == userId).Select(x => x.UserEmail).FirstOrDefault();
+
+        // Zabezpieczenie na wypadek braku rekordu CodeConfirm
+        if (user.CodeConfirm == null)
+        {
+            user.CodeConfirm = new CodeConfirmUsers
+            {
+                UserId = userId,
+                CodeId = Guid.NewGuid().ToString()
+            };
+        }
+
         var code = _utilsService.GenerateCodeToConfirmEmail();
-        user.Code = code;
-        user.ExpiryDate = DateTime.UtcNow.AddMinutes(15);
+        user.CodeConfirm.Code = code;
+        user.CodeConfirm.ExpiryDate = DateTime.UtcNow.AddMinutes(15);
+
         await _context.SaveChangesAsync();
-        await _emailSenderHelper.SendEmail(userEmail, "Kod potwierdzający użytkownika",
+        await _emailSenderHelper.SendEmail(user.UserEmail, "Kod potwierdzający użytkownika",
             $"Twój kod potwierdzający to : {code}");
     }
 
     public async Task ConfirmUser(ConfirmCodeDto confirmCodeDto)
     {
-        var confirmCodeUser = await _context.CodeConfirmUsers.FirstOrDefaultAsync(x => x.UserId == confirmCodeDto.UserId);
+        var confirmCodeUser = await _context.CodeConfirmUsers
+            .FirstOrDefaultAsync(x => x.UserId == confirmCodeDto.UserId);
         if (confirmCodeUser is null) throw new BadRequestException("Confirm code not found");
         if (confirmCodeUser.ExpiryDate < DateTime.UtcNow)
             throw new BadRequestException("Confirm code is expired. You must generate new code");
         if (confirmCodeUser.Code != confirmCodeDto.ConfirmCode)
             throw new BadRequestException("Confirm code is incorrect");
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserId == confirmCodeDto.UserId);
+        var user = await _context.Users
+            .FirstOrDefaultAsync(x => x.UserId == confirmCodeDto.UserId);
         if (user is null) throw new BadRequestException("User not found");
         user.IsActive = true;
         await _context.SaveChangesAsync();
@@ -108,13 +125,14 @@ public class UserService : IUserService
 
     public async Task RecoverPassword(string userEmail)
     {
-        var user  = await _context.Users.FirstOrDefaultAsync(x => x.UserEmail == userEmail);
-        if (user is null) 
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserEmail == userEmail);
+        if (user is null)
         {
             throw new BadRequestException("User not found");
         }
+
         var code = _utilsService.GenerateCodeToRecoverPassword();
-        var link = _utilsService.GenerateLinkToRecoveryPassword(code,user.UserId);
+        var link = _utilsService.GenerateLinkToRecoveryPassword(code, user.UserId);
         var recoveryCode = await _context.CodeRecoveryPasswords.FirstOrDefaultAsync(x => x.UserId == user.UserId);
         if (recoveryCode is not null)
         {
@@ -150,10 +168,13 @@ public class UserService : IUserService
         var user = await _context.Users
             .Include(x => x.UserLogins)
             .Include(x => x.CodeRecoveryPassword)
-            .FirstOrDefaultAsync(x => x.UserId == recoveryUpdatePasswordDto.UserId && x.CodeRecoveryPassword.Code == recoveryUpdatePasswordDto.Token);
+            .FirstOrDefaultAsync(x =>
+                x.UserId == recoveryUpdatePasswordDto.UserId &&
+                x.CodeRecoveryPassword.Code == recoveryUpdatePasswordDto.Token);
         if (user is null) throw new BadRequestException("User not found");
         if (user.CodeRecoveryPassword.IsUsed) throw new BadRequestException("Recovery code is used");
-        if (user.CodeRecoveryPassword.ExpiryDate < DateTime.UtcNow) throw new BadRequestException("Recovery code is expired");
+        if (user.CodeRecoveryPassword.ExpiryDate < DateTime.UtcNow)
+            throw new BadRequestException("Recovery code is expired");
         var newPassword = _passwordHasher.HashPassword(user.UserLogins, recoveryUpdatePasswordDto.NewPassword);
         user.UserLogins.Password = newPassword;
         user.CodeRecoveryPassword.IsUsed = true;
@@ -173,3 +194,4 @@ public class UserService : IUserService
         await _context.SaveChangesAsync();
     }
 }
+    

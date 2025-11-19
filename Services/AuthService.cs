@@ -65,14 +65,14 @@ public class AuthService : IAuthService
 
     public async Task<TokenInfoDto> GetRefreshToken(TokenInfoDto tokenInfo)
     {
-        var principal = _utilsService.GetPrincipalFromExpiredToken(tokenInfo.AccessToken);
+        var principal =  _utilsService.GetPrincipalFromExpiredToken(tokenInfo.AccessToken);
         var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
         var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == userId);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
         {
             throw new BadRequestException("Refresh token is expired");
         }
-        var user = _context.UserLogins.FirstOrDefault(x => x.UserId == userId);
+        var user = await _context.UserLogins.FirstOrDefaultAsync(x => x.UserId == userId);
         var token = _utilsService.GetToken(user);
         var newRefreshToken = _utilsService.GetRefreshToken();
         refreshTokenInfo.RefreshToken = newRefreshToken;

@@ -47,11 +47,7 @@ public class CategoryService : ICategoryService
             CreatedBy = x.CreatedBy,
             UpdatedBy = x.UpdatedBy,
         }).FirstOrDefaultAsync();
-        if (category is null)
-        {
-            throw new BadRequestException("Category not found");
-        }
-        return category;
+        return category ?? throw new NotFoundException("Category not fund");
     }
 
     public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
@@ -90,13 +86,12 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
-        var categories = await _context.Categories.Where(x => x.UserId == userId).ToListAsync();
-        var category = categories.FirstOrDefault(x => x.CategoryId == categoryId);
+        var category = _context.Categories.FirstOrDefault(x => x.CategoryId == categoryId);
         if (category is null)
         {
-            throw new BadRequestException("Category not found");
+            throw new NotFoundException("Category not found");
         }
-        var isCategoryNameExist = categories.Any(x => x.CategoryName == categoryPutDto.CategoryName && x.CategoryId != categoryId);
+        var isCategoryNameExist = _context.Categories.Any(x => x.CategoryName == categoryPutDto.CategoryName && x.CategoryId != categoryId);
         if (isCategoryNameExist)
         {
             throw new BadRequestException("Category with this name already exist");       
