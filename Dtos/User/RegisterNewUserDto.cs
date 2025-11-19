@@ -30,4 +30,7 @@ public class RegisterNewUserDto
     [Compare("Password", ErrorMessage = "Passwords do not match")]
     //[PasswordValidation("Confirm password")]
     public string ConfirmPassword { get; set; }
+    
+    [Required(ErrorMessage = "ConfirmPassword is required")]
+    public string InvitationCode { get; set; }
 }
