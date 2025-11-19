@@ -16,6 +16,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<CodeRecoveryPassword> CodeRecoveryPasswords { get; set; }
     public DbSet<Categories> Categories { get; set; }
     public DbSet<Games> Games { get; set; }
+    public DbSet<InvitationCodes> InvitationCodes { get; set; }
     
     
     
@@ -235,6 +236,18 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .Property(p => p.GameName)
             .IsRequired()
             .HasMaxLength(100);
+        #endregion
+
+        #region InvitationCodes
+
+        modelBuilder.Entity<InvitationCodes>().ToTable("invitation_codes");
+        modelBuilder.Entity<InvitationCodes>(entity =>
+        {
+            entity.Property(x => x.InvitationCodeId).HasColumnName("invitation_code_id");
+            entity.Property(x => x.InvitationCode).HasColumnName("invitation_code");
+            entity.Property(x => x.IsUsed).HasColumnName("is_used");
+        });
+
         #endregion
 
     }
