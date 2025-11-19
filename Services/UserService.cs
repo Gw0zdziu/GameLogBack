@@ -34,6 +34,8 @@ public class UserService : IUserService
         var isUserEmailExist =
             await _context.Users.AnyAsync(x => x.UserEmail.ToLower() == registerNewUser.UserEmail.ToLower());
         if (isUserEmailExist) throw new BadRequestException("User with this email already exist");
+        var invitationCodes = await _context.InvitationCodes.FirstOrDefaultAsync(x => x.InvitationCode == registerNewUser.InvitationCode && x.IsUsed == false);
+        if (invitationCodes is null) throw new BadRequestException("Invitation code is incorrect");
         var newUserId = Guid.NewGuid().ToString();
         var code = _utilsService.GenerateCodeToConfirmEmail();
         var newUser = new Users
@@ -58,6 +60,7 @@ public class UserService : IUserService
         };
         var passwordHash = _passwordHasher.HashPassword(newUser.UserLogins, registerNewUser.Password);
         newUser.UserLogins.Password = passwordHash;
+        invitationCodes.IsUsed = true;
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
         await _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika",
