@@ -18,12 +18,6 @@ public class GameService : IGameService
 
     public async Task<IEnumerable<GameDto>> GetGames(string userId)
     {
-        var isUerExist = await _context.Users.AnyAsync(x => x.UserId == userId);
-        if (!isUerExist)
-        {
-            throw new BadRequestException("User not found");
-        }
-
         var games = await _context.Games.Include(x => x.Category).Where(x => x.UserId == userId).Select(x =>
             new GameDto()
             {
@@ -58,28 +52,10 @@ public class GameService : IGameService
 
     public async Task<GameDto> PostGame(GamePostDto gamePostDto, string userId)
     {
-        var data = await _context.Users
-            .Where(u => u.UserId == userId && u.IsActive)
-            .Select(u => new
-            {   
-                GameExists = u.Games.Any(g => g.GameName == gamePostDto.GameName),
-                CategoryName = u.Categories
-                    .Where(c => c.CategoryId == gamePostDto.CategoryId)
-                    .Select(c => c.CategoryName).FirstOrDefault()
-            })
-            .FirstOrDefaultAsync();
-        if (data is null)
-        {
-            throw new NotFoundException("User not found");
-        }
-
-        if (data.GameExists)
+        var isGameNameExist = await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName == gamePostDto.GameName);
+        if (isGameNameExist)
         {
             throw new BadRequestException("Game with this name already exist");
-        }
-        if (data.CategoryName is null)
-        {
-            throw new NotFoundException("Category not found");       
         }
         var newGame = new Games()
         {
@@ -94,12 +70,13 @@ public class GameService : IGameService
         };
         _context.Games.Add(newGame);
         await _context.SaveChangesAsync();
+        var categoryName = await _context.Categories.Where(c => c.CategoryId == gamePostDto.CategoryId).Select(c => c.CategoryName).FirstOrDefaultAsync();
         return new GameDto()
         {
             GameId = newGame.GameId,
             GameName = newGame.GameName,
             CategoryId = newGame.CategoryId, 
-            CategoryName = data.CategoryName,
+            CategoryName = categoryName,
             CreatedDate = newGame.CreatedDate,
             UpdatedDate = newGame.UpdatedDate,
             CreatedBy = newGame.CreatedBy,
@@ -109,49 +86,39 @@ public class GameService : IGameService
 
     public async Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId)
     {
-        var data = await _context.Users.Where(u => u.UserId == userId).Select(u => new
-        {
-            IsGameNameExist = u.Games.Any(g => (g.UserId == u.UserId && g.GameId != gameId) && g.GameName == gamePutDto.GameName),
-            gameToUpdate = u.Games.FirstOrDefault(x =>  x.GameId == gameId),
-            CategoryName = u.Categories.Where(c => c.CategoryId == gamePutDto.CategoryId).Select(c => c.CategoryName).FirstOrDefault()
-        }).FirstOrDefaultAsync();
-        if (data is null)
-        {
-            throw new NotFoundException("User not found");
-        }
-        if (data.gameToUpdate is null)
+        var game = await _context.Games.FirstOrDefaultAsync(x =>
+            x.UserId == userId && x.GameId == gameId);
+        if (game is null)
         {
             throw new NotFoundException("Game not found");
         }
-        if (data.IsGameNameExist)
+        var isGameNameExist = await _context.Games.AnyAsync(x => (x.UserId == userId && x.GameId != gameId) && x.GameName == gamePutDto.GameName);
+        if (isGameNameExist)
         {
             throw new BadRequestException("Game with this name already exist");
         }
-        data.gameToUpdate.GameName = gamePutDto.GameName;
-        data.gameToUpdate.UpdatedBy = userId;
-        data.gameToUpdate.CategoryId = gamePutDto.CategoryId;       
-        data.gameToUpdate.UpdatedDate = DateTime.UtcNow;
+        
+        game.GameName = gamePutDto.GameName;
+        game.UpdatedBy = userId;
+        game.CategoryId = gamePutDto.CategoryId;       
+        game.UpdatedDate = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        var categoryName = await _context.Categories.Where(c => c.CategoryId == game.CategoryId).Select(c => c.CategoryName).FirstOrDefaultAsync();
         return new GameDto()
         {
-            GameId = data.gameToUpdate.GameId,
+            GameId = game.GameId,
             GameName = gamePutDto.GameName,
             CategoryId = gamePutDto.CategoryId, 
-            CategoryName = data.CategoryName,
-            CreatedBy = data.gameToUpdate.CreatedBy,
-            UpdatedBy = data.gameToUpdate.UpdatedBy,
-            CreatedDate = data.gameToUpdate.CreatedDate,
-            UpdatedDate = data.gameToUpdate.UpdatedDate
+            CategoryName = categoryName,
+            CreatedBy = game.CreatedBy,
+            UpdatedBy = game.UpdatedBy,
+            CreatedDate = game.CreatedDate,
+            UpdatedDate = game.UpdatedDate
         };
     }
     
     public async Task DeleteGame(string gameId, string userId)
     {
-        var isUerExist = await _context.Users.AnyAsync(x => x.UserId == userId);
-        if (!isUerExist)
-        {
-            throw new BadRequestException("User not found");
-        }
         var gameToDelete = _context.Games.FirstOrDefault(x => x.GameId == gameId && x.UserId == userId);
         if (gameToDelete is null)
         {
