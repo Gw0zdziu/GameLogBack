@@ -123,4 +123,17 @@ public class  CategoryService : ICategoryService
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<CategoryByUserId>> GetCategoriesByUserId(string userId)
+    {
+        var categories = await _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryByUserId()
+        {
+            CategoryId = x.CategoryId,
+            CategoryName = x.CategoryName,
+            Description = x.Description,
+            CreatedDate = x.CreatedDate,
+            UpdatedDate = x.UpdatedDate,
+        }).ToListAsync();
+        return categories;
+    }
 }
