@@ -1,6 +1,6 @@
 namespace GameLogBack.Dtos.Category;
 
-public class CategoryPutDto : CategoryBase
+public class CategoryPutDto : CategoryBaseDto
 {
     
 }

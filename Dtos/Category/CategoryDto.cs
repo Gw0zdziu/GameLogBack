@@ -2,9 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GameLogBack.Dtos.Category;
 
-public class CategoryDto : CategoryBase
+public class CategoryDto : CategoryBaseDto
 {
-    [Required(ErrorMessage = "Category is required")]
     public string CategoryId { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
