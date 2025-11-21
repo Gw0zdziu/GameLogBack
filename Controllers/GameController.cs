@@ -28,9 +28,16 @@ namespace GameLogBack.Controllers
             return Ok(games);       
         }
 
+        [HttpGet("get-games-by-userId/{userId}")]
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesById([FromRoute] string userId)
+        {
+            var games = _gameService.GetGamesByUserId(userId);
+            return Ok(games);
+        }
+
         [HttpGet("get-game/{gameId}")]
         [Authorize]
-        public async Task<ActionResult<GameDto>> GetGame(string gameId)
+        public async Task<ActionResult<GameDto>> GetGame([FromRoute]string gameId)
         {
             var game = await _gameService.GetGame(gameId);
             return Ok(game);      
