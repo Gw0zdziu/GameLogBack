@@ -29,6 +29,13 @@ namespace GameLogBack.Controllers
             return Ok(categories);
         }
 
+        [HttpGet("get-categories-by-userId/{userId}")]
+        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategoriesByUserId([FromRoute] string userId)
+        {
+            var categories = await _categoryService.GetCategoriesByUserId(userId);
+            return Ok(categories);
+        }
+
         [HttpGet("get-category/{categoryId}")]
         [Authorize]
         public async Task<ActionResult<CategoryDto>> GetCategory([FromRoute]string categoryId)
