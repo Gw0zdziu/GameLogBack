@@ -10,4 +10,5 @@ public interface IGameService
     Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId);
     Task DeleteGame(string gameId, string userId);
     Task<IEnumerable<GameByUserIdDto>> GetGamesByUserId(string userId);
+    Task<IEnumerable<GameByCategoryIdDto>> GetGamesByCategoryId(string categoryId);
 }
