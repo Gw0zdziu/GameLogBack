@@ -10,7 +10,7 @@ namespace GameLogBack.Services;
 
 
 
-public class CategoryService : ICategoryService
+public class  CategoryService : ICategoryService
 {
     private readonly GameLogDbContext _context;
 
