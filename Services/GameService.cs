@@ -127,4 +127,19 @@ public class GameService : IGameService
         _context.Games.Remove(gameToDelete);
         await _context.SaveChangesAsync();       
     }
+
+    public async Task<IEnumerable<GameByUserIdDto>> GetGamesByUserId(string userId)
+    {
+        var games = await _context.Games.Include(x => x.Category).Where(x => x.UserId == userId).Select(x =>
+            new GameByUserIdDto()
+            {
+                GameId = x.GameId,
+                GameName = x.GameName,
+                UpdatedDate = x.UpdatedDate,
+                CreatedDate = x.CreatedDate,
+                CategoryId = x.CategoryId,
+                CategoryName = x.Category.CategoryName,
+            }).ToListAsync();
+        return games;
+    }
 }
