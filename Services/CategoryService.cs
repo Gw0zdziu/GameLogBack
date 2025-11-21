@@ -124,9 +124,9 @@ public class  CategoryService : ICategoryService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<CategoryByUserId>> GetCategoriesByUserId(string userId)
+    public async Task<IEnumerable<CategoryByUserIdDto>> GetCategoriesByUserId(string userId)
     {
-        var categories = await _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryByUserId()
+        var categories = await _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryByUserIdDto()
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,

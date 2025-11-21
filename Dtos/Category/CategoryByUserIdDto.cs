@@ -1,6 +1,6 @@
 namespace GameLogBack.Dtos.Category;
 
-public class CategoryByUserId : CategoryBaseDto
+public class CategoryByUserIdDto : CategoryBaseDto
 {
     public string CategoryId { get; set; }
     public DateTime CreatedDate { get; set; }
