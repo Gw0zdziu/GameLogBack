@@ -30,6 +30,7 @@ public class  CategoryService : ICategoryService
             UpdatedDate = x.UpdatedDate,
             CreatedBy = x.CreatedBy,
             UpdatedBy = x.UpdatedBy,
+            GamesCount = x.Games.Count
         }).ToListAsync();
         
         return categories;
@@ -46,6 +47,7 @@ public class  CategoryService : ICategoryService
             UpdatedDate = x.UpdatedDate,
             CreatedBy = x.CreatedBy,
             UpdatedBy = x.UpdatedBy,
+            GamesCount = x.Games.Count
         }).FirstOrDefaultAsync();
         return category ?? throw new NotFoundException("Category not fund");
     }
@@ -133,6 +135,7 @@ public class  CategoryService : ICategoryService
             Description = x.Description,
             CreatedDate = x.CreatedDate,
             UpdatedDate = x.UpdatedDate,
+            GamesCount = x.Games.Count
         }).ToListAsync();
         return categories;
     }

@@ -11,5 +11,6 @@ public class Categories
     public string UpdatedBy { get; set; }
     public string UserId { get; set; }
     public virtual Users User { get; set; }
+    public virtual ICollection<Games> Games { get; set; }
     
 }
