@@ -23,7 +23,7 @@ builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularApp", policy =>
-        policy.WithOrigins("http://gamelogfront", "http://localhost:4200", "http://localhost:4300")
+        policy.WithOrigins("http://gamelogfront", "http://localhost:4200", "http://localhost:4300", "https://gamelogfront.up.railway.app")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials()
