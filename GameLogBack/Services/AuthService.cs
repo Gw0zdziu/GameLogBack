@@ -33,7 +33,6 @@ public class AuthService : IAuthService
         if (user is null) throw new BadRequestException("Data of login is incorrect");
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect");
-
         var token = _utilsService.GetToken(user);
         var refreshToken = _utilsService.GetRefreshToken();
         var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.UserId);

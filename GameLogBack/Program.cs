@@ -23,7 +23,7 @@ builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularApp", policy =>
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins("http://gamelogfront", "http://localhost:4200", "http://localhost:4300")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials()
@@ -65,12 +65,24 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using var scope = app.Services.CreateScope();
+var context = scope.ServiceProvider.GetRequiredService<GameLogDbContext>();
+var isConnected = await context.Database.CanConnectAsync();
+if (!isConnected)
 {
+    Console.WriteLine("Nie można połączyć się z bazą danych przy starcie");
+}
+else
+{
+    Console.WriteLine("Połączenie z bazą danych OK");
+}
+
+
+// Configure the HTTP request pipeline.
+
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
