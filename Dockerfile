@@ -3,14 +3,14 @@ USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
-
+ENV ASPNETCORE_ENVIRONMENT Production
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["GameLogBack.csproj", "./"]
-RUN dotnet restore "GameLogBack.csproj"
+COPY ["GameLogBack/GameLogBack.csproj", "GameLogBack/"]
+RUN dotnet restore "GameLogBack/GameLogBack.csproj"
 COPY . .
-WORKDIR "/src/"
+WORKDIR "/src/GameLogBack"
 RUN dotnet build "./GameLogBack.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
