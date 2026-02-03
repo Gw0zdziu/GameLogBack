@@ -122,6 +122,11 @@ public class  CategoryService : ICategoryService
         {
             throw new BadRequestException("Category not found");
         }
+        var isGameWithCategoryExist = _context.Games.Any(x => x.CategoryId == categoryId);
+        if (isGameWithCategoryExist)
+        {
+            throw new BadRequestException("Exist game with this category");
+        }
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
     }
