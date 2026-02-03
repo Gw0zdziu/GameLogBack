@@ -3,6 +3,7 @@ using System;
 using GameLogBack.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameLogBack.Migrations
 {
     [DbContext(typeof(GameLogDbContext))]
-    partial class GameLogDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260129173808_UpdateLocalDatabase")]
+    partial class UpdateLocalDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,10 +164,6 @@ namespace GameLogBack.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
-
-                    b.Property<DateTime?>("YearPlayed")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("year_played");
 
                     b.HasKey("GameId");
 
