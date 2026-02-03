@@ -8,4 +8,5 @@ public class GameByUserIdDto
     public string CategoryName { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
+    public DateTime? YearPlayed { get; set; }
 }
