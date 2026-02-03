@@ -27,6 +27,7 @@ public class GameService : IGameService
                 UpdatedBy = x.UpdatedBy,
                 CreatedDate = x.CreatedDate,
                 CreatedBy = x.CreatedBy,
+                YearPlayed = x.YearPlayed,
                 CategoryId = x.CategoryId,
                 CategoryName = x.Category.CategoryName,
             }
@@ -43,6 +44,7 @@ public class GameService : IGameService
             UpdatedDate = x.UpdatedDate,
             UpdatedBy = x.UpdatedBy,
             CreatedDate = x.CreatedDate,
+            YearPlayed = x.YearPlayed,
             CreatedBy = x.CreatedBy,
             CategoryId = x.CategoryId,
             CategoryName = x.Category.CategoryName,       
@@ -65,6 +67,7 @@ public class GameService : IGameService
             CategoryId = gamePostDto.CategoryId,
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
+            YearPlayed = gamePostDto.YearPlayed,
             CreatedBy = userId,
             UpdatedBy = null,
         };
@@ -79,6 +82,7 @@ public class GameService : IGameService
             CategoryName = categoryName,
             CreatedDate = newGame.CreatedDate,
             UpdatedDate = newGame.UpdatedDate,
+            YearPlayed = newGame.YearPlayed,
             CreatedBy = newGame.CreatedBy,
             UpdatedBy = newGame.UpdatedBy
         };
@@ -100,7 +104,8 @@ public class GameService : IGameService
         
         game.GameName = gamePutDto.GameName;
         game.UpdatedBy = userId;
-        game.CategoryId = gamePutDto.CategoryId;       
+        game.CategoryId = gamePutDto.CategoryId; 
+        game.YearPlayed = gamePutDto.YearPlayed;
         game.UpdatedDate = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         var categoryName = await _context.Categories.Where(c => c.CategoryId == game.CategoryId).Select(c => c.CategoryName).FirstOrDefaultAsync();
@@ -112,6 +117,7 @@ public class GameService : IGameService
             CategoryName = categoryName,
             CreatedBy = game.CreatedBy,
             UpdatedBy = game.UpdatedBy,
+            YearPlayed = game.YearPlayed,
             CreatedDate = game.CreatedDate,
             UpdatedDate = game.UpdatedDate
         };
@@ -137,6 +143,7 @@ public class GameService : IGameService
                 GameName = x.GameName,
                 UpdatedDate = x.UpdatedDate,
                 CreatedDate = x.CreatedDate,
+                YearPlayed = x.YearPlayed,
                 CategoryId = x.CategoryId,
                 CategoryName = x.Category.CategoryName,
             }).ToListAsync();
@@ -153,6 +160,7 @@ public class GameService : IGameService
                 UpdatedDate = x.UpdatedDate,
                 CreatedDate = x.CreatedDate,
                 CategoryId = x.CategoryId,
+                YearPlayed = x.YearPlayed,
                 CategoryName = x.Category.CategoryName,
             }).ToListAsync();
         return games;

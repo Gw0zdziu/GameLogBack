@@ -225,6 +225,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(p => p.UpdatedBy).HasColumnName("updated_by");
             entity.Property(p => p.CategoryId).HasColumnName("category_id");
             entity.Property(p => p.UserId).HasColumnName("user_id");
+            entity.Property(p => p.YearPlayed).HasColumnName("year_played");
         });
         modelBuilder.Entity<Games>()
             .HasKey(k => k.GameId);
