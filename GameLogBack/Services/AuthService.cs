@@ -37,7 +37,6 @@ public class AuthService : IAuthService
         var refreshToken = _utilsService.GetRefreshToken();
         var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.UserId);
         if (refreshTokenInfo is null)
-        {
             _context.RefreshTokens.Add(new RefreshTokenInfo
             {
                 UserId = user.UserId,
@@ -45,22 +44,19 @@ public class AuthService : IAuthService
                 RefreshToken = refreshToken,
                 ExpiryDate = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
             });
-        }
 
         await _context.SaveChangesAsync();
-        
+
         return token;
     }
 
-    public async Task<string> GetRefreshToken(TokenInfoDto tokenInfo)
+    public async Task<string> GetRefreshToken(string tokenInfo)
     {
-        var principal =  _utilsService.GetPrincipalFromExpiredToken(tokenInfo.AccessToken);
+        var principal = _utilsService.GetPrincipalFromExpiredToken(tokenInfo);
         var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
         var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == userId);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
-        {
             throw new BadRequestException("Refresh token is expired");
-        }
         var user = await _context.UserLogins.FirstOrDefaultAsync(x => x.UserId == userId);
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireDays);
         _context.RefreshTokens.Remove(refreshTokenInfo);
