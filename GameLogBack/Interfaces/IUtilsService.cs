@@ -7,7 +7,7 @@ public interface IUtilsService
 {
     string GetRefreshToken();
 
-    string GetToken(UserLogins userLogins);
+    string GetToken(UserLogins userLogins, int expireIn);
     
     string GetAccessToken(UserLogins userLogins, string refreshToken);
 
