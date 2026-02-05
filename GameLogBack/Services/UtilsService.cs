@@ -29,7 +29,7 @@ public class UtilsService : IUtilsService
         return Convert.ToBase64String(refreshToken);
     }
 
-    public string GetToken(UserLogins userLogins)
+    public string GetToken(UserLogins userLogins, int expireIn)
     {
         var claims = new List<Claim>()
         {
@@ -39,7 +39,7 @@ public class UtilsService : IUtilsService
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expiresTime = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtTokenExpireMinutes);
+        var expiresTime = DateTime.UtcNow.AddMinutes(expireIn);
         var jwtToken = new JwtSecurityToken(issuer: _authenticationSettings.JwtIssuer,
             audience: _authenticationSettings.JwtIssuer, claims: claims, notBefore: null, expires: expiresTime,
             signingCredentials: credentials);
