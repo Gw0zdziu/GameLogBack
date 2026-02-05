@@ -12,7 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-var connectionString = builder.Configuration.GetConnectionString("Postgres");
+//var connectionString = builder.Configuration.GetConnectionString("Postgres");
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 var authenticationSettings = new AuthenticationSettings();
