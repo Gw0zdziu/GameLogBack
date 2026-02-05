@@ -7,23 +7,24 @@ using GameLogBack.Interfaces;
 using GameLogBack.Middlewares;
 using GameLogBack.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 var connectionString = builder.Configuration.GetConnectionString("Postgres");
-builder.Services.AddDbContext<GameLogDbContext>(options =>
+źbuilder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 var authenticationSettings = new AuthenticationSettings();
 builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));;
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+;
 builder.Services.AddSingleton(authenticationSettings);
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularApp", policy =>
-        policy.WithOrigins("http://gamelogfront", "http://localhost:4200", "http://localhost:4300", "https://gamelogfront.up.railway.app",)
+        policy.WithOrigins("http://gamelogfront", "http://localhost:4200", "http://localhost:4300",
+                "https://gamelogfront.up.railway.app")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials()
@@ -66,8 +67,8 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 
 app.UseHttpsRedirection();
