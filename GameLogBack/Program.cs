@@ -7,12 +7,13 @@ using GameLogBack.Interfaces;
 using GameLogBack.Middlewares;
 using GameLogBack.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 var connectionString = builder.Configuration.GetConnectionString("Postgres");
-źbuilder.Services.AddDbContext<GameLogDbContext>(options =>
+builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 var authenticationSettings = new AuthenticationSettings();
 builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
