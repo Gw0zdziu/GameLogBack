@@ -30,21 +30,15 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh-token")]
-    public async Task<IActionResult> RefreshToken()
+    public async Task<ActionResult<string>> RefreshToken()
     {
-        var refreshToken = Request.Cookies["refreshToken"];
         var accessToken = Request.Headers["Authorization"].ToString();
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             throw new BadRequestException("Access token is empty");
         }
         accessToken = accessToken.Replace("Bearer ", "");
-        var tokenInfo = new TokenInfoDto
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken
-        };
-        var newTokenInfo = await _authService.GetRefreshToken(tokenInfo);
+        var newTokenInfo = await _authService.GetRefreshToken(accessToken);
         
          return Ok(newTokenInfo);
     }
