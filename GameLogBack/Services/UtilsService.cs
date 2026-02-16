@@ -3,9 +3,12 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using GameLogBack.Authentication;
+using GameLogBack.Dtos.PaginatedQuery;
+using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GameLogBack.Services;
@@ -31,18 +34,18 @@ public class UtilsService : IUtilsService
 
     public string GetToken(UserLogins userLogins, int expireIn)
     {
-        var claims = new List<Claim>()
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, userLogins.UserName),
-            new Claim(ClaimTypes.NameIdentifier, userLogins.UserId),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(ClaimTypes.Name, userLogins.UserName),
+            new(ClaimTypes.NameIdentifier, userLogins.UserId),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiresTime = DateTime.UtcNow.AddMinutes(expireIn);
-        var jwtToken = new JwtSecurityToken(issuer: _authenticationSettings.JwtIssuer,
-            audience: _authenticationSettings.JwtIssuer, claims: claims, notBefore: null, expires: expiresTime,
-            signingCredentials: credentials);
+        var jwtToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer,
+            _authenticationSettings.JwtIssuer, claims, null, expiresTime,
+            credentials);
         var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.WriteToken(jwtToken);
         return token;
@@ -50,10 +53,10 @@ public class UtilsService : IUtilsService
 
     public string GetAccessToken(UserLogins userLogins, string refreshToken)
     {
-        var claims = new List<Claim>()
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, userLogins.UserName),
-            new Claim(ClaimTypes.NameIdentifier, userLogins.UserId),
+            new(ClaimTypes.Name, userLogins.UserName),
+            new(ClaimTypes.NameIdentifier, userLogins.UserId)
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(refreshToken));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -85,16 +88,14 @@ public class UtilsService : IUtilsService
         if (securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                 StringComparison.InvariantCultureIgnoreCase))
-        {
             throw new BadRequestException("Invalid token");
-        }
 
         return principal;
     }
 
     public string GenerateCodeToConfirmEmail()
     {
-        Random randomNumber = new Random();
+        var randomNumber = new Random();
         return randomNumber.Next(0, 9999).ToString("D4");
     }
 
@@ -114,5 +115,28 @@ public class UtilsService : IUtilsService
         recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token", recoverCode);
         var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
         return linkWithCode;
+    }
+
+    public async Task<PaginatedResults<T>> GetPaginatedData<T>(IQueryable<T> data, PaginatedQuery paginatedQuery)
+    {
+        var totalAmount = await data.CountAsync();
+        var paginatedList = await data
+            .Skip((paginatedQuery.PageNumber - 1) * paginatedQuery.PageSize)
+            .Take(paginatedQuery.PageSize).ToListAsync();
+        var firstItemIndexList = (paginatedQuery.PageNumber - 1) * paginatedList.Count() + 1;
+        var lastItemIndexList = firstItemIndexList + paginatedList.Count() - 1;
+        var amountPages = (int)Math.Ceiling((double)totalAmount / paginatedQuery.PageSize);
+        var amountPagesList = Enumerable.Range(1, amountPages).ToList();
+        var paginatedResult = new PaginatedResults<T>
+        {
+            Results = paginatedList,
+            TotalAmount = totalAmount,
+            PageNumber = paginatedQuery.PageNumber,
+            PageSize = paginatedQuery.PageSize,
+            FirstItemIndexList = firstItemIndexList,
+            LastItemIndexList = lastItemIndexList,
+            AmountPagesList = amountPagesList
+        };
+        return paginatedResult;
     }
 }
