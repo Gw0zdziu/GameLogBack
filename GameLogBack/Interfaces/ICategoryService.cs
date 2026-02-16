@@ -1,11 +1,12 @@
-using GameLogBack.Dtos;
 using GameLogBack.Dtos.Category;
+using GameLogBack.Dtos.PaginatedQuery;
+using GameLogBack.Dtos.PaginatedResults;
 
 namespace GameLogBack.Interfaces;
 
 public interface ICategoryService
 {
-    Task<IEnumerable<CategoryDto>> GetUserCategories(string userId);
+    Task<PaginatedResults<CategoryDto>> GetUserCategories(string userId, PaginatedQuery paginatedQuery);
     Task<CategoryDto> GetCategory(string categoryId);
     Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId);
     Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId);
