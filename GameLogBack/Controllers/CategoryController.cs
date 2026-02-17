@@ -19,7 +19,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet("get-user-categories")]
-    //[Authorize]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetUserCategories(
         [FromQuery] PaginatedQuery paginatedQuery)
     {
