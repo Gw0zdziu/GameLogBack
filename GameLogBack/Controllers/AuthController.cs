@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using GameLogBack.Authentication;
-using GameLogBack.Dtos;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
@@ -33,23 +32,26 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<string>> RefreshToken()
     {
         var accessToken = Request.Headers["Authorization"].ToString();
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            throw new BadRequestException("Access token is empty");
-        }
+        if (string.IsNullOrWhiteSpace(accessToken)) throw new BadRequestException("Access token is empty");
         accessToken = accessToken.Replace("Bearer ", "");
         var newTokenInfo = await _authService.GetRefreshToken(accessToken);
-        
-         return Ok(newTokenInfo);
+
+        return Ok(newTokenInfo);
     }
 
 
-    [HttpDelete("logout")] 
+    [HttpDelete("logout")]
     public IActionResult Logout()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         _authService.LogoutUser(userId);
         return Ok();
     }
-    
+
+    [HttpGet("verify")]
+    [Authorize]
+    public IActionResult Verify()
+    {
+        return Ok(true);
+    }
 }
