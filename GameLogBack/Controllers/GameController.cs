@@ -22,7 +22,7 @@ public class GameController : ControllerBase
     //[Authorize]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGames([FromQuery] PaginatedQuery paginatedQuery)
     {
-        var userId = "20d0396d-80c2-4fa6-ab53-f418bcedb160"; /*User.FindFirst(ClaimTypes.NameIdentifier)?.Value;*/
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var games = await _gameService.GetGames(userId, paginatedQuery);
         return Ok(games);
     }
