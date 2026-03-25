@@ -46,7 +46,7 @@ public class CategoryService : ICategoryService
             UpdatedBy = x.UpdatedBy,
             GamesCount = x.Games.Count
         }).FirstOrDefaultAsync();
-        return category ?? throw new NotFoundException("Category not fund");
+        return category ?? throw new NotFoundException("Category not found");
     }
 
     public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
@@ -107,7 +107,7 @@ public class CategoryService : ICategoryService
     public async Task DeleteCategory(string categoryId)
     {
         var category = await _context.Categories.FirstOrDefaultAsync(x => x.CategoryId == categoryId);
-        if (category is null) throw new BadRequestException("Category not found");
+        if (category is null) throw new NotFoundException("Category not found");
         var isGameWithCategoryExist = _context.Games.Any(x => x.CategoryId == categoryId);
         if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category");
         _context.Categories.Remove(category);
