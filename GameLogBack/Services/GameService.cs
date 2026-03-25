@@ -126,7 +126,7 @@ public class GameService : IGameService
     public async Task DeleteGame(string gameId, string userId)
     {
         var gameToDelete = _context.Games.FirstOrDefault(x => x.GameId == gameId && x.UserId == userId);
-        if (gameToDelete is null) throw new BadRequestException("Game not found");
+        if (gameToDelete is null) throw new NotFoundException("Game not found");
         _context.Games.Remove(gameToDelete);
         await _context.SaveChangesAsync();
     }
