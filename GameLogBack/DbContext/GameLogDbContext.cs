@@ -17,13 +17,13 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Categories> Categories { get; set; }
     public DbSet<Games> Games { get; set; }
     public DbSet<InvitationCodes> InvitationCodes { get; set; }
-    
-    
-    
+
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region Users
-        
+
         modelBuilder.Entity<Users>().ToTable("users");
         modelBuilder.Entity<Users>(entity =>
         {
@@ -53,7 +53,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         modelBuilder.Entity<Users>()
             .Property(p => p.IsActive)
             .IsRequired()
-            .HasDefaultValue(false);
+            .HasDefaultValue(true);
 
         #endregion
 
@@ -120,7 +120,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         #endregion
 
         #region CodeConfirmUsers
-        
+
         modelBuilder.Entity<CodeConfirmUsers>().ToTable("confirm_confirm_users");
         modelBuilder.Entity<CodeConfirmUsers>(entity =>
         {
@@ -177,10 +177,10 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         modelBuilder.Entity<CodeRecoveryPassword>()
             .Property(p => p.ExpiryDate)
             .IsRequired();
-        
+
 
         #endregion
-        
+
         #region Categories
         modelBuilder.Entity<Categories>()
             .ToTable("categories");
@@ -210,9 +210,9 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .IsRequired();
 
         #endregion
-        
+
         #region Games
-        
+
         modelBuilder.Entity<Games>()
             .ToTable("games");
         modelBuilder.Entity<Games>(entity =>
@@ -225,6 +225,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(p => p.UpdatedBy).HasColumnName("updated_by");
             entity.Property(p => p.CategoryId).HasColumnName("category_id");
             entity.Property(p => p.UserId).HasColumnName("user_id");
+            entity.Property(p => p.YearPlayed).HasColumnName("year_played");
         });
         modelBuilder.Entity<Games>()
             .HasKey(k => k.GameId);
@@ -252,6 +253,6 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         #endregion
 
     }
-    
-    
+
+
 }

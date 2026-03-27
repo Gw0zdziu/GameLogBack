@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using GameLogBack.Authentication;
-using GameLogBack.Dtos;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
@@ -26,54 +25,26 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<string>> LoginUser([FromBody] LoginUserDto loginUserDto)
     {
         var token = await _authService.LoginUser(loginUserDto);
-        Response.Cookies.Append("refreshToken", token.RefreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
-        });
-        var login = new
-        {
-            token.Token,
-            token.UserId
-        };
-        return Ok(login.Token);
+        return Ok(token);
     }
 
     [HttpPost("refresh-token")]
-    public async Task<IActionResult> RefreshToken()
+    public async Task<ActionResult<string>> RefreshToken()
     {
-        var refreshToken = Request.Cookies["refreshToken"];
         var accessToken = Request.Headers["Authorization"].ToString();
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            throw new BadRequestException("Access token is empty");
-        }
+        if (string.IsNullOrWhiteSpace(accessToken)) throw new BadRequestException("Access token is empty");
         accessToken = accessToken.Replace("Bearer ", "");
-        var tokenInfo = new TokenInfoDto
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken
-        };
-        var newTokenInfo = await _authService.GetRefreshToken(tokenInfo);
-        Response.Cookies.Append("refreshToken", newTokenInfo.RefreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays)
-        });
-        return Ok(newTokenInfo.AccessToken);
+        var newTokenInfo = await _authService.GetRefreshToken(accessToken);
+
+        return Ok(newTokenInfo);
     }
 
 
-    [HttpDelete("logout")] 
+    [HttpDelete("logout")]
     public IActionResult Logout()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         _authService.LogoutUser(userId);
-        Response.Cookies.Delete("refreshToken");
         return Ok();
     }
 
