@@ -13,10 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-//var connectionString = builder.Configuration.GetConnectionString("Postgres");
-var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 builder.Services.AddDbContext<GameLogDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING")));
 var authenticationSettings = new AuthenticationSettings()
 {
     JwtKey = Environment.GetEnvironmentVariable("JWT_KEY"),
@@ -25,7 +23,6 @@ var authenticationSettings = new AuthenticationSettings()
     JwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
 
 };
-/*builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);*/
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 ;
 builder.Services.AddSingleton(authenticationSettings);
