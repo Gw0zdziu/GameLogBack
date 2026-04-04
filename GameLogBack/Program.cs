@@ -11,31 +11,54 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-builder.Services.AddDbContext<GameLogDbContext>(options =>
-    options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING")));
-var authenticationSettings = new AuthenticationSettings()
+string connectionString;
+if (builder.Environment.IsDevelopment())
 {
-    JwtKey = Environment.GetEnvironmentVariable("JWT_KEY"),
-    JwtTokenExpireMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_TOKEN_EXPIRE_MINUTES") ?? "15"),
-    JwtAccessTokenExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_EXPIRE_DAYS") ?? "15"),
-    JwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    connectionString = builder.Configuration.GetConnectionString("Postgres");
+}
+else
+{
+    connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+}
+Console.WriteLine(connectionString);
+builder.Services.AddDbContext<GameLogDbContext>(options =>
+    options.UseNpgsql(connectionString));
+var authenticationSettings = new AuthenticationSettings();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
+}
+else
+{
+    authenticationSettings = new AuthenticationSettings()
+    {
+        JwtKey = Environment.GetEnvironmentVariable("JWT_KEY"),
+        JwtTokenExpireMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_TOKEN_EXPIRE_MINUTES") ?? "15"),
+        JwtAccessTokenExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_EXPIRE_DAYS") ?? "15"),
+        JwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
 
-};
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-;
+    };
+}
 builder.Services.AddSingleton(authenticationSettings);
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AngularApp", policy =>
-        policy.WithOrigins("http://gamelogfront", "http://localhost:4300", "http://localhost:4300",
-                "https://gamelogfront.up.railway.app")
+    options.AddPolicy("GameLogProd", policy =>
+        policy.WithOrigins("https://gamelogfront.up.railway.app")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials()
     );
+        options.AddPolicy("GameLogDev", policy =>
+            policy.WithOrigins("http://localhost:4300")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials()
+        );
 });
 builder.Services.AddAuthentication(option =>
 {
@@ -66,18 +89,7 @@ builder.Services.AddScoped<IUtilsService, UtilsService>();
 builder.Services.AddScoped<IEmailSenderHelper, EmailSenderHelper>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IGameService, GameService>();
-/*builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = 429;
-    options.AddFixedWindowLimiter("fixed", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 5; // Max requests
-        limiterOptions.Window = TimeSpan.FromSeconds(10);
-        limiterOptions.QueueLimit = 0;
-    });
-});*/
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -88,17 +100,13 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseCors("AngularApp");
+app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-/*using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<GameLogDbContext>();
-    dbContext.Database.Migrate();
-}*/
-/*app.UseRateLimiter();*/
+
 
 app.Run();
