@@ -11,14 +11,27 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-var connectionString = builder.Configuration.GetConnectionString("Postgres");
-//var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+string connectionString;
+if (builder.Environment.IsDevelopment())
+{
+    connectionString = builder.Configuration.GetConnectionString("Postgres");
+}
+else
+{
+    connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+}
+Console.WriteLine(connectionString);
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 var authenticationSettings = new AuthenticationSettings();
 if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
+}
+else
 {
     authenticationSettings = new AuthenticationSettings()
     {
@@ -29,13 +42,8 @@ if (builder.Environment.IsDevelopment())
 
     };
 }
-else
-{
-    builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
-
-}
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddSingleton(authenticationSettings);
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddCors(options =>
 {
@@ -92,18 +100,13 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-if (builder.Environment.IsDevelopment())
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<GameLogDbContext>();
-    dbContext.Database.Migrate();
-}
+
 
 app.Run();
