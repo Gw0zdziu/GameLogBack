@@ -9,6 +9,7 @@ namespace GameLogBack.Controllers;
 
 [Route("api/category")]
 [ApiController]
+[Authorize]
 public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
@@ -19,7 +20,6 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet("get-user-categories")]
-    [Authorize]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetUserCategories(
         [FromQuery] PaginatedQuery paginatedQuery)
     {
@@ -29,6 +29,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet("get-categories-by-userId/{userId}")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategoriesByUserId([FromRoute] string userId)
     {
         var categories = await _categoryService.GetCategoriesByUserId(userId);
@@ -36,7 +37,6 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet("get-category/{categoryId}")]
-    [Authorize]
     public async Task<ActionResult<CategoryDto>> GetCategory([FromRoute] string categoryId)
     {
         var category = await _categoryService.GetCategory(categoryId);
@@ -44,7 +44,6 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPost("create-category")]
-    [Authorize]
     public async Task<ActionResult<CategoryDto>> CreateCategory([FromBody] CategoryPostDto newCategory)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
