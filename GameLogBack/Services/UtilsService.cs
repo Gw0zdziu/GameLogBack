@@ -51,22 +51,7 @@ public class UtilsService : IUtilsService
         return token;
     }
 
-    public string GetAccessToken(UserLogins userLogins, string refreshToken)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Name, userLogins.UserName),
-            new(ClaimTypes.NameIdentifier, userLogins.UserId)
-        };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(refreshToken));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays);
-        var jwtAccessToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer,
-            claims, expires, signingCredentials: credentials);
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var accessToken = tokenHandler.WriteToken(jwtAccessToken);
-        return accessToken;
-    }
+
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {

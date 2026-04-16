@@ -11,8 +11,6 @@ public interface IUtilsService
 
     string GetToken(UserLogins userLogins, int expireIn);
 
-    string GetAccessToken(UserLogins userLogins, string refreshToken);
-
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
 
     public string GenerateCodeToConfirmEmail();
