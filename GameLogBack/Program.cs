@@ -37,7 +37,7 @@ else
     {
         JwtKey = Environment.GetEnvironmentVariable("JWT_KEY"),
         JwtTokenExpireMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_TOKEN_EXPIRE_MINUTES") ?? "15"),
-        JwtAccessTokenExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_EXPIRE_DAYS") ?? "15"),
+        JwtAccessTokenExpireMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_EXPIRE_DAYS") ?? "15"),
         JwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
 
     };
