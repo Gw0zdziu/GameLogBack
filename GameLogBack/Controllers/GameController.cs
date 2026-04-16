@@ -9,6 +9,7 @@ namespace GameLogBack.Controllers;
 
 [Route("api/games")]
 [ApiController]
+[Authorize]
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
@@ -19,7 +20,6 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("get-games")]
-    //[Authorize]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGames([FromQuery] PaginatedQuery paginatedQuery)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -36,6 +36,7 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("get-games-by-userId/{userId}")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesById([FromRoute] string userId)
     {
         var games = await _gameService.GetGamesByUserId(userId);
@@ -43,7 +44,6 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("get-game/{gameId}")]
-    [Authorize]
     public async Task<ActionResult<GameDto>> GetGame([FromRoute] string gameId)
     {
         var game = await _gameService.GetGame(gameId);
@@ -51,7 +51,6 @@ public class GameController : ControllerBase
     }
 
     [HttpPost("create-game")]
-    [Authorize]
     public async Task<ActionResult<GameDto>> CreateGame([FromBody] GamePostDto newGame)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -60,7 +59,6 @@ public class GameController : ControllerBase
     }
 
     [HttpPut("update/{gameId}")]
-    [Authorize]
     public async Task<ActionResult<GameDto>> UpdateGame([FromBody] GamePutDto gamePutDto, [FromRoute] string gameId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
