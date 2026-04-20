@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace GameLogBack.Dtos.Category;
+namespace GameLogBack.Dtos.Category.ResponseDto;
 
 public class CategoryDto : CategoryBaseDto
 {

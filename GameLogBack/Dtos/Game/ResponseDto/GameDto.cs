@@ -1,6 +1,6 @@
-namespace GameLogBack.Dtos.Game;
+namespace GameLogBack.Dtos.Game.ResponseDto;
 
-public class GameByUserIdDto
+public class GameDto
 {
     public string GameId { get; set; }
     public string GameName { get; set; }
@@ -9,4 +9,7 @@ public class GameByUserIdDto
     public DateTime CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
     public DateTime? YearPlayed { get; set; }
+    public string CreatedBy { get; set; }
+    public string UpdatedBy { get; set; }
+
 }

@@ -1,5 +1,7 @@
 using GameLogBack.DbContext;
 using GameLogBack.Dtos.Category;
+using GameLogBack.Dtos.Category.RequestDto;
+using GameLogBack.Dtos.Category.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;

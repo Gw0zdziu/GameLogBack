@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using GameLogBack.Dtos.Game;
+using GameLogBack.Dtos.Game.RequestDto;
+using GameLogBack.Dtos.Game.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Authorization;
