@@ -1,4 +1,4 @@
-namespace GameLogBack.Dtos.Game;
+namespace GameLogBack.Dtos.Game.ResponseDto;
 
 public class GameByCategoryIdDto
 {
