@@ -1,4 +1,4 @@
-namespace GameLogBack.Authentication;
+namespace GameLogBack.Settings;
 
 public class AuthenticationSettings
 {
