@@ -1,11 +1,15 @@
 using System.Text;
-using GameLogBack.Authentication;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
 using GameLogBack.Configurations;
+using GameLogBack.Controllers;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
 using GameLogBack.Middlewares;
 using GameLogBack.Services;
+using GameLogBack.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +27,6 @@ else
 {
     connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 }
-Console.WriteLine(connectionString);
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 var authenticationSettings = new AuthenticationSettings();
@@ -42,6 +45,20 @@ else
 
     };
 }
+
+var gameBrainApiSettings = new GameBrainApiSettings()
+{
+    ApiUrl = Environment.GetEnvironmentVariable("GAME_BRAIN_API_URL"),
+    ApiKey = Environment.GetEnvironmentVariable("GAME_BRAIN_API_KEY"),
+    GenerateFilterOptions = Environment.GetEnvironmentVariable("GENERATE_FILTER_OPTIONS"),
+
+};
+builder.Services.AddSingleton(gameBrainApiSettings);
+builder.Services.AddHttpClient<GameBrainApiService>((client) =>
+{
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+});
 builder.Services.AddSingleton(authenticationSettings);
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
@@ -89,7 +106,20 @@ builder.Services.AddScoped<IUtilsService, UtilsService>();
 builder.Services.AddScoped<IEmailSenderHelper, EmailSenderHelper>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
+var awsCredentials = new BasicAWSCredentials(
+    "tid_wNGAzAYWdXBagSiOtVCprPaGXXnPhmlrRUcHnkLTAnIuMaZXOJ",
+    "tsec_kaClCL4iMvRS4pUw50PgGsZ7R_IJ3WjN1pyhKBgif3j1jVO9X9sPC4xKFgPZhrHXmaRz4f"
+);
 
+var s3Config = new AmazonS3Config
+{
+    ServiceURL     = builder.Configuration["AWS:ServiceURL"],
+    ForcePathStyle = true,
+    RegionEndpoint = RegionEndpoint.GetBySystemName(builder.Configuration["AWS:Region"] ?? "us-east-1")
+};
+
+builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
