@@ -2,7 +2,7 @@
 
 namespace GameLogBack.Dtos.GameBrainApi.Response;
 
-public class Games
+public class GamesBrain
 {
     public Sorting sorting { get; set; }
     public List<string> active_filter_options  { get; set; }
