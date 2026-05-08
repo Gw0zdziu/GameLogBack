@@ -19,23 +19,17 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 string connectionString;
+var gameBrainApiSettings = new GameBrainApiSettings();
+var authenticationSettings = new AuthenticationSettings();
 if (builder.Environment.IsDevelopment())
 {
     connectionString = builder.Configuration.GetConnectionString("Postgres");
+    builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
+    builder.Configuration.GetSection("GameBrainSettings").Bind(gameBrainApiSettings);
 }
 else
 {
     connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-}
-builder.Services.AddDbContext<GameLogDbContext>(options =>
-    options.UseNpgsql(connectionString));
-var authenticationSettings = new AuthenticationSettings();
-if (builder.Environment.IsDevelopment())
-{
-    builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
-}
-else
-{
     authenticationSettings = new AuthenticationSettings()
     {
         JwtKey = Environment.GetEnvironmentVariable("JWT_KEY"),
@@ -44,15 +38,16 @@ else
         JwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
 
     };
+    gameBrainApiSettings = new GameBrainApiSettings()
+    {
+        ApiUrl = Environment.GetEnvironmentVariable("GAME_BRAIN_API_URL"),
+        ApiKey = Environment.GetEnvironmentVariable("GAME_BRAIN_API_KEY"),
+        GenerateFilterOptions = Environment.GetEnvironmentVariable("GENERATE_FILTER_OPTIONS"),
+
+    };
 }
-
-var gameBrainApiSettings = new GameBrainApiSettings()
-{
-    ApiUrl = Environment.GetEnvironmentVariable("GAME_BRAIN_API_URL"),
-    ApiKey = Environment.GetEnvironmentVariable("GAME_BRAIN_API_KEY"),
-    GenerateFilterOptions = Environment.GetEnvironmentVariable("GENERATE_FILTER_OPTIONS"),
-
-};
+builder.Services.AddDbContext<GameLogDbContext>(options =>
+    options.UseNpgsql(connectionString));
 builder.Services.AddSingleton(gameBrainApiSettings);
 builder.Services.AddHttpClient<GameBrainApiService>((client) =>
 {
