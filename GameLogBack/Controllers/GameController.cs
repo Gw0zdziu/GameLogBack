@@ -11,7 +11,7 @@ namespace GameLogBack.Controllers;
 
 [Route("api/games")]
 [ApiController]
-[Authorize]
+/*[Authorize]*/
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
@@ -24,7 +24,7 @@ public class GameController : ControllerBase
     [HttpGet("get-games")]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGames([FromQuery] PaginatedQuery paginatedQuery)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = "09ffa23f-b572-458f-be28-11199247c45c";/*User.FindFirst(ClaimTypes.NameIdentifier)?.Value;*/
         var games = await _gameService.GetGames(userId, paginatedQuery);
         return Ok(games);
     }
