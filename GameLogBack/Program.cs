@@ -102,16 +102,17 @@ builder.Services.AddScoped<IEmailSenderHelper, EmailSenderHelper>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
+builder.Services.AddScoped<IRailwayBucketService, RailwayBucketService>();
 var awsCredentials = new BasicAWSCredentials(
-    "tid_wNGAzAYWdXBagSiOtVCprPaGXXnPhmlrRUcHnkLTAnIuMaZXOJ",
-    "tsec_kaClCL4iMvRS4pUw50PgGsZ7R_IJ3WjN1pyhKBgif3j1jVO9X9sPC4xKFgPZhrHXmaRz4f"
+
+    builder.Configuration["BasicAWSCredentials:AccessKey"],
+    builder.Configuration["BasicAWSCredentials:SecretKey"]
 );
 
-var s3Config = new AmazonS3Config
+var s3Config = new AmazonS3Config()
 {
-    ServiceURL     = builder.Configuration["AWS:ServiceURL"],
-    ForcePathStyle = true,
-    RegionEndpoint = RegionEndpoint.GetBySystemName(builder.Configuration["AWS:Region"] ?? "us-east-1")
+    ServiceURL     = builder.Configuration["AmazonS3Config:ServiceURL"],
+    ForcePathStyle =  bool.Parse(builder.Configuration["AmazonS3Config:ForcePathStyle"]),
 };
 
 builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
