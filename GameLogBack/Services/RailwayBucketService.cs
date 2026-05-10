@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using GameLogBack.Interfaces;
+using JetBrains.Annotations;
 
 namespace GameLogBack.Services;
 
@@ -17,13 +18,13 @@ public class RailwayBucketService : IRailwayBucketService
         _bucketName = configuration.GetSection("BucketName").Value;
     }
 
-    public async Task<string> UploadFile(string userId, string fileNameInBucket, string urlFile)
+    public async Task<string> UploadFile(string userId, string fileId, string urlFile)
     {
         using var responseMessage = await _client.GetAsync(urlFile);
         responseMessage.EnsureSuccessStatusCode();
         var contentType = responseMessage.Content.Headers.ContentType?.ToString();
         var extensionFile = urlFile.Split('.')[^1];
-        var pathToFileBucket = $"{userId}/{fileNameInBucket.ToLower()}.{extensionFile}";
+        var pathToFileBucket = $"{userId}/{fileId}.{extensionFile}";
         await using var imageStream = await responseMessage.Content.ReadAsStreamAsync();
         var putRequest = new PutObjectRequest()
         {
@@ -36,5 +37,24 @@ public class RailwayBucketService : IRailwayBucketService
         await _s3Client.PutObjectAsync(putRequest);
         return pathToFileBucket;
 
+    }
+
+    public Task<string> FetchFiles(string userId, string fileId)
+    {
+        throw new NotImplementedException();
+    }
+
+    [CanBeNull]
+    public  string FetchFile(string filePath)
+    {
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _bucketName,
+            Key = filePath.TrimStart('/'),
+            Expires = DateTime.UtcNow.AddHours(1),
+            Verb = HttpVerb.GET
+        };
+
+        return  _s3Client.GetPreSignedURL(request);
     }
 }
