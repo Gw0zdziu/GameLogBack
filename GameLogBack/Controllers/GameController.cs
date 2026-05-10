@@ -56,8 +56,8 @@ public class GameController : ControllerBase
     public async Task<ActionResult<GameDto>> CreateGame([FromBody] GamePostDto newGame)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var game = await _gameService.PostGame(newGame, userId);
-        return Ok(game);
+        await _gameService.PostGame(newGame, userId);
+        return Created();
     }
 
     [HttpPut("update/{gameId}")]
