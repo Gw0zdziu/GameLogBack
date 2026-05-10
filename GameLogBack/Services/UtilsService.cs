@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
@@ -123,5 +124,20 @@ public class UtilsService : IUtilsService
             AmountPagesList = amountPagesList
         };
         return paginatedResult;
+    }
+
+    public string ToKebabCase(string str)
+    {
+        if (string.IsNullOrWhiteSpace(str)) return string.Empty;
+
+        string result = Regex.Replace(str, @"([a-z])([A-Z])", "$1-$2");
+
+        result = Regex.Replace(result, @"[\s_]+", "-");
+
+        result = Regex.Replace(result, @"[^a-zA-Z0-9\-]", "");
+
+        result = Regex.Replace(result, @"-{2,}", "-").Trim('-');
+
+        return result.ToLower();
     }
 }

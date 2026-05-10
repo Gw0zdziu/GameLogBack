@@ -237,6 +237,9 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .Property(p => p.GameName)
             .IsRequired()
             .HasMaxLength(100);
+        modelBuilder.Entity<Games>()
+            .Property(p => p.GameImagePath)
+            .IsRequired(false);
         #endregion
 
         #region InvitationCodes

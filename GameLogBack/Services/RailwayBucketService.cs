@@ -1,0 +1,40 @@
+﻿using Amazon.S3;
+using Amazon.S3.Model;
+using GameLogBack.Interfaces;
+
+namespace GameLogBack.Services;
+
+public class RailwayBucketService : IRailwayBucketService
+{
+    private readonly HttpClient _client;
+    private readonly IAmazonS3 _s3Client;
+    private readonly string _bucketName;
+
+    public RailwayBucketService(HttpClient client, IAmazonS3 s3Client, IConfiguration configuration)
+    {
+        _client = client;
+        _s3Client = s3Client;
+        _bucketName = configuration.GetSection("BucketName").Value;
+    }
+
+    public async Task<string> UploadFile(string userId, string fileNameInBucket, string urlFile)
+    {
+        using var responseMessage = await _client.GetAsync(urlFile);
+        responseMessage.EnsureSuccessStatusCode();
+        var contentType = responseMessage.Content.Headers.ContentType?.ToString();
+        var extensionFile = urlFile.Split('.')[^1];
+        var pathToFileBucket = $"{userId}/{fileNameInBucket.ToLower()}.{extensionFile}";
+        await using var imageStream = await responseMessage.Content.ReadAsStreamAsync();
+        var putRequest = new PutObjectRequest()
+        {
+            BucketName = _bucketName,
+            Key = pathToFileBucket,
+            InputStream = imageStream,
+            ContentType = contentType,
+            CannedACL = S3CannedACL.PublicRead,
+        };
+        await _s3Client.PutObjectAsync(putRequest);
+        return pathToFileBucket;
+
+    }
+}

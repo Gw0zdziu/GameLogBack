@@ -4,6 +4,7 @@ public class Games
 {
     public string GameId { get; set; }
     public string GameName { get; set; }
+    public string GameImagePath { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
     public DateTime? YearPlayed { get; set; }

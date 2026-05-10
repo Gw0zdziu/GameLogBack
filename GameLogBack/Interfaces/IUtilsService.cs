@@ -20,4 +20,6 @@ public interface IUtilsService
     public string GenerateLinkToRecoveryPassword(string recoverCode, string user);
 
     public Task<PaginatedResults<T>> GetPaginatedData<T>(IQueryable<T> data, PaginatedQuery paginatedQuery);
+
+    public  string ToKebabCase(string str);
 }

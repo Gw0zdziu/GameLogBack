@@ -38,6 +38,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -110,7 +111,7 @@ public class GameServiceTest
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = await gameService.GetGames("1", paginatedQuery);
 
         //Assert
@@ -123,6 +124,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -166,7 +168,7 @@ public class GameServiceTest
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = await gameService.GetGame("1");
 
         //Assert
@@ -179,6 +181,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -222,7 +225,7 @@ public class GameServiceTest
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = async () => await gameService.GetGame("3");
 
         //Assert
@@ -235,6 +238,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var newGame = new GamePostDto
         {
             GameName = "Fortnite",
@@ -242,12 +246,11 @@ public class GameServiceTest
             YearPlayed = new DateTime(2026, 02, 01)
         };
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
-        var result = await gameService.PostGame(newGame, "1");
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object,  railwayServiceMock.Object);
+        await gameService.PostGame(newGame, "1");
         var countGames = await gameLogDbContextMock.Games.CountAsync(TestContext.Current.CancellationToken);
 
         //Assert
-        result.GameName.Should().Be("Fortnite");
         countGames.Should().Be(1);
     }
 
@@ -257,6 +260,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gameMock = new Games
         {
             GameId = "1",
@@ -277,9 +281,8 @@ public class GameServiceTest
         };
         await gameLogDbContextMock.AddAsync(gameMock, TestContext.Current.CancellationToken);
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken); //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = async () => await gameService.PostGame(newGame, "1");
-        var countGames = await gameLogDbContextMock.Games.CountAsync(TestContext.Current.CancellationToken);
 
         //Assert
         await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exist");
@@ -291,6 +294,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -327,7 +331,7 @@ public class GameServiceTest
         await gameLogDbContextMock.AddRangeAsync(gamesMock, TestContext.Current.CancellationToken);
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = await gameService.PutGame(updatedGame, "1", "1");
 
         //Assert
@@ -341,6 +345,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -377,7 +382,7 @@ public class GameServiceTest
         await gameLogDbContextMock.AddRangeAsync(gamesMock, TestContext.Current.CancellationToken);
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = async () => await gameService.PutGame(updatedGame, "4", "1");
 
         //Assert
@@ -390,6 +395,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -426,7 +432,7 @@ public class GameServiceTest
         await gameLogDbContextMock.AddRangeAsync(gamesMock, TestContext.Current.CancellationToken);
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = async () => await gameService.PutGame(updatedGame, "2", "1");
 
         //Assert
@@ -439,6 +445,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -469,7 +476,7 @@ public class GameServiceTest
         await gameLogDbContextMock.AddRangeAsync(gamesMock, TestContext.Current.CancellationToken);
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         await gameService.DeleteGame("2", "1");
         var result = await gameLogDbContextMock.Games.CountAsync(TestContext.Current.CancellationToken);
         //Assert
@@ -482,6 +489,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -512,7 +520,7 @@ public class GameServiceTest
         await gameLogDbContextMock.AddRangeAsync(gamesMock, TestContext.Current.CancellationToken);
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = async () => await gameService.DeleteGame("3", "1");
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("Game not found");
@@ -524,6 +532,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -555,7 +564,7 @@ public class GameServiceTest
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = await gameService.GetGamesByUserId("1");
 
         //Assert
@@ -568,6 +577,7 @@ public class GameServiceTest
         //Arrange
         await using var gameLogDbContextMock = GetDbContext();
         var utilsServiceMock = new Mock<IUtilsService>();
+        var railwayServiceMock = new Mock<IRailwayBucketService>();
         var gamesMock = new List<Games>
         {
             new()
@@ -599,7 +609,7 @@ public class GameServiceTest
         await gameLogDbContextMock.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         //Act
-        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object);
+        var gameService = new GameService(gameLogDbContextMock, utilsServiceMock.Object, railwayServiceMock.Object);
         var result = await gameService.GetGamesByCategoryId("1");
 
         //Assert
