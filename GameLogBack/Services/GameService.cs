@@ -95,6 +95,7 @@ public class GameService : IGameService
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
 
         game.GameName = gamePutDto.GameName;
+        game.GameImagePath = await _railwayBucketService.UploadFile(userId, gameId, gamePutDto.GameImageUrl);
         game.UpdatedBy = userId;
         game.CategoryId = gamePutDto.CategoryId;
         game.YearPlayed = gamePutDto.YearPlayed;
@@ -107,6 +108,7 @@ public class GameService : IGameService
             GameId = game.GameId,
             GameName = gamePutDto.GameName,
             CategoryId = gamePutDto.CategoryId,
+            GameUrl = _railwayBucketService.FetchFile(game.GameImagePath),
             CategoryName = categoryName,
             CreatedBy = game.CreatedBy,
             UpdatedBy = game.UpdatedBy,
