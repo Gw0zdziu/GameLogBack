@@ -30,6 +30,7 @@ public class GameService : IGameService
             {
                 GameId = x.GameId,
                 GameName = x.GameName,
+                GameUrl =  _railwayBucketService.FetchFile(x.GameImagePath),
                 UpdatedDate = x.UpdatedDate,
                 UpdatedBy = x.UpdatedBy,
                 CreatedDate = x.CreatedDate,
