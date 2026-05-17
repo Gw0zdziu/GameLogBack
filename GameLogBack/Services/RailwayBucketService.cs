@@ -47,6 +47,7 @@ public class RailwayBucketService : IRailwayBucketService
     [CanBeNull]
     public  string FetchFile(string filePath)
     {
+        if (filePath == null) return null;
         var request = new GetPreSignedUrlRequest
         {
             BucketName = _bucketName,
