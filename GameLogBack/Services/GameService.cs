@@ -50,6 +50,7 @@ public class GameService : IGameService
         {
             GameId = x.GameId,
             GameName = x.GameName,
+            GameUrl = _railwayBucketService.FetchFile(x.GameImagePath),
             UpdatedDate = x.UpdatedDate,
             UpdatedBy = x.UpdatedBy,
             CreatedDate = x.CreatedDate,
@@ -63,11 +64,20 @@ public class GameService : IGameService
 
     public async Task PostGame(GamePostDto gamePostDto, string userId)
     {
+        string gameImagePath;
         var isGameNameExist =
             await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName.ToLower() == gamePostDto.GameName.ToLower());
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
         var gameNameKebabCase = _utilsService.ToKebabCase(gamePostDto.GameName);
-        var gameImagePath = await _railwayBucketService.UploadFile(userId, gameNameKebabCase, gamePostDto.GameImageUrl);
+        if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
+        {
+            gameImagePath = null;
+        }
+        else
+        {
+            gameImagePath = await _railwayBucketService.UploadFile(userId, gameNameKebabCase, gamePostDto.GameImageUrl);
+
+        }
         var newGame = new Games
         {
             GameId = Guid.NewGuid().ToString(),
