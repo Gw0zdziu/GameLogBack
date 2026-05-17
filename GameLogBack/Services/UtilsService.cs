@@ -106,6 +106,10 @@ public class UtilsService : IUtilsService
     public async Task<PaginatedResults<T>> GetPaginatedData<T>(IQueryable<T> data, PaginatedQuery paginatedQuery)
     {
         var totalAmount = await data.CountAsync();
+        if (data.Count() == paginatedQuery.PageSize)
+        {
+            paginatedQuery.PageNumber = 1;
+        }
         var paginatedList = await data
             .Skip((paginatedQuery.PageNumber - 1) * paginatedQuery.PageSize)
             .Take(paginatedQuery.PageSize).ToListAsync();
@@ -117,7 +121,7 @@ public class UtilsService : IUtilsService
         {
             Results = paginatedList,
             TotalAmount = totalAmount,
-            PageNumber = paginatedQuery.PageNumber,
+            PageNumber = amountPagesList.Count == 1 ? 1 : paginatedQuery.PageNumber,
             PageSize = paginatedQuery.PageSize,
             FirstItemIndexList = firstItemIndexList,
             LastItemIndexList = lastItemIndexList,
