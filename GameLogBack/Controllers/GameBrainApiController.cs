@@ -22,6 +22,7 @@ public class GameBrainApiController : ControllerBase
     [HttpGet("search-game-details")]
     public async Task<ActionResult<List<GameDetails>>> SearchGameDetails([FromQuery] string gameName)
     {
-       return await _gameBrainApiService.SearchGameDetails(gameName);
+       var games =  await _gameBrainApiService.SearchGameDetails(gameName);
+       return Ok(games);
     }
 }
