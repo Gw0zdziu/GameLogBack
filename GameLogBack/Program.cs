@@ -69,6 +69,7 @@ else
 
     };
 }
+builder.Services.AddSingleton(bucketS3);
 builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
