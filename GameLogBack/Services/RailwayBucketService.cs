@@ -40,10 +40,7 @@ public class RailwayBucketService : IRailwayBucketService
 
     }
 
-    public Task<string> FetchFiles(string userId, string fileId)
-    {
-        throw new NotImplementedException();
-    }
+
 
     [CanBeNull]
     public  string FetchFile(string filePath)
