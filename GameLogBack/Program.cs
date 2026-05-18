@@ -21,14 +21,34 @@ builder.Services.AddControllers();
 string connectionString;
 var gameBrainApiSettings = new GameBrainApiSettings();
 var authenticationSettings = new AuthenticationSettings();
+BasicAWSCredentials awsCredentials;
+AmazonS3Config s3Config;
 if (builder.Environment.IsDevelopment())
 {
+    awsCredentials = new BasicAWSCredentials(
+        builder.Configuration["BasicAWSCredentials:AccessKey"],
+        builder.Configuration["BasicAWSCredentials:SecretKey"]
+    );
+    s3Config = new AmazonS3Config()
+    {
+        ServiceURL     = builder.Configuration["AmazonS3Config:ServiceURL"],
+        ForcePathStyle =  bool.Parse(builder.Configuration["AmazonS3Config:ForcePathStyle"]),
+    };
     connectionString = builder.Configuration.GetConnectionString("Postgres");
     builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
     builder.Configuration.GetSection("GameBrainSettings").Bind(gameBrainApiSettings);
 }
 else
 {
+    awsCredentials = new BasicAWSCredentials(
+        Environment.GetEnvironmentVariable("BASIC_AWS_ACCESS_TOKEN"),
+        Environment.GetEnvironmentVariable("BASIC_AWS_SECRET_KEY")
+    );
+    s3Config = new AmazonS3Config()
+    {
+        ServiceURL     = Environment.GetEnvironmentVariable("BASIC_AWS_SERVICE_URL"),
+        ForcePathStyle =bool.Parse(Environment.GetEnvironmentVariable("AWS_FORCE_PATH_STYLE"))
+    };
     connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
     authenticationSettings = new AuthenticationSettings()
     {
@@ -46,6 +66,7 @@ else
 
     };
 }
+builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddSingleton(gameBrainApiSettings);
@@ -103,19 +124,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
 builder.Services.AddScoped<IRailwayBucketService, RailwayBucketService>();
-var awsCredentials = new BasicAWSCredentials(
 
-    builder.Configuration["BasicAWSCredentials:AccessKey"],
-    builder.Configuration["BasicAWSCredentials:SecretKey"]
-);
-
-var s3Config = new AmazonS3Config()
-{
-    ServiceURL     = builder.Configuration["AmazonS3Config:ServiceURL"],
-    ForcePathStyle =  bool.Parse(builder.Configuration["AmazonS3Config:ForcePathStyle"]),
-};
-
-builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
