@@ -19,12 +19,14 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 string connectionString;
-var gameBrainApiSettings = new GameBrainApiSettings();
-var authenticationSettings = new AuthenticationSettings();
+GameBrainApiSettings gameBrainApiSettings;
+AuthenticationSettings authenticationSettings;
 BasicAWSCredentials awsCredentials;
 AmazonS3Config s3Config;
+BucketS3 bucketS3;
 if (builder.Environment.IsDevelopment())
 {
+    bucketS3 = new BucketS3(builder.Configuration.GetSection("BucketS3").Value);
     awsCredentials = new BasicAWSCredentials(
         builder.Configuration["BasicAWSCredentials:AccessKey"],
         builder.Configuration["BasicAWSCredentials:SecretKey"]
@@ -40,6 +42,7 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
+    bucketS3 = new BucketS3(Environment.GetEnvironmentVariable("BUCKET_NAME"));
     awsCredentials = new BasicAWSCredentials(
         Environment.GetEnvironmentVariable("BASIC_AWS_ACCESS_TOKEN"),
         Environment.GetEnvironmentVariable("BASIC_AWS_SECRET_KEY")
