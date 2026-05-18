@@ -26,7 +26,7 @@ AmazonS3Config s3Config;
 BucketS3 bucketS3;
 if (builder.Environment.IsDevelopment())
 {
-    bucketS3 = new BucketS3(builder.Configuration.GetSection("BucketS3").Value);
+    bucketS3 = new BucketS3(builder.Configuration.GetValue<string>("BucketName"));
     awsCredentials = new BasicAWSCredentials(
         builder.Configuration["BasicAWSCredentials:AccessKey"],
         builder.Configuration["BasicAWSCredentials:SecretKey"]
