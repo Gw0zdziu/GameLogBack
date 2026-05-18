@@ -1,5 +1,6 @@
 using GameLogBack.DbContext;
-using GameLogBack.Dtos.Game;
+using GameLogBack.Dtos.Game.RequestDto;
+using GameLogBack.Dtos.Game.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
@@ -13,11 +14,13 @@ public class GameService : IGameService
 {
     private readonly GameLogDbContext _context;
     private readonly IUtilsService _utilsService;
+    private readonly IRailwayBucketService _railwayBucketService;
 
-    public GameService(GameLogDbContext context, IUtilsService utilsService)
+    public GameService(GameLogDbContext context, IUtilsService utilsService, IRailwayBucketService railwayBucketService)
     {
         _context = context;
         _utilsService = utilsService;
+        _railwayBucketService = railwayBucketService;
     }
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
@@ -27,6 +30,7 @@ public class GameService : IGameService
             {
                 GameId = x.GameId,
                 GameName = x.GameName,
+                GameUrl =  _railwayBucketService.FetchFile(x.GameImagePath),
                 UpdatedDate = x.UpdatedDate,
                 UpdatedBy = x.UpdatedBy,
                 CreatedDate = x.CreatedDate,
@@ -46,6 +50,7 @@ public class GameService : IGameService
         {
             GameId = x.GameId,
             GameName = x.GameName,
+            GameUrl = _railwayBucketService.FetchFile(x.GameImagePath),
             UpdatedDate = x.UpdatedDate,
             UpdatedBy = x.UpdatedBy,
             CreatedDate = x.CreatedDate,
@@ -57,15 +62,27 @@ public class GameService : IGameService
         return game ?? throw new NotFoundException("Game not found");
     }
 
-    public async Task<GameDto> PostGame(GamePostDto gamePostDto, string userId)
+    public async Task PostGame(GamePostDto gamePostDto, string userId)
     {
+        string gameImagePath;
         var isGameNameExist =
-            await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName == gamePostDto.GameName);
+            await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName.ToLower() == gamePostDto.GameName.ToLower());
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
+        var gameNameKebabCase = _utilsService.ToKebabCase(gamePostDto.GameName);
+        if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
+        {
+            gameImagePath = null;
+        }
+        else
+        {
+            gameImagePath = await _railwayBucketService.UploadFile(userId, gameNameKebabCase, gamePostDto.GameImageUrl);
+
+        }
         var newGame = new Games
         {
             GameId = Guid.NewGuid().ToString(),
             GameName = gamePostDto.GameName,
+            GameImagePath = gameImagePath,
             UserId = userId,
             CategoryId = gamePostDto.CategoryId,
             CreatedDate = DateTime.UtcNow,
@@ -76,20 +93,6 @@ public class GameService : IGameService
         };
         _context.Games.Add(newGame);
         await _context.SaveChangesAsync();
-        var categoryName = await _context.Categories.Where(c => c.CategoryId == gamePostDto.CategoryId)
-            .Select(c => c.CategoryName).FirstOrDefaultAsync();
-        return new GameDto
-        {
-            GameId = newGame.GameId,
-            GameName = newGame.GameName,
-            CategoryId = newGame.CategoryId,
-            CategoryName = categoryName,
-            CreatedDate = newGame.CreatedDate,
-            UpdatedDate = newGame.UpdatedDate,
-            YearPlayed = newGame.YearPlayed,
-            CreatedBy = newGame.CreatedBy,
-            UpdatedBy = newGame.UpdatedBy
-        };
     }
 
     public async Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId)
@@ -102,6 +105,7 @@ public class GameService : IGameService
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
 
         game.GameName = gamePutDto.GameName;
+        game.GameImagePath = await _railwayBucketService.UploadFile(userId, gameId, gamePutDto.GameImageUrl);
         game.UpdatedBy = userId;
         game.CategoryId = gamePutDto.CategoryId;
         game.YearPlayed = gamePutDto.YearPlayed;
@@ -114,6 +118,7 @@ public class GameService : IGameService
             GameId = game.GameId,
             GameName = gamePutDto.GameName,
             CategoryId = gamePutDto.CategoryId,
+            GameUrl = _railwayBucketService.FetchFile(game.GameImagePath),
             CategoryName = categoryName,
             CreatedBy = game.CreatedBy,
             UpdatedBy = game.UpdatedBy,

@@ -3,6 +3,8 @@ namespace GameLogBack.Dtos.Game;
 public class GameBase
 {
     public string GameName { get; set; }
+    public string GameImageUrl { get; set; }
     public string CategoryId { get; set; }
     public DateTime? YearPlayed { get; set; }
+
 }

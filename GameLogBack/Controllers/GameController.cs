@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using GameLogBack.Dtos.Game;
+using GameLogBack.Dtos.Game.RequestDto;
+using GameLogBack.Dtos.Game.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +11,7 @@ namespace GameLogBack.Controllers;
 
 [Route("api/games")]
 [ApiController]
+/*[Authorize]*/
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
@@ -19,10 +22,9 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("get-games")]
-    //[Authorize]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGames([FromQuery] PaginatedQuery paginatedQuery)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = "09ffa23f-b572-458f-be28-11199247c45c";/*User.FindFirst(ClaimTypes.NameIdentifier)?.Value;*/
         var games = await _gameService.GetGames(userId, paginatedQuery);
         return Ok(games);
     }
@@ -36,6 +38,7 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("get-games-by-userId/{userId}")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesById([FromRoute] string userId)
     {
         var games = await _gameService.GetGamesByUserId(userId);
@@ -43,7 +46,6 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("get-game/{gameId}")]
-    [Authorize]
     public async Task<ActionResult<GameDto>> GetGame([FromRoute] string gameId)
     {
         var game = await _gameService.GetGame(gameId);
@@ -51,16 +53,14 @@ public class GameController : ControllerBase
     }
 
     [HttpPost("create-game")]
-    [Authorize]
     public async Task<ActionResult<GameDto>> CreateGame([FromBody] GamePostDto newGame)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var game = await _gameService.PostGame(newGame, userId);
-        return Ok(game);
+        await _gameService.PostGame(newGame, userId);
+        return Created();
     }
 
     [HttpPut("update/{gameId}")]
-    [Authorize]
     public async Task<ActionResult<GameDto>> UpdateGame([FromBody] GamePutDto gamePutDto, [FromRoute] string gameId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

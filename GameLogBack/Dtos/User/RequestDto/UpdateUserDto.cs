@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace GameLogBack.Dtos.User;
+namespace GameLogBack.Dtos.User.RequestDto;
 
 public class UpdateUserDto
 {

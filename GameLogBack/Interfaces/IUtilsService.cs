@@ -11,8 +11,6 @@ public interface IUtilsService
 
     string GetToken(UserLogins userLogins, int expireIn);
 
-    string GetAccessToken(UserLogins userLogins, string refreshToken);
-
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
 
     public string GenerateCodeToConfirmEmail();
@@ -22,4 +20,6 @@ public interface IUtilsService
     public string GenerateLinkToRecoveryPassword(string recoverCode, string user);
 
     public Task<PaginatedResults<T>> GetPaginatedData<T>(IQueryable<T> data, PaginatedQuery paginatedQuery);
+
+    public  string ToKebabCase(string str);
 }

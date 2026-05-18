@@ -2,12 +2,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using GameLogBack.Authentication;
+using System.Text.RegularExpressions;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using GameLogBack.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -51,22 +52,7 @@ public class UtilsService : IUtilsService
         return token;
     }
 
-    public string GetAccessToken(UserLogins userLogins, string refreshToken)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Name, userLogins.UserName),
-            new(ClaimTypes.NameIdentifier, userLogins.UserId)
-        };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(refreshToken));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireDays);
-        var jwtAccessToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer, _authenticationSettings.JwtIssuer,
-            claims, expires, signingCredentials: credentials);
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var accessToken = tokenHandler.WriteToken(jwtAccessToken);
-        return accessToken;
-    }
+
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {
@@ -120,6 +106,10 @@ public class UtilsService : IUtilsService
     public async Task<PaginatedResults<T>> GetPaginatedData<T>(IQueryable<T> data, PaginatedQuery paginatedQuery)
     {
         var totalAmount = await data.CountAsync();
+        if (data.Count() == paginatedQuery.PageSize)
+        {
+            paginatedQuery.PageNumber = 1;
+        }
         var paginatedList = await data
             .Skip((paginatedQuery.PageNumber - 1) * paginatedQuery.PageSize)
             .Take(paginatedQuery.PageSize).ToListAsync();
@@ -131,12 +121,27 @@ public class UtilsService : IUtilsService
         {
             Results = paginatedList,
             TotalAmount = totalAmount,
-            PageNumber = paginatedQuery.PageNumber,
+            PageNumber = amountPagesList.Count == 1 ? 1 : paginatedQuery.PageNumber,
             PageSize = paginatedQuery.PageSize,
             FirstItemIndexList = firstItemIndexList,
             LastItemIndexList = lastItemIndexList,
             AmountPagesList = amountPagesList
         };
         return paginatedResult;
+    }
+
+    public string ToKebabCase(string str)
+    {
+        if (string.IsNullOrWhiteSpace(str)) return string.Empty;
+
+        string result = Regex.Replace(str, @"([a-z])([A-Z])", "$1-$2");
+
+        result = Regex.Replace(result, @"[\s_]+", "-");
+
+        result = Regex.Replace(result, @"[^a-zA-Z0-9\-]", "");
+
+        result = Regex.Replace(result, @"-{2,}", "-").Trim('-');
+
+        return result.ToLower();
     }
 }

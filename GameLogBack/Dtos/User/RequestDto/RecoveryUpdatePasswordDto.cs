@@ -1,4 +1,4 @@
-namespace GameLogBack.Dtos.User;
+namespace GameLogBack.Dtos.User.RequestDto;
 
 public class RecoveryUpdatePasswordDto
 {

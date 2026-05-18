@@ -1,4 +1,4 @@
-namespace GameLogBack.Dtos.Category;
+namespace GameLogBack.Dtos.Category.ResponseDto;
 
 public class CategoryByUserIdDto : CategoryBaseDto
 {

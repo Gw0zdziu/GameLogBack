@@ -1,4 +1,6 @@
 using GameLogBack.Dtos.Game;
+using GameLogBack.Dtos.Game.RequestDto;
+using GameLogBack.Dtos.Game.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 
@@ -8,7 +10,7 @@ public interface IGameService
 {
     Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery);
     Task<GameDto> GetGame(string gameId);
-    Task<GameDto> PostGame(GamePostDto gamePostDto, string userId);
+    Task PostGame(GamePostDto gamePostDto, string userId);
     Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId);
     Task DeleteGame(string gameId, string userId);
     Task<IEnumerable<GameByUserIdDto>> GetGamesByUserId(string userId);

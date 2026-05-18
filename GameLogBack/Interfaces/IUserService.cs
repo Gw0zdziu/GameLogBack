@@ -1,5 +1,6 @@
 using GameLogBack.Dtos;
 using GameLogBack.Dtos.User;
+using GameLogBack.Dtos.User.RequestDto;
 
 namespace GameLogBack.Interfaces;
 
