@@ -1,22 +1,32 @@
+using System.Reflection;
 using System.Text;
-using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using FluentValidation;
 using GameLogBack.Configurations;
-using GameLogBack.Controllers;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
 using GameLogBack.Middlewares;
 using GameLogBack.Services;
 using GameLogBack.Settings;
+using GameLogBack.Validators;
+using GameLogBack.Validators.Auth;
+using GameLogBack.Validators.Game;
+using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddValidatorsFromAssemblyContaining<LoginUserDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CategoryPostDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CategoryPutDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GamePostDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GamePutDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterNewUserDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateUserDtoValidator>();
 builder.Services.AddControllers();
 string connectionString;
 var gameBrainApiSettings = new GameBrainApiSettings();
