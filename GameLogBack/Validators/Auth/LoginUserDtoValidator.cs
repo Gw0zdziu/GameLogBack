@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using GameLogBack.Dtos.Auth;
+using GameLogBack.Dtos.Auth.RequestDto;
 
 namespace GameLogBack.Validators.Auth;
 

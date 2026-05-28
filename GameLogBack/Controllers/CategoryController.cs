@@ -1,9 +1,12 @@
 using System.Security.Claims;
+using FluentValidation;
 using GameLogBack.Dtos.Category;
 using GameLogBack.Dtos.Category.RequestDto;
 using GameLogBack.Dtos.Category.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Interfaces;
+using GameLogBack.Validators;
+using GameLogBack.Validators.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,10 +18,14 @@ namespace GameLogBack.Controllers;
 public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
+    private readonly IValidator<CategoryPostDto> _categoryPostDtoValidator;
+    private readonly IValidator<CategoryPutDto> _categoryPutDtoValidator;
 
-    public CategoryController(ICategoryService categoryService)
+    public CategoryController(ICategoryService categoryService, IValidator<CategoryPostDto> categoryPostDtoValidator, IValidator<CategoryPutDto> categoryPutDtoValidator)
     {
         _categoryService = categoryService;
+        _categoryPostDtoValidator = categoryPostDtoValidator;
+        _categoryPutDtoValidator = categoryPutDtoValidator;
     }
 
     [HttpGet("get-user-categories")]
@@ -48,6 +55,13 @@ public class CategoryController : ControllerBase
     [HttpPost("create-category")]
     public async Task<ActionResult<CategoryDto>> CreateCategory([FromBody] CategoryPostDto newCategory)
     {
+        var result = await _categoryPostDtoValidator.ValidateAsync(newCategory);
+
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var category = await _categoryService.CreateCategory(newCategory, userId);
         return Ok(category);
@@ -57,6 +71,13 @@ public class CategoryController : ControllerBase
     public async Task<ActionResult<CategoryDto>> UpdateCategory([FromBody] CategoryPutDto categoryPutDto,
         [FromRoute] string categoryId)
     {
+        var result = await _categoryPutDtoValidator.ValidateAsync(categoryPutDto);
+
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var category = await _categoryService.UpdateCategory(categoryPutDto, categoryId, userId);
         return Ok(category);

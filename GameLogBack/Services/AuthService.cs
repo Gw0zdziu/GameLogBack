@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GameLogBack.DbContext;
 using GameLogBack.Dtos.Auth;
+using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
