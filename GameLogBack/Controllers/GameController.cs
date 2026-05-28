@@ -1,9 +1,11 @@
 using System.Security.Claims;
+using FluentValidation;
 using GameLogBack.Dtos.Game;
 using GameLogBack.Dtos.Game.RequestDto;
 using GameLogBack.Dtos.Game.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Interfaces;
+using GameLogBack.Validators.Game;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,10 +17,15 @@ namespace GameLogBack.Controllers;
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
+    private readonly IValidator<GamePostDto> _gamePostDtoValidator;
+    private readonly IValidator<GamePutDto> _gamePutDtoValidator;
 
-    public GameController(IGameService gameService)
+
+    public GameController(IGameService gameService, IValidator<GamePostDto> gamePostDtoValidator, IValidator<GamePutDto> gamePutDtoValidator)
     {
         _gameService = gameService;
+        _gamePostDtoValidator = gamePostDtoValidator;
+        _gamePutDtoValidator = gamePutDtoValidator;
     }
 
     [HttpGet("get-games")]
@@ -55,6 +62,13 @@ public class GameController : ControllerBase
     [HttpPost("create-game")]
     public async Task<ActionResult<GameDto>> CreateGame([FromBody] GamePostDto newGame)
     {
+        var result = await _gamePostDtoValidator.ValidateAsync(newGame);
+
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         await _gameService.PostGame(newGame, userId);
         return Created();
@@ -63,6 +77,13 @@ public class GameController : ControllerBase
     [HttpPut("update/{gameId}")]
     public async Task<ActionResult<GameDto>> UpdateGame([FromBody] GamePutDto gamePutDto, [FromRoute] string gameId)
     {
+        var result = await _gamePutDtoValidator.ValidateAsync(gamePutDto);
+
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var game = await _gameService.PutGame(gamePutDto, gameId, userId);
         return Ok(game);

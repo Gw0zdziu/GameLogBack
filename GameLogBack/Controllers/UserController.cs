@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using FluentValidation;
 using GameLogBack.Dtos;
 using GameLogBack.Dtos.User;
 using GameLogBack.Dtos.User.RequestDto;
 using GameLogBack.Interfaces;
+using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,15 +15,26 @@ namespace GameLogBack.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IValidator<RegisterNewUserDto> _registerNewUserDtoValidator;
+    private readonly IValidator<UpdateUserDto> _updateUserDtoValidator;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IValidator<RegisterNewUserDto> registerNewUserDtoValidator, IValidator<UpdateUserDto> updateUserDtoValidator)
     {
         _userService = userService;
+        _registerNewUserDtoValidator = registerNewUserDtoValidator;
+        _updateUserDtoValidator = updateUserDtoValidator;
     }
 
     [HttpPost("register")]
     public async Task<ActionResult<string>> RegisterUser([FromBody] RegisterNewUserDto registerNewUser)
     {
+        var result = await _registerNewUserDtoValidator.ValidateAsync(registerNewUser);
+
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = await _userService.RegisterUser(registerNewUser);
         return Ok(userId);
     }
@@ -38,6 +51,13 @@ public class UserController : ControllerBase
     [HttpPut("update")]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto updateUserDto)
     {
+        var result = await _updateUserDtoValidator.ValidateAsync(updateUserDto);
+
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         await _userService.UpdateUser(updateUserDto, userId);
         return Ok();
