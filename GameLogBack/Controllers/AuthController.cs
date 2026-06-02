@@ -1,5 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices.JavaScript;
 using System.Security.Claims;
+using FluentValidation;
 using GameLogBack.Dtos.Auth;
+using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
@@ -14,16 +18,25 @@ public class AuthController : ControllerBase
 {
     private readonly AuthenticationSettings _authenticationSettings;
     private readonly IAuthService _authService;
+    private readonly IValidator<LoginUserDto> _validator;
 
-    public AuthController(IAuthService authService, AuthenticationSettings authenticationSettings)
+    public AuthController(IAuthService authService, AuthenticationSettings authenticationSettings, IValidator<LoginUserDto> validator)
     {
         _authService = authService;
         _authenticationSettings = authenticationSettings;
+        _validator = validator;
     }
 
     [HttpPost("login")]
     public async Task<ActionResult<string>> LoginUser([FromBody] LoginUserDto loginUserDto)
     {
+        var result = await _validator.ValidateAsync(loginUserDto);
+
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var token = await _authService.LoginUser(loginUserDto);
         return Ok(token);
     }
