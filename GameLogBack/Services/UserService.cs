@@ -45,6 +45,7 @@ public class UserService : IUserService
             FirstName = registerNewUser.FirstName,
             LastName = registerNewUser.LastName,
             UserEmail = registerNewUser.UserEmail,
+            IsActive = true,
             UserLogins = new UserLogins
             {
                 UserId = newUserId,
