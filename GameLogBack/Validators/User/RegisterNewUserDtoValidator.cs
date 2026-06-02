@@ -28,8 +28,8 @@ public class RegisterNewUserDtoValidator : AbstractValidator<RegisterNewUserDto>
         RuleFor(x => x.Password).MinimumLength(3).WithMessage("Password must be at least 3 characters long");
         RuleFor(x => x.ConfirmPassword).Equal(x => x.Password).WithMessage("Passwords don't match");
 
-        RuleFor(x => x.InvitationCode).NotEmpty().WithMessage("Invitation code is required");
-        RuleFor(x => x.InvitationCode).Length(4).WithMessage("Invitation code must be at least 4 characters long");
+        /*RuleFor(x => x.InvitationCode).NotEmpty().WithMessage("Invitation code is required");
+        RuleFor(x => x.InvitationCode).Length(4).WithMessage("Invitation code must be at least 4 characters long");*/
     }
 
 }
