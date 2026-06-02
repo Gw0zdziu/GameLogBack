@@ -100,12 +100,12 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowCredentials()
     );
-        options.AddPolicy("GameLogDev", policy =>
-            policy.WithOrigins("http://localhost:4300")
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials()
-        );
+    options.AddPolicy("GameLogDev", policy =>
+        policy.WithOrigins("http://localhost:4300", "http://localhost:80")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+    );
 });
 builder.Services.AddAuthentication(option =>
 {
@@ -151,6 +151,7 @@ app.UseSwaggerUI();
 
 //app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
+Console.WriteLine(builder.Environment.IsDevelopment());
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
 
 app.UseAuthentication();
