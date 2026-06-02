@@ -13,7 +13,7 @@ namespace GameLogBack.Controllers;
 
 [Route("api/games")]
 [ApiController]
-/*[Authorize]*/
+[Authorize]
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
