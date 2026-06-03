@@ -38,13 +38,21 @@ public class AuthService : IAuthService
         var refreshToken = _utilsService.GetRefreshToken();
         var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.UserId);
         if (refreshTokenInfo is null)
+        {
             _context.RefreshTokens.Add(new RefreshTokenInfo
             {
                 UserId = user.UserId,
                 RefreshTokenId = Guid.NewGuid().ToString(),
                 RefreshToken = refreshToken,
-                ExpiryDate = DateTime.UtcNow.AddDays(_authenticationSettings.JwtAccessTokenExpireMinutes)
+                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireMinutes)
             });
+        }
+        else
+        {
+            refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireMinutes);
+            refreshTokenInfo.RefreshToken = refreshToken;
+        }
+
 
         await _context.SaveChangesAsync();
 
