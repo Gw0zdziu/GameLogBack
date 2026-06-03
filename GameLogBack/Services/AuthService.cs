@@ -68,7 +68,6 @@ public class AuthService : IAuthService
             throw new BadRequestException("Refresh token is expired");
         var user = await _context.UserLogins.FirstOrDefaultAsync(x => x.UserId == userId);
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
-        _context.RefreshTokens.Remove(refreshTokenInfo);
         await _context.SaveChangesAsync();
         return token;
     }
