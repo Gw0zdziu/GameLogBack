@@ -3,7 +3,6 @@ using System.Text;
 using Amazon.Runtime;
 using Amazon.S3;
 using FluentValidation;
-using GameLogBack.Configurations;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
@@ -17,6 +16,7 @@ using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +36,10 @@ AmazonS3Config s3Config;
 BucketS3 bucketS3;
 if (builder.Environment.IsDevelopment())
 {
+    builder.Services.AddResend( o =>
+    {
+        o.ApiToken = builder.Configuration.GetValue<string>("ResendApiKey");
+    } );
     bucketS3 = new BucketS3(builder.Configuration.GetValue<string>("BucketName"));
     awsCredentials = new BasicAWSCredentials(
         builder.Configuration["BasicAWSCredentials:AccessKey"],
@@ -44,7 +48,7 @@ if (builder.Environment.IsDevelopment())
     s3Config = new AmazonS3Config()
     {
         ServiceURL     = builder.Configuration["AmazonS3Config:ServiceURL"],
-        ForcePathStyle =  bool.Parse(builder.Configuration["AmazonS3Config:ForcePathStyle"]),
+        ForcePathStyle =  bool.Parse(builder.Configuration["AmazonS3Config:ForcePathStyle"] ?? "true"),
     };
     connectionString = builder.Configuration.GetConnectionString("Postgres");
     builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
@@ -52,6 +56,10 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
+    builder.Services.AddResend(o =>
+    {
+        o.ApiToken = Environment.GetEnvironmentVariable("RESEND_API_KEY")!;
+    });
     bucketS3 = new BucketS3(Environment.GetEnvironmentVariable("BUCKET_NAME"));
     awsCredentials = new BasicAWSCredentials(
         Environment.GetEnvironmentVariable("BASIC_AWS_ACCESS_TOKEN"),
@@ -60,7 +68,7 @@ else
     s3Config = new AmazonS3Config()
     {
         ServiceURL     = Environment.GetEnvironmentVariable("BASIC_AWS_SERVICE_URL"),
-        ForcePathStyle =bool.Parse(Environment.GetEnvironmentVariable("AWS_FORCE_PATH_STYLE"))
+        ForcePathStyle =bool.Parse(Environment.GetEnvironmentVariable("AWS_FORCE_PATH_STYLE") ?? "true")
     };
     connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
     authenticationSettings = new AuthenticationSettings()
@@ -90,7 +98,6 @@ builder.Services.AddHttpClient<GameBrainApiService>((client) =>
 
 });
 builder.Services.AddSingleton(authenticationSettings);
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddCors(options =>
 {
