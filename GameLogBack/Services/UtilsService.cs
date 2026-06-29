@@ -98,7 +98,7 @@ public class UtilsService : IUtilsService
     {
         var frontedUrl = _configuration.GetSection("FrontendUrl").Value;
         var recoveryPasswordEndpoint = _configuration.GetSection("RecoveryPasswordEndpoint").Value;
-        recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token", recoverCode);
+        recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token}", recoverCode);
         var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
         return linkWithCode;
     }
