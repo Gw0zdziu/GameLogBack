@@ -63,10 +63,10 @@ public class UserController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("resend-code")]
-    public async Task<IActionResult> ResendCode([FromBody] ResendCodeDto resendCodeDto)
+    [HttpGet("resend-code/{userId}")]
+    public async Task<IActionResult> ResendCode([FromRoute] string userId)
     {
-        await _userService.ResendNewConfirmCode(resendCodeDto.UserId);
+        await _userService.ResendNewConfirmCode(userId);
         return Ok();
     }
 
@@ -83,10 +83,10 @@ public class UserController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("recovery-update-password")]
-    public async Task<ActionResult> RecoveryUpdatePassword([FromBody] RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
+    [HttpPost("update-password")]
+    public async Task<ActionResult> UpdatePassword([FromBody] RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
     {
-        await _userService.RecoveryUpdatePassword(recoveryUpdatePasswordDto);
+        await _userService.UpdatePassword(recoveryUpdatePasswordDto);
         return Ok();
     }
 }
