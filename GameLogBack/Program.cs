@@ -7,6 +7,7 @@ using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
 using GameLogBack.Middlewares;
+using GameLogBack.Repositories;
 using GameLogBack.Services;
 using GameLogBack.Settings;
 using GameLogBack.Validators;
@@ -136,6 +137,7 @@ builder.Services.AddAuthentication(option =>
         ClockSkew = TimeSpan.Zero
     };
 });
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher<UserLogins>, PasswordHasher<UserLogins>>();
