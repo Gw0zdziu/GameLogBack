@@ -7,6 +7,7 @@ using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using GameLogBack.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
@@ -14,17 +15,19 @@ namespace GameLogBack.Services;
 public class CategoryService : ICategoryService
 {
     private readonly GameLogDbContext _context;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IUtilsService _utilsService;
 
-    public CategoryService(GameLogDbContext context, IUtilsService utilsService)
+    public CategoryService(GameLogDbContext context, IUtilsService utilsService, ICategoryRepository categoryRepository)
     {
         _context = context;
         _utilsService = utilsService;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<PaginatedResults<CategoryDto>> GetUserCategories(string userId, PaginatedQuery paginatedQuery)
     {
-        var categories = _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryDto
+        var categories =  _categoryRepository.GetByUserId(userId).Where(x => x.UserId == userId).Select(x => new CategoryDto
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,
@@ -37,7 +40,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> GetCategory(string categoryId)
     {
-        var category = await _context.Categories.Where(x => x.CategoryId == categoryId).Select(x => new CategoryDto
+        var category = await _categoryRepository.GetById(categoryId).Where(x => x.CategoryId == categoryId).Select(x => new CategoryDto
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,
@@ -84,7 +87,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
-        var category = _context.Categories.FirstOrDefault(x => x.CategoryId == categoryId);
+        var category = await _categoryRepository.GetById(categoryId).FirstOrDefaultAsync();
         if (category is null) throw new NotFoundException("Category not found");
         var isCategoryNameExist = _context.Categories.Any(x =>
             x.CategoryName == categoryPutDto.CategoryName && x.CategoryId != categoryId);
@@ -93,7 +96,7 @@ public class CategoryService : ICategoryService
         category.Description = categoryPutDto.Description;
         category.UpdatedBy = userId;
         category.UpdatedDate = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await _categoryRepository.Update(category);
         return new CategoryDto
         {
             CategoryId = category.CategoryId,
@@ -108,17 +111,16 @@ public class CategoryService : ICategoryService
 
     public async Task DeleteCategory(string categoryId)
     {
-        var category = await _context.Categories.FirstOrDefaultAsync(x => x.CategoryId == categoryId);
+        var category = await _categoryRepository.GetById(categoryId).FirstOrDefaultAsync();
         if (category is null) throw new NotFoundException("Category not found");
         var isGameWithCategoryExist = _context.Games.Any(x => x.CategoryId == categoryId);
         if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category");
-        _context.Categories.Remove(category);
-        await _context.SaveChangesAsync();
+        await _categoryRepository.Delete(category);
     }
 
     public async Task<IEnumerable<CategoryByUserIdDto>> GetCategoriesByUserId(string userId)
     {
-        var categories = await _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryByUserIdDto
+        var categories = await _categoryRepository.GetByUserId(userId).Select(x => new CategoryByUserIdDto
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,
