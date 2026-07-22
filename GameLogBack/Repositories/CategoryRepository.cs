@@ -26,6 +26,18 @@ public class CategoryRepository: ICategoryRepository
         return  _categories.Where(x => x.CategoryId == id);
     }
 
+    public async Task<bool> CheckIfExists(string categoryName, string userId)
+    {
+        return await _context.Categories
+            .AnyAsync(x => x.CategoryName == categoryName && x.UserId == userId);
+    }
+
+    public async Task<bool> CheckIfExistsWithSameName(string categoryName, string userId, string categoryId)
+    {
+        return await _context.Categories.AnyAsync(x =>
+            x.CategoryId != categoryId && x.UserId == userId && x.CategoryName.Equals(categoryName, StringComparison.CurrentCultureIgnoreCase));
+    }
+
     public async Task Create(Categories category)
     {
         _categories.Add(category);
