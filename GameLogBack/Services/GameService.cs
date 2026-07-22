@@ -6,26 +6,29 @@ using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using GameLogBack.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
 public class GameService : IGameService
 {
-    private readonly GameLogDbContext _context;
-    private readonly IUtilsService _utilsService;
+    private readonly IUtilsService _utilsService;   
+    private readonly IGameRepository _gameRepository;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IRailwayBucketService _railwayBucketService;
 
-    public GameService(GameLogDbContext context, IUtilsService utilsService, IRailwayBucketService railwayBucketService)
+    public GameService(IUtilsService utilsService, IRailwayBucketService railwayBucketService, IGameRepository gameRepository, ICategoryRepository categoryRepository)
     {
-        _context = context;
         _utilsService = utilsService;
         _railwayBucketService = railwayBucketService;
+        _gameRepository = gameRepository;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
     {
-        var games = _context.Games.Include(x => x.Category).Where(x => x.UserId == userId).Select(x =>
+        var games = _gameRepository.GetByUserId(userId).Select(x =>
             new GameDto
             {
                 GameId = x.GameId,
@@ -46,7 +49,7 @@ public class GameService : IGameService
 
     public async Task<GameDto> GetGame(string gameId)
     {
-        var game = await _context.Games.Include(x => x.Category).Where(x => x.GameId == gameId).Select(x => new GameDto
+        var game = await _gameRepository.GetById(gameId).Select(x => new GameDto
         {
             GameId = x.GameId,
             GameName = x.GameName,
@@ -65,8 +68,7 @@ public class GameService : IGameService
     public async Task PostGame(GamePostDto gamePostDto, string userId)
     {
         string gameImagePath;
-        var isGameNameExist =
-            await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName.ToLower() == gamePostDto.GameName.ToLower());
+        var isGameNameExist = await _gameRepository.CheckIfGameExists(gamePostDto.GameName, userId);
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
         var gameNameKebabCase = _utilsService.ToKebabCase(gamePostDto.GameName);
         if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
@@ -91,17 +93,14 @@ public class GameService : IGameService
             CreatedBy = userId,
             UpdatedBy = null
         };
-        _context.Games.Add(newGame);
-        await _context.SaveChangesAsync();
+        await _gameRepository.Create(newGame);
     }
 
     public async Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId)
     {
-        var game = await _context.Games.FirstOrDefaultAsync(x =>
-            x.UserId == userId && x.GameId == gameId);
+        var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId).FirstOrDefaultAsync();
         if (game is null) throw new NotFoundException("Game not found");
-        var isGameNameExist = await _context.Games.AnyAsync(x =>
-            x.UserId == userId && x.GameId != gameId && x.GameName == gamePutDto.GameName);
+        var isGameNameExist = await _gameRepository.CheckIfExistsWithSameName(gamePutDto.GameName, userId, gameId);
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
 
         game.GameName = gamePutDto.GameName;
@@ -110,8 +109,8 @@ public class GameService : IGameService
         game.CategoryId = gamePutDto.CategoryId;
         game.YearPlayed = gamePutDto.YearPlayed;
         game.UpdatedDate = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        var categoryName = await _context.Categories.Where(c => c.CategoryId == game.CategoryId)
+        await _gameRepository.Update(game);
+        var categoryName = await _categoryRepository.GetById(gamePutDto.CategoryId)
             .Select(c => c.CategoryName).FirstOrDefaultAsync();
         return new GameDto
         {
@@ -130,15 +129,14 @@ public class GameService : IGameService
 
     public async Task DeleteGame(string gameId, string userId)
     {
-        var gameToDelete = _context.Games.FirstOrDefault(x => x.GameId == gameId && x.UserId == userId);
+        var gameToDelete = _gameRepository.GetByGameIdAndUserId(gameId, userId).FirstOrDefault();
         if (gameToDelete is null) throw new NotFoundException("Game not found");
-        _context.Games.Remove(gameToDelete);
-        await _context.SaveChangesAsync();
+        await _gameRepository.Delete(gameToDelete);
     }
 
     public async Task<IEnumerable<GameByUserIdDto>> GetGamesByUserId(string userId)
     {
-        var games = await _context.Games.Include(x => x.Category).Where(x => x.UserId == userId).Select(x =>
+        return await _gameRepository.GetByUserId(userId).Select(x =>
             new GameByUserIdDto
             {
                 GameId = x.GameId,
@@ -149,12 +147,11 @@ public class GameService : IGameService
                 CategoryId = x.CategoryId,
                 CategoryName = x.Category.CategoryName
             }).ToListAsync();
-        return games;
     }
 
     public async Task<IEnumerable<GameByCategoryIdDto>> GetGamesByCategoryId(string categoryId)
     {
-        var games = await _context.Games.Include(x => x.Category).Where(x => x.CategoryId == categoryId).Select(x =>
+        return await _gameRepository.GetByCategoryId(categoryId).Where(x => x.CategoryId == categoryId).Select(x =>
             new GameByCategoryIdDto
             {
                 GameId = x.GameId,
@@ -165,6 +162,5 @@ public class GameService : IGameService
                 YearPlayed = x.YearPlayed,
                 CategoryName = x.Category.CategoryName
             }).ToListAsync();
-        return games;
     }
 }
