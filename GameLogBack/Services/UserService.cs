@@ -16,23 +16,24 @@ public class UserService : IUserService
 {
     private readonly GameLogDbContext _context; 
     private readonly IUserRepository _userRepository;
+    private readonly IUserLoginsRepository _userLoginsRepository;
     private readonly IEmailSenderHelper _emailSenderHelper;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
     public UserService(IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
-        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository)
+        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository)
     {
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
         _emailSenderHelper = emailSenderHelper;
         _userRepository = userRepository;
+        _userLoginsRepository = userLoginsRepository;
     }
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
     {
-        var isUserNameExist =
-            await _context.UserLogins.AnyAsync(x => x.UserName.ToLower() == registerNewUser.Username.ToLower());
+        var isUserNameExist = await _userLoginsRepository.CheckIfUserExists(registerNewUser.Username);
         if (isUserNameExist) throw new BadRequestException("User with this username already exist");
         var isUserEmailExist = await _userRepository.CheckIfUserExist(registerNewUser.UserEmail);
         if (isUserEmailExist) throw new BadRequestException("User with this email already exist");
@@ -71,7 +72,7 @@ public class UserService : IUserService
 
     public async Task<GetUserDto> GetUser(string userId)
     {
-        var user = await _context.UserLogins.Select(x => new GetUserDto
+        var user = await _userLoginsRepository.GetByUserId(userId).Select(x => new GetUserDto
         {
             UserId = x.UserId,
             UserName = x.UserName,
@@ -79,16 +80,13 @@ public class UserService : IUserService
             IsActive = x.User.IsActive,
             FirstName = x.User.FirstName,
             LastName = x.User.LastName
-        }).FirstOrDefaultAsync(x => x.UserId == userId);
+        }).FirstOrDefaultAsync();
         return user ?? throw new BadRequestException("User not found");
     }
 
     public async Task ResendNewConfirmCode(string userId)
     {
-        var user = await _context.Users
-            .Include(u => u.CodeConfirm)
-            .FirstOrDefaultAsync(x => x.UserId == userId);
-
+        var user = await _userRepository.GetUserWithConfirmCode(userId);
         if (user is null) throw new BadRequestException("User not found");
         if (user.CodeConfirm == null)
         {
@@ -117,8 +115,7 @@ public class UserService : IUserService
             throw new BadRequestException("Confirm code is expired. You must generate new code");
         if (confirmCodeUser.Code != confirmCodeDto.ConfirmCode)
             throw new BadRequestException("Confirm code is incorrect");
-        var user = await _context.Users
-            .FirstOrDefaultAsync(x => x.UserId == confirmCodeDto.UserId);
+        var user = await _userRepository.GetById(confirmCodeDto.UserId);
         if (user is null) throw new BadRequestException("User not found");
         user.IsActive = true;
         await _context.SaveChangesAsync();
@@ -166,12 +163,8 @@ public class UserService : IUserService
             throw new BadRequestException("Passwords are not equal");
         }
 
-        var user = await _context.Users
-            .Include(x => x.UserLogins)
-            .Include(x => x.CodeRecoveryPassword)
-            .FirstOrDefaultAsync(x =>
-                x.UserId == recoveryUpdatePasswordDto.UserId &&
-                x.CodeRecoveryPassword.Code == recoveryUpdatePasswordDto.Token);
+        var user = await _userRepository.GetUserWithUserLoginsAndCodeRecovery(recoveryUpdatePasswordDto.UserId,
+            recoveryUpdatePasswordDto.Token);
         if (user is null) throw new BadRequestException("User not found");
         if (user.CodeRecoveryPassword.IsUsed) throw new BadRequestException("Recovery code is used");
         if (user.CodeRecoveryPassword.ExpiryDate < DateTime.UtcNow)
