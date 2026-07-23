@@ -34,8 +34,9 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task Update(Users user)
+    public async Task Update(Users user)
     {
-        throw new NotImplementedException();
+        _context.Update(user);
+        await _context.SaveChangesAsync();
     }
 }
