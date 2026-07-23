@@ -192,6 +192,6 @@ public class UserService : IUserService
         user.FirstName = updateUserDto.FirstName;
         user.LastName = updateUserDto.LastName;
         user.UserEmail = updateUserDto.UserEmail;
-        await _context.SaveChangesAsync();
+        await _userRepository.Update(user);
     }
 }
