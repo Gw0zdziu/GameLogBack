@@ -5,6 +5,7 @@ using GameLogBack.Dtos.User.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using GameLogBack.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -13,18 +14,19 @@ namespace GameLogBack.Services;
 
 public class UserService : IUserService
 {
-    private readonly GameLogDbContext _context;
+    private readonly GameLogDbContext _context; 
+    private readonly IUserRepository _userRepository;
     private readonly IEmailSenderHelper _emailSenderHelper;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
-    public UserService(GameLogDbContext context, IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
-        IEmailSenderHelper emailSenderHelper)
+    public UserService(IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
+        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository)
     {
-        _context = context;
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
         _emailSenderHelper = emailSenderHelper;
+        _userRepository = userRepository;
     }
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
@@ -32,8 +34,7 @@ public class UserService : IUserService
         var isUserNameExist =
             await _context.UserLogins.AnyAsync(x => x.UserName.ToLower() == registerNewUser.Username.ToLower());
         if (isUserNameExist) throw new BadRequestException("User with this username already exist");
-        var isUserEmailExist =
-            await _context.Users.AnyAsync(x => x.UserEmail.ToLower() == registerNewUser.UserEmail.ToLower());
+        var isUserEmailExist = await _userRepository.CheckIfUserExist(registerNewUser.UserEmail);
         if (isUserEmailExist) throw new BadRequestException("User with this email already exist");
         var newUserId = Guid.NewGuid().ToString();
         var code = _utilsService.GenerateCodeToConfirmEmail();
@@ -61,8 +62,7 @@ public class UserService : IUserService
         var passwordHash = _passwordHasher.HashPassword(newUser.UserLogins, registerNewUser.Password);
         newUser.UserLogins.Password = passwordHash;
         /*invitationCodes.IsUsed = true;*/
-        _context.Users.Add(newUser);
-        await _context.SaveChangesAsync();
+        await _userRepository.Create(newUser);
         await _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika",
             $"Twój kod potwierdzający to : {code}");
         return newUserId;
@@ -90,8 +90,6 @@ public class UserService : IUserService
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (user is null) throw new BadRequestException("User not found");
-
-        // Zabezpieczenie na wypadek braku rekordu CodeConfirm
         if (user.CodeConfirm == null)
         {
             user.CodeConfirm = new CodeConfirmUsers
@@ -128,7 +126,7 @@ public class UserService : IUserService
 
     public async Task RecoverPassword(string userEmail)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserEmail == userEmail);
+        var user = await _userRepository.GetByEmail(userEmail);
         if (user is null)
         {
             throw new BadRequestException("User not found");
@@ -189,11 +187,11 @@ public class UserService : IUserService
 
     public async Task UpdateUser(UpdateUserDto updateUserDto, string userId)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserId == userId);
+        var user = await _userRepository.GetById(userId);
         if (user is null) throw new BadRequestException("User not found");
         user.FirstName = updateUserDto.FirstName;
         user.LastName = updateUserDto.LastName;
         user.UserEmail = updateUserDto.UserEmail;
-        await _context.SaveChangesAsync();
+        await _userRepository.Update(user);
     }
 }
