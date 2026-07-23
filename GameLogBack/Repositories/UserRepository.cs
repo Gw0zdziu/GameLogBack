@@ -23,10 +23,28 @@ public class UserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(x => x.UserEmail == email);
     }
 
-    public async Task<Users> GetById(string id)
+    public async Task<Users> GetById(string userId)
     {
-        return await _context.Users.FirstOrDefaultAsync(x => x.UserId == id);
+        return await _context.Users.FirstOrDefaultAsync(x => x.UserId == userId);
     }
+
+    public async Task<Users> GetUserWithUserLoginsAndCodeRecovery(string userId, string token)
+    {
+        return await _context.Users
+            .Include(x => x.UserLogins)
+            .Include(x => x.CodeRecoveryPassword)
+            .FirstOrDefaultAsync(x =>
+                x.UserId == userId &&
+                x.CodeRecoveryPassword.Code == token);
+    }
+
+    public async Task<Users> GetUserWithConfirmCode(string userId)
+    {
+        return await _context.Users
+            .Include(u => u.CodeConfirm)
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+    }
+
 
     public async Task Create(Users user)
     {
