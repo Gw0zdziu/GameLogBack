@@ -22,4 +22,9 @@ public class UserLoginsRepository : IUserLoginsRepository
     {
         return await _context.UserLogins.AnyAsync(x => x.UserName.Equals(userName, StringComparison.CurrentCultureIgnoreCase));
     }
+
+    public async Task<UserLogins> GetByUserName(string userName)
+    {
+        return await _context.UserLogins.FirstOrDefaultAsync(x => x.UserName == userName);
+    }
 }
