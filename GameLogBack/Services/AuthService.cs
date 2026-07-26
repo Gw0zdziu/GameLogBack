@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GameLogBack.DbContext;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Entities;
@@ -15,17 +14,15 @@ namespace GameLogBack.Services;
 public class AuthService : IAuthService
 {
     private readonly AuthenticationSettings _authenticationSettings;
-    private readonly GameLogDbContext _context;
     private readonly IUserLoginsRepository _userLoginsRepository;
     private readonly IRefreshTokenInfoRepository _refreshTokenInfoRepository;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
 
-    public AuthService(GameLogDbContext context, AuthenticationSettings authenticationSettings,
+    public AuthService(AuthenticationSettings authenticationSettings,
         IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService, IUserLoginsRepository userLoginsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository)
     {
-        _context = context;
         _authenticationSettings = authenticationSettings;
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
@@ -72,7 +69,6 @@ public class AuthService : IAuthService
             throw new BadRequestException("Refresh token is expired");
         var user =  await _userLoginsRepository.GetByUserId(userId).FirstOrDefaultAsync();
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
-        await _context.SaveChangesAsync();
         return token;
     }
 
