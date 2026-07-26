@@ -5,6 +5,7 @@ using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using GameLogBack.Repositories;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,22 +16,24 @@ public class AuthService : IAuthService
 {
     private readonly AuthenticationSettings _authenticationSettings;
     private readonly GameLogDbContext _context;
+    private readonly IUserLoginsRepository _userLoginsRepository;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
 
     public AuthService(GameLogDbContext context, AuthenticationSettings authenticationSettings,
-        IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService)
+        IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService, IUserLoginsRepository userLoginsRepository)
     {
         _context = context;
         _authenticationSettings = authenticationSettings;
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
+        _userLoginsRepository = userLoginsRepository;
     }
 
     public async Task<string> LoginUser(LoginUserDto loginUserDto)
     {
-        var user = await _context.UserLogins.FirstOrDefaultAsync(x => x.UserName == loginUserDto.UserName);
+        var user = await _userLoginsRepository.GetByUserName(loginUserDto.UserName);
         if (user is null) throw new BadRequestException("Data of login is incorrect");
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect");
@@ -66,7 +69,7 @@ public class AuthService : IAuthService
         var refreshTokenInfo = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == userId);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
             throw new BadRequestException("Refresh token is expired");
-        var user = await _context.UserLogins.FirstOrDefaultAsync(x => x.UserId == userId);
+        var user =  await _userLoginsRepository.GetByUserId(userId).FirstOrDefaultAsync();
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
         await _context.SaveChangesAsync();
         return token;
