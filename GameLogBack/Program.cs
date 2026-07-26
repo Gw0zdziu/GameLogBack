@@ -137,6 +137,8 @@ builder.Services.AddAuthentication(option =>
         ClockSkew = TimeSpan.Zero
     };
 });
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserLoginsRepository, UserLoginsRepository>();
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
