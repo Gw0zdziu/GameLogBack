@@ -1,18 +1,19 @@
+using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameLogBack.Repositories;
+namespace GameLogBack.DataAccess.Repositories;
 
 public class UserRepository : IUserRepository
 {
     private readonly GameLogDbContext _context;
-    
+
     public UserRepository(GameLogDbContext context)
     {
         _context = context;
     }
-    
+
     public Task<bool> CheckIfUserExist(string email)
     {
         return _context.Users.AnyAsync(x => x.UserEmail.Equals(email, StringComparison.CurrentCultureIgnoreCase));
