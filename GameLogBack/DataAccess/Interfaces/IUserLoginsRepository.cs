@@ -1,6 +1,6 @@
 using GameLogBack.Entities;
 
-namespace GameLogBack.Repositories;
+namespace GameLogBack.DataAccess.Interfaces;
 
 public interface IUserLoginsRepository
 {
