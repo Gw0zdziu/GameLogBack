@@ -1,3 +1,4 @@
+using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
 using GameLogBack.Dtos.Category;
 using GameLogBack.Dtos.Category.RequestDto;
@@ -7,7 +8,6 @@ using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
-using GameLogBack.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
