@@ -1,8 +1,9 @@
+using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameLogBack.Repositories;
+namespace GameLogBack.DataAccess.Repositories;
 
 
 public class GameRepository : IGameRepository
@@ -12,7 +13,7 @@ public class GameRepository : IGameRepository
     {
         _context = context;
     }
-    
+
     public IQueryable<Games> GetByUserId(string id)
     {
         return _context.Games.Include(x => x.Category).Where(x => x.UserId == id);
@@ -22,7 +23,7 @@ public class GameRepository : IGameRepository
     {
         return _context.Games.Include(x => x.Category).Where(x => x.GameId == id);
     }
-    
+
     public IQueryable<Games> GetByCategoryId(string id)
     {
         return _context.Games.Include(x => x.Category).Where(x => x.CategoryId == id);
