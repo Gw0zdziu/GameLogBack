@@ -1,8 +1,9 @@
+using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameLogBack.Repositories;
+namespace GameLogBack.DataAccess.Repositories;
 
 public class CategoryRepository: ICategoryRepository
 {
