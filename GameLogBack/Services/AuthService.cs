@@ -1,10 +1,10 @@
 using System.Security.Claims;
+using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
-using GameLogBack.Repositories;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
