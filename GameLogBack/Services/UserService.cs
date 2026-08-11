@@ -1,34 +1,35 @@
+using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
-using GameLogBack.Dtos;
 using GameLogBack.Dtos.User;
 using GameLogBack.Dtos.User.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
-using GameLogBack.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace GameLogBack.Services;
 
 public class UserService : IUserService
 {
-    private readonly GameLogDbContext _context; 
     private readonly IUserRepository _userRepository;
     private readonly IUserLoginsRepository _userLoginsRepository;
+    private readonly ICodeConfirmUsersRepository _codeConfirmUsersRepository;
+    private readonly ICodeRecoveryPasswordsRepository _codeRecoveryPasswordsRepository;
     private readonly IEmailSenderHelper _emailSenderHelper;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
     public UserService(IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
-        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository)
+        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository)
     {
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
         _emailSenderHelper = emailSenderHelper;
         _userRepository = userRepository;
         _userLoginsRepository = userLoginsRepository;
+        _codeConfirmUsersRepository = codeConfirmUsersRepository;
+        _codeRecoveryPasswordsRepository = codeRecoveryPasswordsRepository;
     }
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
@@ -100,16 +101,13 @@ public class UserService : IUserService
         var code = _utilsService.GenerateCodeToConfirmEmail();
         user.CodeConfirm.Code = code;
         user.CodeConfirm.ExpiryDate = DateTime.UtcNow.AddMinutes(15);
-
-        await _context.SaveChangesAsync();
         await _emailSenderHelper.SendEmail(user.UserEmail, "Kod potwierdzający użytkownika",
             $"Twój kod potwierdzający to : {code}");
     }
 
     public async Task ConfirmUser(ConfirmCodeDto confirmCodeDto)
     {
-        var confirmCodeUser = await _context.CodeConfirmUsers
-            .FirstOrDefaultAsync(x => x.UserId == confirmCodeDto.UserId);
+        var confirmCodeUser = await _codeConfirmUsersRepository.GetByUserId(confirmCodeDto.UserId);
         if (confirmCodeUser is null) throw new BadRequestException("Confirm code not found");
         if (confirmCodeUser.ExpiryDate < DateTime.UtcNow)
             throw new BadRequestException("Confirm code is expired. You must generate new code");
@@ -118,7 +116,6 @@ public class UserService : IUserService
         var user = await _userRepository.GetById(confirmCodeDto.UserId);
         if (user is null) throw new BadRequestException("User not found");
         user.IsActive = true;
-        await _context.SaveChangesAsync();
     }
 
     public async Task RecoverPassword(string userEmail)
@@ -131,13 +128,12 @@ public class UserService : IUserService
 
         var code = _utilsService.GenerateCodeToRecoverPassword();
         var link = _utilsService.GenerateLinkToRecoveryPassword(code, user.UserId);
-        var recoveryCode = await _context.CodeRecoveryPasswords.FirstOrDefaultAsync(x => x.UserId == user.UserId);
+        var recoveryCode = await _codeRecoveryPasswordsRepository.GetByUserId(user.UserId);
         if (recoveryCode is not null)
         {
             recoveryCode.Code = code;
             recoveryCode.ExpiryDate = DateTime.UtcNow.AddMinutes(15);
             recoveryCode.IsUsed = false;
-            await _context.SaveChangesAsync();
             await _emailSenderHelper.SendEmail(userEmail, "Recovery password", link);
         }
         else
@@ -150,8 +146,7 @@ public class UserService : IUserService
                 Code = code,
                 IsUsed = false
             };
-            _context.Add(newRecoveryPasswordCode);
-            await _context.SaveChangesAsync();
+            await _codeRecoveryPasswordsRepository.Create(newRecoveryPasswordCode);
             await _emailSenderHelper.SendEmail(userEmail, "Recovery password", link);
         }
     }
@@ -172,7 +167,7 @@ public class UserService : IUserService
         var newPassword = _passwordHasher.HashPassword(user.UserLogins, recoveryUpdatePasswordDto.NewPassword);
         user.UserLogins.Password = newPassword;
         user.CodeRecoveryPassword.IsUsed = true;
-        await _context.SaveChangesAsync();
+        await _userRepository.Update(user);
         await _emailSenderHelper.SendEmail(user.UserEmail, "Aktualizacja hasła",
             "Pomyślnie zaktualizowano hasło");
     }
