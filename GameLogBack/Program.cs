@@ -1,13 +1,13 @@
-using System.Reflection;
 using System.Text;
 using Amazon.Runtime;
 using Amazon.S3;
 using FluentValidation;
+using GameLogBack.DataAccess.Interfaces;
+using GameLogBack.DataAccess.Repositories;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
 using GameLogBack.Middlewares;
-using GameLogBack.Repositories;
 using GameLogBack.Services;
 using GameLogBack.Settings;
 using GameLogBack.Validators;
@@ -137,6 +137,9 @@ builder.Services.AddAuthentication(option =>
         ClockSkew = TimeSpan.Zero
     };
 });
+builder.Services.AddScoped<ICodeConfirmUsersRepository, CodeConfirmUsersRepository>();
+builder.Services.AddScoped<ICodeRecoveryPasswordsRepository, CodeRecoveryPasswordsRepository>();
+builder.Services.AddScoped<IRefreshTokenInfoRepository, RefreshTokenInfoRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserLoginsRepository, UserLoginsRepository>();
 builder.Services.AddScoped<IGameRepository, GameRepository>();
@@ -163,7 +166,6 @@ app.UseSwaggerUI();
 
 //app.UseHttpsRedirection();
 app.UseMiddleware<ErrorHandlingMiddleware>();
-Console.WriteLine(builder.Environment.IsDevelopment());
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
 
 app.UseAuthentication();
