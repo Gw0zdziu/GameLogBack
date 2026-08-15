@@ -14,30 +14,35 @@ public class GameRepository : IGameRepository
         _context = context;
     }
 
-    public IQueryable<Games> GetByUserId(string id)
+    public async Task<List<Games>> GetByUserId(string id)
     {
-        return _context.Games.Include(x => x.Category).Where(x => x.UserId == id);
+        return await _context.Games.Include(x => x.Category).Where(x => x.UserId == id).ToListAsync();
     }
 
-    public IQueryable<Games> GetById(string id)
+    public async Task<Games> GetById(string id)
     {
-        return _context.Games.Include(x => x.Category).Where(x => x.GameId == id);
+        return await _context.Games.Include(x => x.Category).Where(x => x.GameId == id).FirstOrDefaultAsync();
     }
 
-    public IQueryable<Games> GetByCategoryId(string id)
+    public Task<List<Games>> GetByCategoryId(string id)
     {
-        return _context.Games.Include(x => x.Category).Where(x => x.CategoryId == id);
+        return _context.Games.Include(x => x.Category).Where(x => x.CategoryId == id).ToListAsync();
     }
 
-    public IQueryable<Games> GetByGameIdAndUserId(string gameId, string userId)
+    public async Task<Games> GetByGameIdAndUserId(string gameId, string userId)
     {
-        return _context.Games.Where(x =>
-            x.UserId == userId && x.GameId == gameId);
+        return await _context.Games.Where(x =>
+            x.UserId == userId && x.GameId == gameId).FirstOrDefaultAsync();
     }
 
     public async Task<bool> CheckIfGameExists(string gameName, string userId)
     {
-        return await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName.Equals(gameName, StringComparison.CurrentCultureIgnoreCase));
+        return await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName.ToLower() == gameName.ToLower());
+    }
+
+    public async Task<bool> CheckIfGameExitsById(string gameId)
+    {
+        return await _context.Games.AnyAsync(x => x.GameId == gameId );
     }
 
     public async Task<bool> CheckIfExistsWithSameName(string gameName, string userId, string gameId)
