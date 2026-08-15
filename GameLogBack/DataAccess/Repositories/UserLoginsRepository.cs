@@ -21,7 +21,7 @@ public class UserLoginsRepository : IUserLoginsRepository
 
     public async Task<bool> CheckIfUserExists(string userName)
     {
-        return await _context.UserLogins.AnyAsync(x => x.UserName.Equals(userName, StringComparison.CurrentCultureIgnoreCase));
+        return await _context.UserLogins.AnyAsync(x => x.UserName.ToLower() == userName.ToLower());
     }
 
     public async Task<UserLogins> GetByUserName(string userName)

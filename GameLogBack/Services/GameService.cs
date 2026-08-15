@@ -28,12 +28,13 @@ public class GameService : IGameService
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
     {
-        var games = _gameRepository.GetByUserId(userId).Select(x =>
+        var games = await _gameRepository.GetByUserId(userId);
+        var gameDtos =  games.Select(x =>
             new GameDto
             {
                 GameId = x.GameId,
                 GameName = x.GameName,
-                GameUrl =  _railwayBucketService.FetchFile(x.GameImagePath),
+                GameUrl = _railwayBucketService.FetchFile(x.GameImagePath),
                 UpdatedDate = x.UpdatedDate,
                 UpdatedBy = x.UpdatedBy,
                 CreatedDate = x.CreatedDate,
@@ -42,27 +43,32 @@ public class GameService : IGameService
                 CategoryId = x.CategoryId,
                 CategoryName = x.Category.CategoryName
             }
-        );
-        var gamesPaginated = await _utilsService.GetPaginatedData(games, paginatedQuery);
+        ).ToList();
+        var gamesPaginated =  _utilsService.GetPaginatedData(gameDtos, paginatedQuery);
         return gamesPaginated;
     }
 
     public async Task<GameDto> GetGame(string gameId)
     {
-        var game = await _gameRepository.GetById(gameId).Select(x => new GameDto
+        var game = await _gameRepository.GetById(gameId);
+        if (game is null)
         {
-            GameId = x.GameId,
-            GameName = x.GameName,
-            GameUrl = _railwayBucketService.FetchFile(x.GameImagePath),
-            UpdatedDate = x.UpdatedDate,
-            UpdatedBy = x.UpdatedBy,
-            CreatedDate = x.CreatedDate,
-            YearPlayed = x.YearPlayed,
-            CreatedBy = x.CreatedBy,
-            CategoryId = x.CategoryId,
-            CategoryName = x.Category.CategoryName
-        }).FirstOrDefaultAsync();
-        return game ?? throw new NotFoundException("Game not found");
+            throw new NotFoundException("Game not found");
+        }
+        return  new GameDto
+        {
+            GameId = game.GameId,
+            GameName = game.GameName,
+            GameUrl = _railwayBucketService.FetchFile(game.GameImagePath),
+            UpdatedDate = game.UpdatedDate,
+            UpdatedBy = game.UpdatedBy,
+            CreatedDate = game.CreatedDate,
+            YearPlayed = game.YearPlayed,
+            CreatedBy = game.CreatedBy,
+            CategoryId = game.CategoryId,
+            CategoryName = game.Category.CategoryName
+        };
+        
     }
 
     public async Task PostGame(GamePostDto gamePostDto, string userId)
@@ -98,7 +104,7 @@ public class GameService : IGameService
 
     public async Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId)
     {
-        var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId).FirstOrDefaultAsync();
+        var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
         if (game is null) throw new NotFoundException("Game not found");
         var isGameNameExist = await _gameRepository.CheckIfExistsWithSameName(gamePutDto.GameName, userId, gameId);
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
@@ -110,8 +116,7 @@ public class GameService : IGameService
         game.YearPlayed = gamePutDto.YearPlayed;
         game.UpdatedDate = DateTime.UtcNow;
         await _gameRepository.Update(game);
-        var categoryName = await _categoryRepository.GetById(gamePutDto.CategoryId)
-            .Select(c => c.CategoryName).FirstOrDefaultAsync();
+        var categoryName = await _categoryRepository.GetCategoryName(gamePutDto.CategoryId);
         return new GameDto
         {
             GameId = game.GameId,
@@ -129,14 +134,15 @@ public class GameService : IGameService
 
     public async Task DeleteGame(string gameId, string userId)
     {
-        var gameToDelete = _gameRepository.GetByGameIdAndUserId(gameId, userId).FirstOrDefault();
+        var gameToDelete = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
         if (gameToDelete is null) throw new NotFoundException("Game not found");
         await _gameRepository.Delete(gameToDelete);
     }
 
     public async Task<IEnumerable<GameByUserIdDto>> GetGamesByUserId(string userId)
     {
-        return await _gameRepository.GetByUserId(userId).Select(x =>
+        var categories = await _gameRepository.GetByUserId(userId);
+        var gamesByUserId = categories.Select(x =>
             new GameByUserIdDto
             {
                 GameId = x.GameId,
@@ -146,21 +152,27 @@ public class GameService : IGameService
                 YearPlayed = x.YearPlayed,
                 CategoryId = x.CategoryId,
                 CategoryName = x.Category.CategoryName
-            }).ToListAsync();
+            }).ToList();
+        return gamesByUserId;
     }
 
     public async Task<IEnumerable<GameByCategoryIdDto>> GetGamesByCategoryId(string categoryId)
     {
-        return await _gameRepository.GetByCategoryId(categoryId).Where(x => x.CategoryId == categoryId).Select(x =>
-            new GameByCategoryIdDto
-            {
-                GameId = x.GameId,
-                GameName = x.GameName,
-                UpdatedDate = x.UpdatedDate,
-                CreatedDate = x.CreatedDate,
-                CategoryId = x.CategoryId,
-                YearPlayed = x.YearPlayed,
-                CategoryName = x.Category.CategoryName
-            }).ToListAsync();
+        var games = await _gameRepository.GetByCategoryId(categoryId);
+        return
+        [
+            .. games.Select(x =>
+                new GameByCategoryIdDto
+                {
+                    GameId = x.GameId,
+                    GameName = x.GameName,
+                    UpdatedDate = x.UpdatedDate,
+                    CreatedDate = x.CreatedDate,
+                    CategoryId = x.CategoryId,
+                    YearPlayed = x.YearPlayed,
+                    CategoryName = x.Category.CategoryName
+                })
+        ];
+        
     }
 }

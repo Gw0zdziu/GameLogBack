@@ -17,14 +17,19 @@ public class CategoryRepository: ICategoryRepository
     }
 
 
-    public  IQueryable<Categories> GetByUserId(string id)
+    public async Task<List<Categories>> GetByUserId(string id)
     {
-        return _categories.Where(x => x.UserId == id);
+        return await _categories.Where(x => x.UserId == id).Include(x => x.Games).Include(x => x.Games).ToListAsync();
+    }
+    
+    public async  Task<Categories> GetById(string id)
+    {
+        return await _categories.Where(x => x.CategoryId == id).Include(x => x.Games).FirstOrDefaultAsync();
     }
 
-    public  IQueryable<Categories> GetById(string id)
+    public async Task<string> GetCategoryName(string id)
     {
-        return  _categories.Where(x => x.CategoryId == id);
+        return await _categories.Where(x => x.CategoryId == id).Select(x => x.CategoryName).FirstOrDefaultAsync();
     }
 
     public async Task<bool> CheckIfExists(string categoryName, string userId)
@@ -36,7 +41,7 @@ public class CategoryRepository: ICategoryRepository
     public async Task<bool> CheckIfExistsWithSameName(string categoryName, string userId, string categoryId)
     {
         return await _context.Categories.AnyAsync(x =>
-            x.CategoryId != categoryId && x.UserId == userId && x.CategoryName.Equals(categoryName, StringComparison.CurrentCultureIgnoreCase));
+            x.CategoryId != categoryId && x.UserId == userId && x.CategoryName.ToLower() == categoryName.ToLower());
     }
 
     public async Task Create(Categories category)
