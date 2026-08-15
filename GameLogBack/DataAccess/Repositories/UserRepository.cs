@@ -16,7 +16,7 @@ public class UserRepository : IUserRepository
 
     public Task<bool> CheckIfUserExist(string email)
     {
-        return _context.Users.AnyAsync(x => x.UserEmail.Equals(email, StringComparison.CurrentCultureIgnoreCase));
+        return _context.Users.AnyAsync(x => x.UserEmail.ToLower() == email);
     }
 
     public async Task<Users> GetByEmail(string email)
