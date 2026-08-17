@@ -24,4 +24,10 @@ public class CodeRecoveryPasswordsRepository : ICodeRecoveryPasswordsRepository
         await _context.CodeRecoveryPasswords.AddAsync(codeRecoveryPassword);
         await _context.SaveChangesAsync();
     }
+
+    public async Task Update(CodeRecoveryPassword codeRecoveryPassword)
+    {
+        _context.CodeRecoveryPasswords.Update(codeRecoveryPassword);
+        await _context.SaveChangesAsync();
+    }
 }
