@@ -14,9 +14,9 @@ public class UserLoginsRepository : IUserLoginsRepository
         _context = context;
     }
 
-    public IQueryable<UserLogins> GetByUserId(string id)
+    public Task<UserLogins> GetByUserId(string id)
     {
-        return _context.UserLogins.Where(x => x.UserId == id);
+        return _context.UserLogins.Include(x => x.User).Where(x => x.UserId == id).FirstOrDefaultAsync();
     }
 
     public async Task<bool> CheckIfUserExists(string userName)
