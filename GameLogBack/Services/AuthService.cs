@@ -76,7 +76,7 @@ public class AuthService : IAuthService
     public async Task LogoutUser(string userId)
     {
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(userId);
-        if (refreshTokenInfo is null) throw new BadRequestException("");
+        if (refreshTokenInfo is null) throw new BadRequestException("Refresh token is expired");
         await _refreshTokenInfoRepository.Delete(refreshTokenInfo);
     }
 }
