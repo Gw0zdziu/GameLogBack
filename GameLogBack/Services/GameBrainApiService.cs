@@ -1,4 +1,5 @@
 ﻿using GameLogBack.Dtos.GameBrainApi.Response;
+using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.WebUtilities;
@@ -40,8 +41,7 @@ public class GameBrainApiService : IGameBrainApiService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            throw new FailureException("Your daily points limit of 50 has been reached");
         }
     }
 }

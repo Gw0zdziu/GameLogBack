@@ -1,37 +1,37 @@
 using System.Net;
 using System.Net.Mail;
-using GameLogBack.Configurations;
 using GameLogBack.Interfaces;
 using Microsoft.Extensions.Options;
+using Resend;
 
 namespace GameLogBack.Services;
 
 public class EmailSenderHelper : IEmailSenderHelper
 {
-    private readonly SmtpSettings _smtpSettings;
-    private readonly IConfiguration _configuration;
+    private readonly bool _isSendEmail;
+    private readonly IResend _resend;
+    private readonly string _emailAddress;
 
-    public EmailSenderHelper(IOptions<SmtpSettings> smtpSettings, IConfiguration configuration)
+    public EmailSenderHelper(IConfiguration configuration, IResend resend)
     {
-        _configuration = configuration;
-        _smtpSettings = smtpSettings.Value;
+        _resend = resend;
+        _isSendEmail = configuration.GetValue<bool>("SendEmails");
+        _emailAddress = configuration.GetValue<string>("EmailAddress");
     }
 
     public async Task SendEmail(string to, string subject, string message)
     {
-        var isSendEmail = _configuration.GetValue<bool>("SendEmails");
-        if (isSendEmail)
+        
+        if (_isSendEmail)
         {
-            var mailMessage = new MailMessage();
-            mailMessage.From = new MailAddress(_smtpSettings.Address);
-            mailMessage.To.Add(to);
-            mailMessage.Subject = subject;
-            mailMessage.Body = message;
-            using SmtpClient smtpClient = new SmtpClient(_smtpSettings.SmtpServer, _smtpSettings.Port);
-            smtpClient.EnableSsl = true;
-            smtpClient.UseDefaultCredentials = false;
-            smtpClient.Credentials = new NetworkCredential(_smtpSettings.Address, _smtpSettings.Password);
-            await smtpClient.SendMailAsync(mailMessage);
+            var mailMessage = new EmailMessage
+            {
+                From = _emailAddress,
+                To = to,
+                Subject = subject,
+                HtmlBody = message
+            };
+            await _resend.EmailSendAsync(mailMessage);
         }
     }
 }

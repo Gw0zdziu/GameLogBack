@@ -1,3 +1,4 @@
+using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
 using GameLogBack.Dtos.Category;
 using GameLogBack.Dtos.Category.RequestDto;
@@ -13,50 +14,53 @@ namespace GameLogBack.Services;
 
 public class CategoryService : ICategoryService
 {
-    private readonly GameLogDbContext _context;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly IGameRepository _gameRepository;
     private readonly IUtilsService _utilsService;
 
-    public CategoryService(GameLogDbContext context, IUtilsService utilsService)
+    public CategoryService(IUtilsService utilsService, ICategoryRepository categoryRepository, IGameRepository gameRepository)
     {
-        _context = context;
         _utilsService = utilsService;
+        _categoryRepository = categoryRepository;
+        _gameRepository = gameRepository;
     }
 
     public async Task<PaginatedResults<CategoryDto>> GetUserCategories(string userId, PaginatedQuery paginatedQuery)
     {
-        var categories = _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryDto
+        var categories = await _categoryRepository.GetByUserId(userId);
+        var categoryDtos = categories.Select(x => new CategoryDto
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,
             Description = x.Description,
             GamesCount = x.Games.Count
-        });
-        var paginatedResult = await _utilsService.GetPaginatedData(categories, paginatedQuery);
+        }).ToList();
+        var paginatedResult =  _utilsService.GetPaginatedData(categoryDtos, paginatedQuery);
         return paginatedResult;
     }
 
     public async Task<CategoryDto> GetCategory(string categoryId)
     {
-        var category = await _context.Categories.Where(x => x.CategoryId == categoryId).Select(x => new CategoryDto
+        var category = await _categoryRepository.GetById(categoryId);
+        if (category is null) throw new NotFoundException("Category not found");
+        var categoryWithGamesCounter = new CategoryDto
         {
-            CategoryId = x.CategoryId,
-            CategoryName = x.CategoryName,
-            Description = x.Description,
-            CreatedDate = x.CreatedDate,
-            UpdatedDate = x.UpdatedDate,
-            CreatedBy = x.CreatedBy,
-            UpdatedBy = x.UpdatedBy,
-            GamesCount = x.Games.Count
-        }).FirstOrDefaultAsync();
-        return category ?? throw new NotFoundException("Category not found");
+            CategoryId = category.CategoryId,
+            CategoryName = category.CategoryName,
+            Description = category.Description,
+            CreatedDate = category.CreatedDate,
+            UpdatedDate = category.UpdatedDate,
+            CreatedBy = category.CreatedBy,
+            UpdatedBy = category.UpdatedBy,
+            GamesCount = category.Games.Count
+        };
+        return categoryWithGamesCounter;
     }
 
     public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
-        var isCategoryExist = await _context.Categories
-            .AnyAsync(x => x.CategoryName == categoryPostDto.CategoryName && x.UserId == userId);
+        var isCategoryExist = await _categoryRepository.CheckIfExists(categoryPostDto.CategoryName, userId);
         if (isCategoryExist) throw new BadRequestException("Category with this name already exist");
-
         var newCategory = new Categories
         {
             CategoryId = Guid.NewGuid().ToString(),
@@ -68,8 +72,7 @@ public class CategoryService : ICategoryService
             CreatedBy = userId,
             UpdatedBy = userId
         };
-        _context.Categories.Add(newCategory);
-        await _context.SaveChangesAsync();
+        await _categoryRepository.Create(newCategory);
         return new CategoryDto
         {
             CategoryId = newCategory.CategoryId,
@@ -84,16 +87,15 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
-        var category = _context.Categories.FirstOrDefault(x => x.CategoryId == categoryId);
+        var category = await _categoryRepository.GetById(categoryId);
         if (category is null) throw new NotFoundException("Category not found");
-        var isCategoryNameExist = _context.Categories.Any(x =>
-            x.CategoryName == categoryPutDto.CategoryName && x.CategoryId != categoryId);
+        var isCategoryNameExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
         if (isCategoryNameExist) throw new BadRequestException("Category with this name already exist");
         category.CategoryName = categoryPutDto.CategoryName;
         category.Description = categoryPutDto.Description;
         category.UpdatedBy = userId;
         category.UpdatedDate = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await _categoryRepository.Update(category);
         return new CategoryDto
         {
             CategoryId = category.CategoryId,
@@ -108,17 +110,17 @@ public class CategoryService : ICategoryService
 
     public async Task DeleteCategory(string categoryId)
     {
-        var category = await _context.Categories.FirstOrDefaultAsync(x => x.CategoryId == categoryId);
+        var category = await _categoryRepository.GetById(categoryId);
         if (category is null) throw new NotFoundException("Category not found");
-        var isGameWithCategoryExist = _context.Games.Any(x => x.CategoryId == categoryId);
+        var isGameWithCategoryExist = await _gameRepository.CheckIfGameExitsById(categoryId);
         if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category");
-        _context.Categories.Remove(category);
-        await _context.SaveChangesAsync();
+        await _categoryRepository.Delete(category);
     }
 
-    public async Task<IEnumerable<CategoryByUserIdDto>> GetCategoriesByUserId(string userId)
+    public async Task<List<CategoryByUserIdDto>> GetCategoriesByUserId(string userId)
     {
-        var categories = await _context.Categories.Where(x => x.UserId == userId).Select(x => new CategoryByUserIdDto
+        var categories = await _categoryRepository.GetByUserId(userId);
+        var categoryByUserIdDtos = categories.Select(x => new CategoryByUserIdDto
         {
             CategoryId = x.CategoryId,
             CategoryName = x.CategoryName,
@@ -126,7 +128,7 @@ public class CategoryService : ICategoryService
             CreatedDate = x.CreatedDate,
             UpdatedDate = x.UpdatedDate,
             GamesCount = x.Games.Count
-        }).ToListAsync();
-        return categories;
+        }).ToList();
+        return categoryByUserIdDtos;
     }
 }

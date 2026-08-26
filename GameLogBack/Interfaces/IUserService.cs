@@ -12,5 +12,5 @@ public interface IUserService
     public Task ResendNewConfirmCode(string userId);
     public Task ConfirmUser(ConfirmCodeDto confirmCodeDto);
     public Task RecoverPassword(string userEmail);
-    public Task RecoveryUpdatePassword(RecoveryUpdatePasswordDto recoveryUpdatePasswordDto);
+    public Task UpdatePassword(RecoveryUpdatePasswordDto recoveryUpdatePasswordDto);
 }   

@@ -98,21 +98,22 @@ public class UtilsService : IUtilsService
     {
         var frontedUrl = _configuration.GetSection("FrontendUrl").Value;
         var recoveryPasswordEndpoint = _configuration.GetSection("RecoveryPasswordEndpoint").Value;
-        recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token", recoverCode);
+        recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token}", recoverCode);
         var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
         return linkWithCode;
     }
 
-    public async Task<PaginatedResults<T>> GetPaginatedData<T>(IQueryable<T> data, PaginatedQuery paginatedQuery)
+    public PaginatedResults<T> GetPaginatedData<T>(List<T> data, PaginatedQuery paginatedQuery)
     {
-        var totalAmount = await data.CountAsync();
-        if (data.Count() == paginatedQuery.PageSize)
+        var totalAmount = data.Count();
+        if (totalAmount == paginatedQuery.PageSize)
         {
             paginatedQuery.PageNumber = 1;
         }
-        var paginatedList = await data
+
+        var paginatedList =  data
             .Skip((paginatedQuery.PageNumber - 1) * paginatedQuery.PageSize)
-            .Take(paginatedQuery.PageSize).ToListAsync();
+            .Take(paginatedQuery.PageSize).ToList();
         var firstItemIndexList = (paginatedQuery.PageNumber - 1) * paginatedList.Count() + 1;
         var lastItemIndexList = firstItemIndexList + paginatedList.Count() - 1;
         var amountPages = (int)Math.Ceiling((double)totalAmount / paginatedQuery.PageSize);
