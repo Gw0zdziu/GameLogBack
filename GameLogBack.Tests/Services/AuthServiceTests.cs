@@ -31,7 +31,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -84,7 +84,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -129,7 +129,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -167,7 +167,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -210,7 +210,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -252,7 +252,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -280,7 +280,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -313,7 +313,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
@@ -345,7 +345,7 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireMinutes = 15,
+            JwtAccessTokenExpireDays = 15,
             JwtTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
