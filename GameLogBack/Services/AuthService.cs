@@ -46,13 +46,13 @@ public class AuthService : IAuthService
                 UserId = user.UserId,
                 RefreshTokenId = Guid.NewGuid().ToString(),
                 RefreshToken = refreshToken,
-                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireMinutes)
+                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireDays)
             };
             await _refreshTokenInfoRepository.Create(newRefreshTokenInfo);
         }
         else
         {
-            refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireMinutes);
+            refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireDays);
             refreshTokenInfo.RefreshToken = refreshToken;
             await _refreshTokenInfoRepository.Update(refreshTokenInfo);
         }
@@ -68,7 +68,7 @@ public class AuthService : IAuthService
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
             throw new BadRequestException("Refresh token is expired");
         var user = await _userLoginsRepository.GetByUserId(userId);
-        var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
+        var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireDays);
         return token;
     }
 
