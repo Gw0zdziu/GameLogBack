@@ -33,6 +33,10 @@ public class CategoryService : ICategoryService
             Results = categories.Results.Select(x => new CategoryDto
             {
                 CategoryId = x.CategoryId,
+                CreatedDate = x.CreatedDate,
+                UpdatedDate = x.UpdatedDate,
+                CreatedBy = x.CreatedBy,
+                UpdatedBy = x.UpdatedBy,
                 CategoryName = x.CategoryName,
                 Description = x.Description,
                 GamesCount = x.Games.Count
