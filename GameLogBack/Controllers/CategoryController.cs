@@ -39,9 +39,9 @@ public class CategoryController : ControllerBase
 
     [HttpGet("get-categories-by-userId/{userId}")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategoriesByUserId([FromRoute] string userId)
+    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategoriesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
     {
-        var categories = await _categoryService.GetCategoriesByUserId(userId);
+        var categories = await _categoryService.GetCategoriesByUserId(userId, paginatedQuery);
         return Ok(categories);
     }
 

@@ -28,24 +28,32 @@ public class GameService : IGameService
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
     {
-        var games = await _gameRepository.GetByUserId(userId);
-        var gameDtos =  games.Select(x =>
-            new GameDto
-            {
-                GameId = x.GameId,
-                GameName = x.GameName,
-                GameUrl = _railwayBucketService.FetchFile(x.GameImagePath),
-                UpdatedDate = x.UpdatedDate,
-                UpdatedBy = x.UpdatedBy,
-                CreatedDate = x.CreatedDate,
-                CreatedBy = x.CreatedBy,
-                YearPlayed = x.YearPlayed,
-                CategoryId = x.CategoryId,
-                CategoryName = x.Category.CategoryName
-            }
-        ).ToList();
-        var gamesPaginated =  _utilsService.GetPaginatedData(gameDtos, paginatedQuery);
-        return gamesPaginated;
+        var games = await _gameRepository.GetByUserId(userId, paginatedQuery);
+        var gamesDtoPaginated = new PaginatedResults<GameDto>
+        {
+            Results = games.Results.Select(x =>
+                new GameDto
+                {
+                    GameId = x.GameId,
+                    GameName = x.GameName,
+                    GameUrl = _railwayBucketService.FetchFile(x.GameImagePath),
+                    UpdatedDate = x.UpdatedDate,
+                    UpdatedBy = x.UpdatedBy,
+                    CreatedDate = x.CreatedDate,
+                    CreatedBy = x.CreatedBy,
+                    YearPlayed = x.YearPlayed,
+                    CategoryId = x.CategoryId,
+                    CategoryName = x.Category.CategoryName
+                }
+            ).ToList(),
+            TotalAmount = games.TotalAmount,
+            PageNumber = games.PageNumber,
+            PageSize = games.PageSize,
+            FirstItemIndexList = games.FirstItemIndexList,
+            LastItemIndexList = games.LastItemIndexList,
+            AmountPagesList = games.AmountPagesList
+        };
+        return gamesDtoPaginated;
     }
 
     public async Task<GameDto> GetGame(string gameId)
@@ -139,10 +147,12 @@ public class GameService : IGameService
         await _gameRepository.Delete(gameToDelete);
     }
 
-    public async Task<IEnumerable<GameByUserIdDto>> GetGamesByUserId(string userId)
+    
+
+    public async Task<IEnumerable<GameByUserIdDto>> GetGamesByUserId(string userId, PaginatedQuery paginatedQuery)
     {
-        var categories = await _gameRepository.GetByUserId(userId);
-        var gamesByUserId = categories.Select(x =>
+        var categories = await _gameRepository.GetByUserId(userId, paginatedQuery);
+        var gamesByUserId = categories.Results.Select(x =>
             new GameByUserIdDto
             {
                 GameId = x.GameId,

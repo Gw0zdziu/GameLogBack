@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.Dtos.Game.RequestDto;
-using GameLogBack.Dtos.Game.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
@@ -28,51 +27,12 @@ public class GameServiceTests
         var mockCategoryRepository = new Mock<ICategoryRepository>();
         var mockGameRepository = new Mock<IGameRepository>();
         var mockRailwayService = new Mock<IRailwayBucketService>();
-        var gamesMock = new List<Games>
-        {
-            new()
-            {
-                GameId = "1",
-                GameName = "Battlefield",
-                CreatedDate = new DateTime(2026, 02, 01),
-                UpdatedDate = new DateTime(2026, 02, 02),
-                YearPlayed = new DateTime(2026, 02, 01),
-                CategoryId = "1",
-                CreatedBy = "Piotr",
-                UpdatedBy = "Piotr",
-                UserId = "1",
-                Category = new Categories()
-                {
-                    CategoryName = "FPS"
-                }
-            },
-            new()
-            {
-                GameId = "2",
-                GameName = "CallOfDuty",
-                CreatedDate = new DateTime(2026, 02, 01),
-                UpdatedDate = new DateTime(2026, 02, 02),
-                YearPlayed = new DateTime(2026, 02, 01),
-                CategoryId = "1",
-                CreatedBy = "Piotr",
-                UpdatedBy = "Piotr",
-                UserId = "1",
-                Category = new Categories()
-                {
-                    CategoryName = "FPS"
-                }
-            }
-        };
-        var paginatedQuery = new PaginatedQuery
-        {
-            PageNumber = 1,
-            PageSize = 5
-        };
-        var paginatedData = new PaginatedResults<GameDto>
+        var paginatedGamesMock = new PaginatedResults<Games>
         {
             Results =
             [
-                new GameDto
+
+                new Games
                 {
                     GameId = "1",
                     GameName = "Battlefield",
@@ -81,9 +41,15 @@ public class GameServiceTests
                     YearPlayed = new DateTime(2026, 02, 01),
                     CategoryId = "1",
                     CreatedBy = "Piotr",
-                    UpdatedBy = "Piotr"
+                    UpdatedBy = "Piotr",
+                    UserId = "1",
+                    Category = new Categories()
+                    {
+                        CategoryName = "FPS"
+                    }
                 },
-                new GameDto
+
+                new Games
                 {
                     GameId = "2",
                     GameName = "CallOfDuty",
@@ -92,7 +58,12 @@ public class GameServiceTests
                     YearPlayed = new DateTime(2026, 02, 01),
                     CategoryId = "1",
                     CreatedBy = "Piotr",
-                    UpdatedBy = "Piotr"
+                    UpdatedBy = "Piotr",
+                    UserId = "1",
+                    Category = new Categories()
+                    {
+                        CategoryName = "FPS"
+                    }
                 }
             ],
             TotalAmount = 2,
@@ -102,9 +73,12 @@ public class GameServiceTests
             LastItemIndexList = 2,
             AmountPagesList = [1]
         };
-        mockUtilsService.Setup(x => x.GetPaginatedData(It.IsAny<List<GameDto>>(), It.IsAny<PaginatedQuery>()))
-            .Returns(paginatedData);
-        mockGameRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(gamesMock);
+        var paginatedQuery = new PaginatedQuery
+        {
+            PageNumber = 1,
+            PageSize = 5
+        };
+        mockGameRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(paginatedGamesMock);
         //Act
         var gameService = new GameService(mockUtilsService.Object, mockRailwayService.Object, mockGameRepository.Object,
             mockCategoryRepository.Object);
@@ -519,12 +493,63 @@ public class GameServiceTests
                 }
             }
         };
-        mockGameRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(gamesMock);
+        var paginatedGamesMock = new PaginatedResults<Games>
+        {
+            Results =
+            [
+
+                new Games
+                {
+                    GameId = "1",
+                    GameName = "Battlefield",
+                    CreatedDate = new DateTime(2026, 02, 01),
+                    UpdatedDate = new DateTime(2026, 02, 02),
+                    YearPlayed = new DateTime(2026, 02, 01),
+                    CategoryId = "1",
+                    CreatedBy = "Piotr",
+                    UpdatedBy = "Piotr",
+                    UserId = "1",
+                    Category = new Categories()
+                    {
+                        CategoryName = "FPS"
+                    }
+                },
+
+                new Games
+                {
+                    GameId = "2",
+                    GameName = "CallOfDuty",
+                    CreatedDate = new DateTime(2026, 02, 01),
+                    UpdatedDate = new DateTime(2026, 02, 02),
+                    YearPlayed = new DateTime(2026, 02, 01),
+                    CategoryId = "1",
+                    CreatedBy = "Piotr",
+                    UpdatedBy = "Piotr",
+                    UserId = "1",
+                    Category = new Categories()
+                    {
+                        CategoryName = "FPS"
+                    }
+                }
+            ],
+            TotalAmount = 2,
+            PageNumber = 1,
+            PageSize = 5,
+            FirstItemIndexList = 1,
+            LastItemIndexList = 2,
+            AmountPagesList = [1]
+        };
+        var paginatedQuery = new PaginatedQuery
+        {
+            PageNumber = 1,
+            PageSize = 5
+        };
+        mockGameRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(paginatedGamesMock);
 
         //Act
         var gameService = new GameService(mockUtilsService.Object, mockRailwayService.Object, mockGameRepository.Object,
             mockCategoryRepository.Object);
-        var result = await gameService.GetGamesByUserId("1");
+        var result = await gameService.GetGamesByUserId("1", paginatedQuery);
 
         //Assert
         result.Should().HaveCount(2);

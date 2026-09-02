@@ -37,60 +37,37 @@ public class CategoryServiceTests
             PageNumber = 1,
             PageSize = 5
         };
-        var categoriesTableMock = new List<Categories>
+        var categoriesPaginatedMock = new PaginatedResults<Categories>
         {
-            new()
-            {
-                CategoryId = "1",
-                CategoryName = "Kategoria1",
-                Description = "",
-                CreatedDate = new DateTime(2026, 01, 01),
-                UpdatedDate = new DateTime(2026, 01, 02),
-                CreatedBy = "Jakub",
-                UpdatedBy = "Jakub",
-                UserId = "1",
-                Games = new List<Games>()
+           Results = new List<Categories>
+           {
+               new()
+               {
+                   CategoryId = "1",
+                   CategoryName = "Kategoria1",
+                   Description = "",
+                   CreatedDate = new DateTime(2026, 01, 01),
+                   UpdatedDate = new DateTime(2026, 01, 02),
+                   CreatedBy = "Jakub",
+                   UpdatedBy = "Jakub",
+                   UserId = "1",
+                   Games = new List<Games>()
 
-            },
-            new()
-            {
-                CategoryId = "2",
-                CategoryName = "Kategoria2",
-                Description = "Description",
-                CreatedDate = new DateTime(2026, 02, 01),
-                UpdatedDate = new DateTime(2026, 02, 02),
-                CreatedBy = "Piotr",
-                UpdatedBy = "Piotr",
-                UserId = "1",
-                Games = new List<Games>()
+               },
+               new()
+               {
+                   CategoryId = "2",
+                   CategoryName = "Kategoria2",
+                   Description = "Description",
+                   CreatedDate = new DateTime(2026, 02, 01),
+                   UpdatedDate = new DateTime(2026, 02, 02),
+                   CreatedBy = "Piotr",
+                   UpdatedBy = "Piotr",
+                   UserId = "1",
+                   Games = new List<Games>()
 
-            }
-        };
-        var paginatedData = new PaginatedResults<CategoryDto>
-        {
-            Results =
-            [
-                new CategoryDto
-                {
-                    CategoryId = "1",
-                    CreatedDate = new DateTime(2026, 01, 01),
-                    UpdatedDate = new DateTime(2026, 01, 02),
-                    CreatedBy = "Jakub",
-                    UpdatedBy = "Jakub",
-                    GamesCount = 10,
-                },
-
-                new CategoryDto
-                {
-                    CategoryId = "2",
-                    CreatedDate = new DateTime(2026, 02, 01),
-                    UpdatedDate = new DateTime(2026, 02, 02),
-                    CreatedBy = "Piotr",
-                    UpdatedBy = "Piotr",
-                    GamesCount = 5,
-                    
-                }
-            ],
+               }
+           },
             TotalAmount = 2,
             PageNumber = 1,
             PageSize = 5,
@@ -98,15 +75,13 @@ public class CategoryServiceTests
             LastItemIndexList = 2,
             AmountPagesList = [1]
         };
-        mockUtilsService.Setup(x => x.GetPaginatedData(It.IsAny<List<CategoryDto>>(), It.IsAny<PaginatedQuery>()))
-            .Returns(paginatedData);
-        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(categoriesTableMock);
+        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(categoriesPaginatedMock);
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
         var result = await categoryService.GetUserCategories("1", paginatedQuery);
 
         //Assert
-        result.Results.Should().HaveCount(paginatedData.Results.Count);
+        result.Results.Should().HaveCount(categoriesPaginatedMock.Results.Count);
     }
 
     [Fact]
@@ -121,10 +96,9 @@ public class CategoryServiceTests
             PageNumber = 1,
             PageSize = 5
         };
-        var categoriesTableMock = new List<Categories>();
-        var paginatedData = new PaginatedResults<CategoryDto>
+        var paginatedData = new PaginatedResults<Categories>
         {
-            Results = new List<CategoryDto>(),
+            Results = new List<Categories>(),
             TotalAmount = 0,
             PageNumber = 1,
             PageSize = 5,
@@ -132,9 +106,7 @@ public class CategoryServiceTests
             LastItemIndexList = 0,
             AmountPagesList = [1]
         };
-        mockUtilsService.Setup(x => x.GetPaginatedData(It.IsAny<List<CategoryDto>>(), It.IsAny<PaginatedQuery>()))
-            .Returns(paginatedData);
-        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(categoriesTableMock);
+        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(paginatedData);
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
         var result = await categoryService.GetUserCategories("1", paginatedQuery);
@@ -453,40 +425,56 @@ public class CategoryServiceTests
         var mockUtilsService = new Mock<IUtilsService>();
         var mockCategoryRepository = new Mock<ICategoryRepository>();
         var mockGameRepository = new Mock<IGameRepository>();
-        var categoriesTableMock = new List<Categories>
+        var categoriesPaginatedMock = new PaginatedResults<Categories>
         {
-            new()
+            Results = new List<Categories>
             {
-                CategoryId = "1",
-                CategoryName = "Kategoria1",
-                Description = "",
-                CreatedDate = new DateTime(2026, 01, 01),
-                UpdatedDate = new DateTime(2026, 01, 02),
-                CreatedBy = "Jakub",
-                UpdatedBy = "Jakub",
-                UserId = "1",
-                Games = new List<Games>()
+                new()
+                {
+                    CategoryId = "1",
+                    CategoryName = "Kategoria1",
+                    Description = "",
+                    CreatedDate = new DateTime(2026, 01, 01),
+                    UpdatedDate = new DateTime(2026, 01, 02),
+                    CreatedBy = "Jakub",
+                    UpdatedBy = "Jakub",
+                    UserId = "1",
+                    Games = new List<Games>()
+
+                },
+                new()
+                {
+                    CategoryId = "2",
+                    CategoryName = "Kategoria2",
+                    Description = "Description",
+                    CreatedDate = new DateTime(2026, 02, 01),
+                    UpdatedDate = new DateTime(2026, 02, 02),
+                    CreatedBy = "Piotr",
+                    UpdatedBy = "Piotr",
+                    UserId = "1",
+                    Games = new List<Games>()
+
+                }
             },
-            new()
-            {
-                CategoryId = "2",
-                CategoryName = "Kategoria2",
-                Description = "Description",
-                CreatedDate = new DateTime(2026, 02, 01),
-                UpdatedDate = new DateTime(2026, 02, 02),
-                CreatedBy = "Piotr",
-                UpdatedBy = "Piotr",
-                UserId = "1",
-                Games = new List<Games>()
-            }
+            TotalAmount = 2,
+            PageNumber = 1,
+            PageSize = 5,
+            FirstItemIndexList = 1,
+            LastItemIndexList = 2,
+            AmountPagesList = [1]
         };
-        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(categoriesTableMock);
+        var paginatedQuery = new PaginatedQuery
+        {
+            PageNumber = 1,
+            PageSize = 5
+        };
+        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(categoriesPaginatedMock);
 
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
-        var result = await categoryService.GetCategoriesByUserId("1");
+        var result = await categoryService.GetCategoriesByUserId("1", paginatedQuery);
 
         //Assert
-        result.Should().HaveCount(2);
+        result.Results.Should().HaveCount(2);
     }
 }
