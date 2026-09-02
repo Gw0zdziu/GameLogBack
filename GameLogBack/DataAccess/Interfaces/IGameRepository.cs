@@ -1,10 +1,12 @@
+using GameLogBack.Dtos.PaginatedQuery;
+using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 
 namespace GameLogBack.DataAccess.Interfaces;
 
 public interface IGameRepository
 {
-    public Task<List<Games>> GetByUserId(string id);
+    public Task<PaginatedResults<Games>> GetByUserId(string id, PaginatedQuery paginatedQuery);
     public Task<Games> GetById(string id);
     public Task<List<Games>> GetByCategoryId(string id);
     public Task<Games> GetByGameIdAndUserId(string gameName, string userId);
