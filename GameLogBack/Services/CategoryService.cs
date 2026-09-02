@@ -27,16 +27,23 @@ public class CategoryService : ICategoryService
 
     public async Task<PaginatedResults<CategoryDto>> GetUserCategories(string userId, PaginatedQuery paginatedQuery)
     {
-        var categories = await _categoryRepository.GetByUserId(userId);
-        var categoryDtos = categories.Select(x => new CategoryDto
+        var categories = await _categoryRepository.GetByUserId(userId, paginatedQuery);
+        var categoriesDtoPaginated = new PaginatedResults<CategoryDto>
         {
-            CategoryId = x.CategoryId,
-            CategoryName = x.CategoryName,
-            Description = x.Description,
-            GamesCount = x.Games.Count
-        }).ToList();
-        var paginatedResult =  _utilsService.GetPaginatedData(categoryDtos, paginatedQuery);
-        return paginatedResult;
+            Results = categories.Results.Select(x => new CategoryDto
+            {
+                CategoryId = x.CategoryId,
+                CategoryName = x.CategoryName,
+                Description = x.Description,
+                GamesCount = x.Games.Count
+            }).ToList(),
+            TotalAmount = categories.TotalAmount,
+            PageNumber = categories.PageNumber,
+            PageSize = categories.PageSize,
+            FirstItemIndexList = categories.FirstItemIndexList,
+            LastItemIndexList = categories.LastItemIndexList
+        };
+        return categoriesDtoPaginated;
     }
 
     public async Task<CategoryDto> GetCategory(string categoryId)
@@ -117,18 +124,26 @@ public class CategoryService : ICategoryService
         await _categoryRepository.Delete(category);
     }
 
-    public async Task<List<CategoryByUserIdDto>> GetCategoriesByUserId(string userId)
+    public async Task<PaginatedResults<CategoryByUserIdDto>> GetCategoriesByUserId(string userId, PaginatedQuery paginatedQuery)
     {
-        var categories = await _categoryRepository.GetByUserId(userId);
-        var categoryByUserIdDtos = categories.Select(x => new CategoryByUserIdDto
+        var categories = await _categoryRepository.GetByUserId(userId, paginatedQuery);
+        var categoriesByUserIdDtoPaginated = new PaginatedResults<CategoryByUserIdDto>
         {
-            CategoryId = x.CategoryId,
-            CategoryName = x.CategoryName,
-            Description = x.Description,
-            CreatedDate = x.CreatedDate,
-            UpdatedDate = x.UpdatedDate,
-            GamesCount = x.Games.Count
-        }).ToList();
-        return categoryByUserIdDtos;
+            Results = categories.Results.Select(x => new CategoryByUserIdDto()
+            {
+                CategoryId = x.CategoryId,
+                CategoryName = x.CategoryName,
+                Description = x.Description,
+                CreatedDate = x.CreatedDate,
+                UpdatedDate = x.UpdatedDate,
+                GamesCount = x.Games.Count
+            }).ToList(),
+            TotalAmount = categories.TotalAmount,
+            PageNumber = categories.PageNumber,
+            PageSize = categories.PageSize,
+            FirstItemIndexList = categories.FirstItemIndexList,
+            LastItemIndexList = categories.LastItemIndexList
+        };
+        return categoriesByUserIdDtoPaginated;
     }
 }
