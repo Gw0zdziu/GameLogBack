@@ -1,6 +1,9 @@
 using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
+using GameLogBack.Dtos.PaginatedQuery;
+using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
+using GameLogBack.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.DataAccess.Repositories;
@@ -13,10 +16,11 @@ public class GameRepository : IGameRepository
     {
         _context = context;
     }
+    
 
-    public async Task<List<Games>> GetByUserId(string id)
+    public async Task<PaginatedResults<Games>> GetByUserId(string id, PaginatedQuery paginatedQuery)
     {
-        return await _context.Games.Include(x => x.Category).Where(x => x.UserId == id).ToListAsync();
+        return await _context.Games.AsNoTracking().Include(x => x.Category).Where(x => x.UserId == id).GetPaginatedData(paginatedQuery);
     }
 
     public async Task<Games> GetById(string id)
@@ -67,5 +71,11 @@ public class GameRepository : IGameRepository
     {
         _context.Games.Remove(game);
         await _context.SaveChangesAsync();
+    }
+
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (_context != null) await _context.DisposeAsync();
     }
 }
