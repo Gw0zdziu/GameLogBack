@@ -46,9 +46,9 @@ public class GameController : ControllerBase
 
     [HttpGet("get-games-by-userId/{userId}")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesById([FromRoute] string userId)
+    public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
     {
-        var games = await _gameService.GetGamesByUserId(userId);
+        var games = await _gameService.GetGamesByUserId(userId, paginatedQuery);
         return Ok(games);
     }
 
