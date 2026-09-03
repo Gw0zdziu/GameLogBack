@@ -39,9 +39,9 @@ public class GameRepository : IGameRepository
         return await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName.ToLower() == gameName.ToLower());
     }
 
-    public async Task<bool> CheckIfGameExitsById(string gameId)
+    public async Task<bool> CheckIfGameExitsById(string categoryId)
     {
-        return await _context.Games.AnyAsync(x => x.GameId == gameId );
+        return await _context.Games.AnyAsync(x => x.CategoryId == categoryId );
     }
 
     public async Task<bool> CheckIfExistsWithSameName(string gameName, string userId, string gameId)
