@@ -22,7 +22,7 @@ public class CategoryRepository: ICategoryRepository
 
     public async Task<PaginatedResults<Categories>> GetByUserId(string id, PaginatedQuery paginatedQuery)
     {
-        return await _categories.Where(x => x.UserId == id).Include(x => x.Games).Include(x => x.Games).GetPaginatedData(paginatedQuery);
+        return await _categories.Where(x => x.UserId == id).Include(x => x.Games).GetPaginatedData(paginatedQuery);
     }
     
     public async  Task<Categories> GetById(string id)
