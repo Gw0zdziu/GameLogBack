@@ -7,8 +7,7 @@ namespace GameLogBack.DataAccess.Interfaces;
 public interface IGameRepository
 {
     public Task<PaginatedResults<Games>> GetByUserId(string id, PaginatedQuery paginatedQuery);
-    public Task<Games> GetById(string id);
-    public Task<List<Games>> GetByCategoryId(string id);
+    public Task<List<Games>> GetByCategoryId(string id, string userId);
     public Task<Games> GetByGameIdAndUserId(string gameName, string userId);
     public Task<bool> CheckIfGameExists(string gameName, string userId);
     public Task<bool> CheckIfGameExitsById(string gameId);

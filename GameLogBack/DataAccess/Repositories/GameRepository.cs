@@ -23,19 +23,14 @@ public class GameRepository : IGameRepository
         return await _context.Games.AsNoTracking().Include(x => x.Category).Where(x => x.UserId == id).GetPaginatedData(paginatedQuery);
     }
 
-    public async Task<Games> GetById(string id)
+    public Task<List<Games>> GetByCategoryId(string id, string userId)
     {
-        return await _context.Games.Include(x => x.Category).Where(x => x.GameId == id).FirstOrDefaultAsync();
-    }
-
-    public Task<List<Games>> GetByCategoryId(string id)
-    {
-        return _context.Games.Include(x => x.Category).Where(x => x.CategoryId == id).ToListAsync();
+        return _context.Games.Include(x => x.Category).Where(x => x.CategoryId == id && x.UserId == userId).ToListAsync();
     }
 
     public async Task<Games> GetByGameIdAndUserId(string gameId, string userId)
     {
-        return await _context.Games.Where(x =>
+        return await _context.Games.Include(x => x.Category).Where(x =>
             x.UserId == userId && x.GameId == gameId).FirstOrDefaultAsync();
     }
 
@@ -71,11 +66,5 @@ public class GameRepository : IGameRepository
     {
         _context.Games.Remove(game);
         await _context.SaveChangesAsync();
-    }
-
-    
-    public async ValueTask DisposeAsync()
-    {
-        if (_context != null) await _context.DisposeAsync();
     }
 }
