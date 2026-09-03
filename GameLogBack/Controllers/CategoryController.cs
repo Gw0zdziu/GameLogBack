@@ -48,7 +48,8 @@ public class CategoryController : ControllerBase
     [HttpGet("get-category/{categoryId}")]
     public async Task<ActionResult<CategoryDto>> GetCategory([FromRoute] string categoryId)
     {
-        var category = await _categoryService.GetCategory(categoryId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var category = await _categoryService.GetCategory(categoryId, userId);
         return Ok(category);
     }
 
@@ -86,7 +87,8 @@ public class CategoryController : ControllerBase
     [HttpDelete("delete/{categoryId}")]
     public async Task<IActionResult> DeleteCategory([FromRoute] string categoryId)
     {
-        await _categoryService.DeleteCategory(categoryId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await _categoryService.DeleteCategory(categoryId, userId);
         return Ok();
     }
 }
