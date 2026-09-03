@@ -102,20 +102,4 @@ public class UtilsService : IUtilsService
         var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
         return linkWithCode;
     }
-
-
-    public string ToKebabCase(string str)
-    {
-        if (string.IsNullOrWhiteSpace(str)) return string.Empty;
-
-        string result = Regex.Replace(str, @"([a-z])([A-Z])", "$1-$2");
-
-        result = Regex.Replace(result, @"[\s_]+", "-");
-
-        result = Regex.Replace(result, @"[^a-zA-Z0-9\-]", "");
-
-        result = Regex.Replace(result, @"-{2,}", "-").Trim('-');
-
-        return result.ToLower();
-    }
 }

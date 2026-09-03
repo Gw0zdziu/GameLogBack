@@ -18,6 +18,4 @@ public interface IUtilsService
     public string GenerateCodeToRecoverPassword();
 
     public string GenerateLinkToRecoveryPassword(string recoverCode, string user);
-    
-    public  string ToKebabCase(string str);
 }
