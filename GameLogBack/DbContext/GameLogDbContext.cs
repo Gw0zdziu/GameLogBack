@@ -226,6 +226,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(p => p.CategoryId).HasColumnName("category_id");
             entity.Property(p => p.UserId).HasColumnName("user_id");
             entity.Property(p => p.YearPlayed).HasColumnName("year_played");
+            entity.Property(p => p.GameImagePath).HasColumnName("game_image_path");
         });
         modelBuilder.Entity<Games>()
             .HasKey(k => k.GameId);
