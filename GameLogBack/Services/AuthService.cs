@@ -36,7 +36,7 @@ public class AuthService : IAuthService
         if (user is null) throw new BadRequestException("Data of login is incorrect");
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect");
-        var token = _utilsService.GetToken(user, _authenticationSettings.JwtTokenExpireMinutes);
+        var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
         var refreshToken = _utilsService.GetRefreshToken();
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(user.UserId);
         if (refreshTokenInfo is null)
@@ -46,13 +46,13 @@ public class AuthService : IAuthService
                 UserId = user.UserId,
                 RefreshTokenId = Guid.NewGuid().ToString(),
                 RefreshToken = refreshToken,
-                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireDays)
+                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes)
             };
             await _refreshTokenInfoRepository.Create(newRefreshTokenInfo);
         }
         else
         {
-            refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtAccessTokenExpireDays);
+            refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes);
             refreshTokenInfo.RefreshToken = refreshToken;
             await _refreshTokenInfoRepository.Update(refreshTokenInfo);
         }
@@ -68,7 +68,7 @@ public class AuthService : IAuthService
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
             throw new BadRequestException("Refresh token is expired");
         var user = await _userLoginsRepository.GetByUserId(userId);
-        var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireDays);
+        var token = _utilsService.GetToken(user, _authenticationSettings.JwtRefreshTokenExpireMinutes);
         return token;
     }
 
