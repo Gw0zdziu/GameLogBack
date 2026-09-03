@@ -45,7 +45,8 @@ public class CategoryService : ICategoryService
             PageNumber = categories.PageNumber,
             PageSize = categories.PageSize,
             FirstItemIndexList = categories.FirstItemIndexList,
-            LastItemIndexList = categories.LastItemIndexList
+            LastItemIndexList = categories.LastItemIndexList,
+            AmountPagesList = categories.AmountPagesList
         };
         return categoriesDtoPaginated;
     }
