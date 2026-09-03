@@ -14,9 +14,9 @@ public static class QueryableExtensions
             paginatedQuery.PageNumber = 1;
         }
 
-        var paginatedList = data
+        var paginatedList = await data
             .Skip((paginatedQuery.PageNumber - 1) * paginatedQuery.PageSize)
-            .Take(paginatedQuery.PageSize).ToList();
+            .Take(paginatedQuery.PageSize).ToListAsync();
         var firstItemIndexList = (paginatedQuery.PageNumber - 1) * paginatedList.Count() + 1;
         var lastItemIndexList = firstItemIndexList + paginatedList.Count() - 1;
         var amountPages = (int)Math.Ceiling((double)totalAmount / paginatedQuery.PageSize);
