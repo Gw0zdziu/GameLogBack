@@ -40,7 +40,8 @@ public class GameController : ControllerBase
     public async Task<ActionResult<IEnumerable<GameByUserIdDto>>> GetGamesByCategoryId(
         [FromRoute] string categoryId)
     {
-        var games = await _gameService.GetGamesByCategoryId(categoryId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var games = await _gameService.GetGamesByCategoryId(categoryId, userId);
         return Ok(games);
     }
 
@@ -55,7 +56,8 @@ public class GameController : ControllerBase
     [HttpGet("get-game/{gameId}")]
     public async Task<ActionResult<GameDto>> GetGame([FromRoute] string gameId)
     {
-        var game = await _gameService.GetGame(gameId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var game = await _gameService.GetGame(gameId, userId);
         return Ok(game);
     }
 

@@ -112,11 +112,11 @@ public class GameServiceTests
                 CategoryName = "FPS"
             }
         };
-        mockGameRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(gameMock);
+        mockGameRepository.Setup(x => x.GetByGameIdAndUserId(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(gameMock);
         //Act
         var gameService = new GameService(mockUtilsService.Object, mockRailwayService.Object, mockGameRepository.Object,
             mockCategoryRepository.Object);
-        var result = await gameService.GetGame("1");
+        var result = await gameService.GetGame("1", "1");
 
         //Assert
         result.GameName.Should().Be("CallOfDuty");
@@ -157,12 +157,12 @@ public class GameServiceTests
                 UserId = "1"
             }
         };
-        mockGameRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(null as Games);
+        mockGameRepository.Setup(x => x.GetByGameIdAndUserId(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Games);
 
         //Act
         var gameService = new GameService(mockUtilsService.Object, mockRailwayService.Object, mockGameRepository.Object,
             mockCategoryRepository.Object);
-        var result = async () => await gameService.GetGame("3");
+        var result = async () => await gameService.GetGame("3", "1");
 
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("Game not found");
@@ -583,12 +583,12 @@ public class GameServiceTests
             }
         };
 
-        mockGameRepository.Setup(x => x.GetByCategoryId(It.IsAny<string>())).ReturnsAsync(gameMock);
+        mockGameRepository.Setup(x => x.GetByCategoryId(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(gameMock);
 
         //Act
         var gameService = new GameService(mockUtilsService.Object, mockRailwayService.Object, mockGameRepository.Object,
             mockCategoryRepository.Object);
-        var result = await gameService.GetGamesByCategoryId("1");
+        var result = await gameService.GetGamesByCategoryId("1", "1");
 
         //Assert
         result.Should().HaveCount(1);

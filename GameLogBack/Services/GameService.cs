@@ -56,9 +56,9 @@ public class GameService : IGameService
         return gamesDtoPaginated;
     }
 
-    public async Task<GameDto> GetGame(string gameId)
+    public async Task<GameDto> GetGame(string gameId, string userId)
     {
-        var game = await _gameRepository.GetById(gameId);
+        var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
         if (game is null)
         {
             throw new NotFoundException("Game not found");
@@ -166,9 +166,9 @@ public class GameService : IGameService
         return gamesByUserId;
     }
 
-    public async Task<IEnumerable<GameByCategoryIdDto>> GetGamesByCategoryId(string categoryId)
+    public async Task<IEnumerable<GameByCategoryIdDto>> GetGamesByCategoryId(string categoryId, string userId)
     {
-        var games = await _gameRepository.GetByCategoryId(categoryId);
+        var games = await _gameRepository.GetByCategoryId(categoryId, userId);
         return
         [
             .. games.Select(x =>
