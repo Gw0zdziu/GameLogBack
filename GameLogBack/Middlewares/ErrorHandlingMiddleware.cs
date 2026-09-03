@@ -23,7 +23,8 @@ public class ErrorHandlingMiddleware: IMiddleware
         }
         catch (Exception e)
         {
-            await context.Response.WriteAsync(e.Message);
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("Internal Server Error");
         }
     }
 }
