@@ -134,11 +134,11 @@ public class CategoryServiceTests
             Games = new List<Games>(),
             UserId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(categoryMock);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
 
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
-        var result = await categoryService.GetCategory("1");
+        var result = await categoryService.GetCategory("1", "2");
 
         //Assert
         result.CategoryName.Should().Be("Kategoria1");
@@ -152,9 +152,9 @@ public class CategoryServiceTests
         var mockCategoryRepository = new Mock<ICategoryRepository>();
         var mockGameRepository = new Mock<IGameRepository>();
          //Act
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(null as Categories);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
-        var result = async () => { await categoryService.GetCategory("3"); };
+        var result = async () => { await categoryService.GetCategory("3", "1"); };
 
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("Category not found");
@@ -239,7 +239,7 @@ public class CategoryServiceTests
                 UserId = "1"
             },
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(categoriesTableMock[0]);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoriesTableMock[0]);
         mockCategoryRepository.Setup(x => x.CheckIfExistsWithSameName(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
@@ -286,7 +286,7 @@ public class CategoryServiceTests
                 UserId = "1"
             }
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(null as Categories);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
         var result = async () => await categoryService.UpdateCategory(updateCategory, "5", "1");
@@ -319,7 +319,7 @@ public class CategoryServiceTests
                 UpdatedBy = "Jakub",
                 UserId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(categoryMock);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
         mockCategoryRepository.Setup(x => x.CheckIfExistsWithSameName(updateCategory.CategoryName, "1", "1")).ReturnsAsync(true);
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
@@ -347,11 +347,11 @@ public class CategoryServiceTests
             UpdatedBy = "Jakub",
             UserId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(categoryMock);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
         mockGameRepository.Setup(x => x.CheckIfGameExitsById(It.IsAny<string>())).ReturnsAsync(false);
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
-        await categoryService.DeleteCategory("1");
+        await categoryService.DeleteCategory("1", "1");
         
         //Assert
         mockCategoryRepository.Verify(x => x.Delete(categoryMock), Times.Once);
@@ -365,11 +365,11 @@ public class CategoryServiceTests
         var mockCategoryRepository = new Mock<ICategoryRepository>();
         var mockGameRepository = new Mock<IGameRepository>();
         
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(null as Categories);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
 
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
-        var result = async () => await categoryService.DeleteCategory("3");
+        var result = async () => await categoryService.DeleteCategory("3", "1");
 
 
         //Assert
@@ -406,12 +406,12 @@ public class CategoryServiceTests
             YearPlayed = new DateTime(2026, 01, 02),
             CategoryId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(categoriesTableMock);
+        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoriesTableMock);
         mockGameRepository.Setup(x => x.CheckIfGameExitsById(It.IsAny<string>())).ReturnsAsync(true);
 
         //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
-        var result = async () => await categoryService.DeleteCategory("1");
+        var result = async () => await categoryService.DeleteCategory("1", "1");
 
 
         //Assert
