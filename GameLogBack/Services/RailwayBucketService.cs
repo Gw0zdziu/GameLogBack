@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using GameLogBack.Interfaces;
+using GameLogBack.Mappers;
 using GameLogBack.Settings;
 using JetBrains.Annotations;
 
@@ -19,13 +20,13 @@ public class RailwayBucketService : IRailwayBucketService
         _bucketS3 = bucketS3;
     }
 
-    public async Task<string> UploadFile(string userId, string fileId, string urlFile)
+    public async Task<string> UploadFile(string directoryName, string fileName, string urlFile)
     {
         using var responseMessage = await _client.GetAsync(urlFile);
         responseMessage.EnsureSuccessStatusCode();
         var contentType = responseMessage.Content.Headers.ContentType?.ToString();
-        var extensionFile = urlFile.Split('.')[^1];
-        var pathToFileBucket = $"{userId}/{fileId}.{extensionFile}";
+        var extensionFile = ExtensionsMapper.ContentTypeToExtensionFile(contentType);
+        var pathToFileBucket = $"{directoryName}/{fileName}.{extensionFile}";
         await using var imageStream = await responseMessage.Content.ReadAsStreamAsync();
         var putRequest = new PutObjectRequest()
         {
