@@ -50,9 +50,9 @@ public class CategoryService : ICategoryService
         return categoriesDtoPaginated;
     }
 
-    public async Task<CategoryDto> GetCategory(string categoryId)
+    public async Task<CategoryDto> GetCategory(string categoryId, string userId)
     {
-        var category = await _categoryRepository.GetById(categoryId);
+        var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found");
         var categoryWithGamesCounter = new CategoryDto
         {
@@ -98,7 +98,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
-        var category = await _categoryRepository.GetById(categoryId);
+        var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found");
         var isCategoryNameExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
         if (isCategoryNameExist) throw new BadRequestException("Category with this name already exist");
@@ -119,9 +119,9 @@ public class CategoryService : ICategoryService
         };
     }
 
-    public async Task DeleteCategory(string categoryId)
+    public async Task DeleteCategory(string categoryId, string userId)
     {
-        var category = await _categoryRepository.GetById(categoryId);
+        var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found");
         var isGameWithCategoryExist = await _gameRepository.CheckIfGameExitsById(categoryId);
         if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category");

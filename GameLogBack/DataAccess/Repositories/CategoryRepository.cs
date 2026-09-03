@@ -25,9 +25,9 @@ public class CategoryRepository: ICategoryRepository
         return await _categories.Where(x => x.UserId == id).Include(x => x.Games).GetPaginatedData(paginatedQuery);
     }
     
-    public async  Task<Categories> GetById(string id)
+    public async  Task<Categories> GetById(string id, string userId)
     {
-        return await _categories.Where(x => x.CategoryId == id).Include(x => x.Games).FirstOrDefaultAsync();
+        return await _categories.Include(x => x.Games).Where(x => x.CategoryId == id && x.UserId == userId).FirstOrDefaultAsync();
     }
 
     public async Task<string> GetCategoryName(string id)
