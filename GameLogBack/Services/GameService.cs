@@ -6,6 +6,7 @@ using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
+using GameLogBack.Extensions;
 using GameLogBack.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,13 +18,16 @@ public class GameService : IGameService
     private readonly IGameRepository _gameRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IRailwayBucketService _railwayBucketService;
+    private readonly IConfiguration _configuration;
 
-    public GameService(IUtilsService utilsService, IRailwayBucketService railwayBucketService, IGameRepository gameRepository, ICategoryRepository categoryRepository)
+
+    public GameService(IUtilsService utilsService, IRailwayBucketService railwayBucketService, IGameRepository gameRepository, ICategoryRepository categoryRepository, IConfiguration configuration)
     {
         _utilsService = utilsService;
         _railwayBucketService = railwayBucketService;
         _gameRepository = gameRepository;
         _categoryRepository = categoryRepository;
+        _configuration = configuration;
     }
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
@@ -81,31 +85,32 @@ public class GameService : IGameService
 
     public async Task PostGame(GamePostDto gamePostDto, string userId)
     {
-        string gameImagePath;
+        string gameImagePathInBucket;
         var isGameNameExist = await _gameRepository.CheckIfGameExists(gamePostDto.GameName, userId);
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
-        var gameNameKebabCase = _utilsService.ToKebabCase(gamePostDto.GameName);
+        var gameNameKebabCase = gamePostDto.GameName.ToKebabCase();
         if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
         {
-            gameImagePath = null;
+            gameImagePathInBucket = null;
         }
         else
         {
-            gameImagePath = await _railwayBucketService.UploadFile(userId, gameNameKebabCase, gamePostDto.GameImageUrl);
+            var gameImageDirectoryPath = _configuration.GetSection("GamesImageDirectoryName").Value;
+            gameImagePathInBucket = await _railwayBucketService.UploadFile(gameImageDirectoryPath, gameNameKebabCase, gamePostDto.GameImageUrl);
 
         }
         var newGame = new Games
         {
             GameId = Guid.NewGuid().ToString(),
             GameName = gamePostDto.GameName,
-            GameImagePath = gameImagePath,
+            GameImagePath = gameImagePathInBucket,
             UserId = userId,
             CategoryId = gamePostDto.CategoryId,
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
             YearPlayed = gamePostDto.YearPlayed,
             CreatedBy = userId,
-            UpdatedBy = null
+            UpdatedBy = userId
         };
         await _gameRepository.Create(newGame);
     }
