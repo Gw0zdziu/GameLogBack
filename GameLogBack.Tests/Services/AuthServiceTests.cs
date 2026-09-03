@@ -31,8 +31,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var loginUserDto = new LoginUserDto()
@@ -84,8 +84,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var loginUserDto = new LoginUserDto()
@@ -129,8 +129,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var loginUserDto = new LoginUserDto()
@@ -167,8 +167,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var loginUserDto = new LoginUserDto()
@@ -210,8 +210,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var refreshTokenInfo = new RefreshTokenInfo()
@@ -252,8 +252,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var mockClaimsPrincipal = ClaimsPrincipalTestHelper.CreatePrincipal("1", "nickName", "admin");
@@ -280,8 +280,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var refreshTokenInfo = new RefreshTokenInfo()
@@ -313,8 +313,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtRefreshTokenExpireMinutes = 15,
+            JwtAccessTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         var refreshTokenInfo = new RefreshTokenInfo()
@@ -345,8 +345,8 @@ public class AuthServiceTests
         var mockAuthenticationSettings = new AuthenticationSettings()
         {
             JwtKey = "jwtKey",
-            JwtAccessTokenExpireDays = 15,
-            JwtTokenExpireMinutes = 21600,
+            JwtAccessTokenExpireMinutes = 15,
+            JwtRefreshTokenExpireMinutes = 21600,
             JwtIssuer = "https://auth.example.com"
         };
         mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
