@@ -96,10 +96,11 @@ public class UtilsService : IUtilsService
 
     public string GenerateLinkToRecoveryPassword(string recoverCode, string userId)
     {
-        var frontedUrl = _config.FrontendUrl;
-        var recoveryPasswordEndpoint = _config.RecoveryPasswordEndpoint;
-        recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token}", recoverCode);
-        var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
-        return linkWithCode;
+        var recoveryLink = new StringBuilder(_config.FrontendUrl)
+            .Append(_config.RecoveryPasswordEndpoint)
+            .Replace("{userId}", userId)
+            .Replace("{token}", recoverCode)
+            .ToString();
+        return recoveryLink;
     }
 }
