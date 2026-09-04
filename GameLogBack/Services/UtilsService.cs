@@ -17,12 +17,12 @@ namespace GameLogBack.Services;
 public class UtilsService : IUtilsService
 {
     private readonly AuthenticationSettings _authenticationSettings;
-    private readonly IConfiguration _configuration;
+    private readonly Config _config;
 
-    public UtilsService(AuthenticationSettings authenticationSettings, IConfiguration configuration)
+    public UtilsService(AuthenticationSettings authenticationSettings, Config config)
     {
         _authenticationSettings = authenticationSettings;
-        _configuration = configuration;
+        _config = config;
     }
 
     public string GetRefreshToken()
@@ -96,8 +96,8 @@ public class UtilsService : IUtilsService
 
     public string GenerateLinkToRecoveryPassword(string recoverCode, string userId)
     {
-        var frontedUrl = _configuration.GetSection("FrontendUrl").Value;
-        var recoveryPasswordEndpoint = _configuration.GetSection("RecoveryPasswordEndpoint").Value;
+        var frontedUrl = _config.FrontendUrl;
+        var recoveryPasswordEndpoint = _config.RecoveryPasswordEndpoint;
         recoveryPasswordEndpoint = recoveryPasswordEndpoint?.Replace("{userId}", userId).Replace("{token}", recoverCode);
         var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
         return linkWithCode;

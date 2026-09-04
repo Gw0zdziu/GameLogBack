@@ -32,6 +32,7 @@ builder.Services.AddControllers();
 string connectionString;
 var gameBrainApiSettings = new GameBrainApiSettings();
 var authenticationSettings = new AuthenticationSettings();
+var config = new Config();
 BasicAWSCredentials awsCredentials;
 AmazonS3Config s3Config;
 BucketS3 bucketS3;
@@ -54,6 +55,12 @@ if (builder.Environment.IsDevelopment())
     connectionString = builder.Configuration.GetConnectionString("Postgres");
     builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
     builder.Configuration.GetSection("GameBrainSettings").Bind(gameBrainApiSettings);
+    config = new Config()
+    {
+        FrontendUrl = builder.Configuration["RecoveryPasswordEndpoint"],
+        GamesImageDirectoryName = builder.Configuration["GamesImageDirectoryName"],
+        RecoveryPasswordEndpoint = builder.Configuration["RecoveryPasswordEndpoint"],
+    };
 }
 else
 {
@@ -87,8 +94,15 @@ else
         GenerateFilterOptions = Environment.GetEnvironmentVariable("GENERATE_FILTER_OPTIONS"),
 
     };
+    config = new Config()
+    {
+        FrontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL"),
+        GamesImageDirectoryName = Environment.GetEnvironmentVariable("GAMES_IMAGE_DIRECTORY_NAME"),
+        RecoveryPasswordEndpoint = Environment.GetEnvironmentVariable("RECOVERY_PASSWORD_ENDPOINT"),
+    };
 }
 builder.Services.AddSingleton(bucketS3);
+builder.Services.AddSingleton(config);
 builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
