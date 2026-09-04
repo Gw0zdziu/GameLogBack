@@ -102,47 +102,4 @@ public class UtilsService : IUtilsService
         var linkWithCode = frontedUrl + recoveryPasswordEndpoint;
         return linkWithCode;
     }
-
-    public PaginatedResults<T> GetPaginatedData<T>(List<T> data, PaginatedQuery paginatedQuery)
-    {
-        var totalAmount = data.Count();
-        if (totalAmount == paginatedQuery.PageSize)
-        {
-            paginatedQuery.PageNumber = 1;
-        }
-
-        var paginatedList =  data
-            .Skip((paginatedQuery.PageNumber - 1) * paginatedQuery.PageSize)
-            .Take(paginatedQuery.PageSize).ToList();
-        var firstItemIndexList = (paginatedQuery.PageNumber - 1) * paginatedList.Count() + 1;
-        var lastItemIndexList = firstItemIndexList + paginatedList.Count() - 1;
-        var amountPages = (int)Math.Ceiling((double)totalAmount / paginatedQuery.PageSize);
-        var amountPagesList = Enumerable.Range(1, amountPages).ToList();
-        var paginatedResult = new PaginatedResults<T>
-        {
-            Results = paginatedList,
-            TotalAmount = totalAmount,
-            PageNumber = amountPagesList.Count == 1 ? 1 : paginatedQuery.PageNumber,
-            PageSize = paginatedQuery.PageSize,
-            FirstItemIndexList = firstItemIndexList,
-            LastItemIndexList = lastItemIndexList,
-            AmountPagesList = amountPagesList
-        };
-        return paginatedResult;
-    }
-
-    public string ToKebabCase(string str)
-    {
-        if (string.IsNullOrWhiteSpace(str)) return string.Empty;
-
-        string result = Regex.Replace(str, @"([a-z])([A-Z])", "$1-$2");
-
-        result = Regex.Replace(result, @"[\s_]+", "-");
-
-        result = Regex.Replace(result, @"[^a-zA-Z0-9\-]", "");
-
-        result = Regex.Replace(result, @"-{2,}", "-").Trim('-');
-
-        return result.ToLower();
-    }
 }

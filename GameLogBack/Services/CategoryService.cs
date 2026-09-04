@@ -27,21 +27,33 @@ public class CategoryService : ICategoryService
 
     public async Task<PaginatedResults<CategoryDto>> GetUserCategories(string userId, PaginatedQuery paginatedQuery)
     {
-        var categories = await _categoryRepository.GetByUserId(userId);
-        var categoryDtos = categories.Select(x => new CategoryDto
+        var categories = await _categoryRepository.GetByUserId(userId, paginatedQuery);
+        var categoriesDtoPaginated = new PaginatedResults<CategoryDto>
         {
-            CategoryId = x.CategoryId,
-            CategoryName = x.CategoryName,
-            Description = x.Description,
-            GamesCount = x.Games.Count
-        }).ToList();
-        var paginatedResult =  _utilsService.GetPaginatedData(categoryDtos, paginatedQuery);
-        return paginatedResult;
+            Results = categories.Results.Select(x => new CategoryDto
+            {
+                CategoryId = x.CategoryId,
+                CreatedDate = x.CreatedDate,
+                UpdatedDate = x.UpdatedDate,
+                CreatedBy = x.CreatedBy,
+                UpdatedBy = x.UpdatedBy,
+                CategoryName = x.CategoryName,
+                Description = x.Description,
+                GamesCount = x.Games.Count
+            }).ToList(),
+            TotalAmount = categories.TotalAmount,
+            PageNumber = categories.PageNumber,
+            PageSize = categories.PageSize,
+            FirstItemIndexList = categories.FirstItemIndexList,
+            LastItemIndexList = categories.LastItemIndexList,
+            AmountPagesList = categories.AmountPagesList
+        };
+        return categoriesDtoPaginated;
     }
 
-    public async Task<CategoryDto> GetCategory(string categoryId)
+    public async Task<CategoryDto> GetCategory(string categoryId, string userId)
     {
-        var category = await _categoryRepository.GetById(categoryId);
+        var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found");
         var categoryWithGamesCounter = new CategoryDto
         {
@@ -87,7 +99,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
-        var category = await _categoryRepository.GetById(categoryId);
+        var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found");
         var isCategoryNameExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
         if (isCategoryNameExist) throw new BadRequestException("Category with this name already exist");
@@ -108,27 +120,35 @@ public class CategoryService : ICategoryService
         };
     }
 
-    public async Task DeleteCategory(string categoryId)
+    public async Task DeleteCategory(string categoryId, string userId)
     {
-        var category = await _categoryRepository.GetById(categoryId);
+        var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found");
         var isGameWithCategoryExist = await _gameRepository.CheckIfGameExitsById(categoryId);
         if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category");
         await _categoryRepository.Delete(category);
     }
 
-    public async Task<List<CategoryByUserIdDto>> GetCategoriesByUserId(string userId)
+    public async Task<PaginatedResults<CategoryByUserIdDto>> GetCategoriesByUserId(string userId, PaginatedQuery paginatedQuery)
     {
-        var categories = await _categoryRepository.GetByUserId(userId);
-        var categoryByUserIdDtos = categories.Select(x => new CategoryByUserIdDto
+        var categories = await _categoryRepository.GetByUserId(userId, paginatedQuery);
+        var categoriesByUserIdDtoPaginated = new PaginatedResults<CategoryByUserIdDto>
         {
-            CategoryId = x.CategoryId,
-            CategoryName = x.CategoryName,
-            Description = x.Description,
-            CreatedDate = x.CreatedDate,
-            UpdatedDate = x.UpdatedDate,
-            GamesCount = x.Games.Count
-        }).ToList();
-        return categoryByUserIdDtos;
+            Results = categories.Results.Select(x => new CategoryByUserIdDto()
+            {
+                CategoryId = x.CategoryId,
+                CategoryName = x.CategoryName,
+                Description = x.Description,
+                CreatedDate = x.CreatedDate,
+                UpdatedDate = x.UpdatedDate,
+                GamesCount = x.Games.Count
+            }).ToList(),
+            TotalAmount = categories.TotalAmount,
+            PageNumber = categories.PageNumber,
+            PageSize = categories.PageSize,
+            FirstItemIndexList = categories.FirstItemIndexList,
+            LastItemIndexList = categories.LastItemIndexList
+        };
+        return categoriesByUserIdDtoPaginated;
     }
 }

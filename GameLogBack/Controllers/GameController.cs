@@ -40,22 +40,24 @@ public class GameController : ControllerBase
     public async Task<ActionResult<IEnumerable<GameByUserIdDto>>> GetGamesByCategoryId(
         [FromRoute] string categoryId)
     {
-        var games = await _gameService.GetGamesByCategoryId(categoryId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var games = await _gameService.GetGamesByCategoryId(categoryId, userId);
         return Ok(games);
     }
 
     [HttpGet("get-games-by-userId/{userId}")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesById([FromRoute] string userId)
+    public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
     {
-        var games = await _gameService.GetGamesByUserId(userId);
+        var games = await _gameService.GetGamesByUserId(userId, paginatedQuery);
         return Ok(games);
     }
 
     [HttpGet("get-game/{gameId}")]
     public async Task<ActionResult<GameDto>> GetGame([FromRoute] string gameId)
     {
-        var game = await _gameService.GetGame(gameId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var game = await _gameService.GetGame(gameId, userId);
         return Ok(game);
     }
 

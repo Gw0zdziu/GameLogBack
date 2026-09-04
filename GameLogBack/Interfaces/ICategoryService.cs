@@ -9,9 +9,9 @@ namespace GameLogBack.Interfaces;
 public interface ICategoryService
 {
     Task<PaginatedResults<CategoryDto>> GetUserCategories(string userId, PaginatedQuery paginatedQuery);
-    Task<CategoryDto> GetCategory(string categoryId);
+    Task<CategoryDto> GetCategory(string categoryId, string userId);
     Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId);
     Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId);
-    Task DeleteCategory(string categoryId);
-    Task<List<CategoryByUserIdDto>> GetCategoriesByUserId(string userId);
+    Task DeleteCategory(string categoryId, string userId);
+    Task<PaginatedResults<CategoryByUserIdDto>> GetCategoriesByUserId(string userId, PaginatedQuery paginatedQuery);
 }

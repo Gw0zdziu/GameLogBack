@@ -39,16 +39,17 @@ public class CategoryController : ControllerBase
 
     [HttpGet("get-categories-by-userId/{userId}")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategoriesByUserId([FromRoute] string userId)
+    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategoriesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
     {
-        var categories = await _categoryService.GetCategoriesByUserId(userId);
+        var categories = await _categoryService.GetCategoriesByUserId(userId, paginatedQuery);
         return Ok(categories);
     }
 
     [HttpGet("get-category/{categoryId}")]
     public async Task<ActionResult<CategoryDto>> GetCategory([FromRoute] string categoryId)
     {
-        var category = await _categoryService.GetCategory(categoryId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var category = await _categoryService.GetCategory(categoryId, userId);
         return Ok(category);
     }
 
@@ -86,7 +87,8 @@ public class CategoryController : ControllerBase
     [HttpDelete("delete/{categoryId}")]
     public async Task<IActionResult> DeleteCategory([FromRoute] string categoryId)
     {
-        await _categoryService.DeleteCategory(categoryId);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await _categoryService.DeleteCategory(categoryId, userId);
         return Ok();
     }
 }

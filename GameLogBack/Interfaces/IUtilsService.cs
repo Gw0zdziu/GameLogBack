@@ -18,8 +18,4 @@ public interface IUtilsService
     public string GenerateCodeToRecoverPassword();
 
     public string GenerateLinkToRecoveryPassword(string recoverCode, string user);
-
-    public PaginatedResults<T> GetPaginatedData<T>(List<T> data, PaginatedQuery paginatedQuery);
-
-    public  string ToKebabCase(string str);
 }

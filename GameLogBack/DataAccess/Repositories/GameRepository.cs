@@ -1,6 +1,9 @@
 using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
+using GameLogBack.Dtos.PaginatedQuery;
+using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
+using GameLogBack.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.DataAccess.Repositories;
@@ -13,25 +16,21 @@ public class GameRepository : IGameRepository
     {
         _context = context;
     }
+    
 
-    public async Task<List<Games>> GetByUserId(string id)
+    public async Task<PaginatedResults<Games>> GetByUserId(string id, PaginatedQuery paginatedQuery)
     {
-        return await _context.Games.Include(x => x.Category).Where(x => x.UserId == id).ToListAsync();
+        return await _context.Games.AsNoTracking().Include(x => x.Category).Where(x => x.UserId == id).GetPaginatedData(paginatedQuery);
     }
 
-    public async Task<Games> GetById(string id)
+    public Task<List<Games>> GetByCategoryId(string id, string userId)
     {
-        return await _context.Games.Include(x => x.Category).Where(x => x.GameId == id).FirstOrDefaultAsync();
-    }
-
-    public Task<List<Games>> GetByCategoryId(string id)
-    {
-        return _context.Games.Include(x => x.Category).Where(x => x.CategoryId == id).ToListAsync();
+        return _context.Games.Include(x => x.Category).Where(x => x.CategoryId == id && x.UserId == userId).ToListAsync();
     }
 
     public async Task<Games> GetByGameIdAndUserId(string gameId, string userId)
     {
-        return await _context.Games.Where(x =>
+        return await _context.Games.Include(x => x.Category).Where(x =>
             x.UserId == userId && x.GameId == gameId).FirstOrDefaultAsync();
     }
 
@@ -40,9 +39,9 @@ public class GameRepository : IGameRepository
         return await _context.Games.AnyAsync(x => x.UserId == userId && x.GameName.ToLower() == gameName.ToLower());
     }
 
-    public async Task<bool> CheckIfGameExitsById(string gameId)
+    public async Task<bool> CheckIfGameExitsById(string categoryId)
     {
-        return await _context.Games.AnyAsync(x => x.GameId == gameId );
+        return await _context.Games.AnyAsync(x => x.CategoryId == categoryId );
     }
 
     public async Task<bool> CheckIfExistsWithSameName(string gameName, string userId, string gameId)
