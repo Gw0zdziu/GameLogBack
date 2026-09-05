@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Resend;
+using Serilog;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -104,16 +105,23 @@ else
 builder.Services.AddSingleton(bucketS3);
 builder.Services.AddSingleton(config);
 builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
+builder.Services.AddSingleton(gameBrainApiSettings);
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
-builder.Services.AddSingleton(gameBrainApiSettings);
 builder.Services.AddHttpClient<GameBrainApiService>((client) =>
 {
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 
 });
 builder.Services.AddSingleton(authenticationSettings);
-builder.Services.AddScoped<ErrorHandlingMiddleware>();
+builder.Services.AddTransient<ErrorHandlingMiddleware>();
+builder.Host.UseSerilog((context, configs) =>
+{
+    configs
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console();
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("GameLogProd", policy =>
@@ -179,12 +187,12 @@ app.UseSwaggerUI();
 
 
 //app.UseHttpsRedirection();
+app.UseSerilogRequestLogging();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
 
 app.Run();
