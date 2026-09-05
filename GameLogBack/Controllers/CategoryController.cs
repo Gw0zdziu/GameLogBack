@@ -1,14 +1,12 @@
 using System.Security.Claims;
 using FluentValidation;
-using GameLogBack.Dtos.Category;
 using GameLogBack.Dtos.Category.RequestDto;
 using GameLogBack.Dtos.Category.ResponseDto;
-using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Interfaces;
-using GameLogBack.Validators;
-using GameLogBack.Validators.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Resend;
+using PaginatedQuery = GameLogBack.Dtos.PaginatedQuery.PaginatedQuery;
 
 namespace GameLogBack.Controllers;
 
@@ -39,11 +37,20 @@ public class CategoryController : ControllerBase
 
     [HttpGet("get-categories-by-userId/{userId}")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategoriesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
+    public async Task<ActionResult<IEnumerable<PaginatedResult<CategoryByUserIdDto>>>> GetCategoriesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
     {
         var categories = await _categoryService.GetCategoriesByUserId(userId, paginatedQuery);
         return Ok(categories);
     }
+
+    [HttpGet("get-category-names")]
+    public async Task<ActionResult<IEnumerable<CategoriesNameDto>>> GetCategoryNames()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var categories = await _categoryService.GetCategoryNames(userId);
+        return Ok(categories);
+    }
+    
 
     [HttpGet("get-category/{categoryId}")]
     public async Task<ActionResult<CategoryDto>> GetCategory([FromRoute] string categoryId)

@@ -477,4 +477,42 @@ public class CategoryServiceTests
         //Assert
         result.Results.Should().HaveCount(2);
     }
+
+    [Fact]
+    public async Task GetCategoryNames_ForValidUserId_ReturnListCategoryNames()
+    {
+        var mockUtilsService = new Mock<IUtilsService>();
+        var mockCategoryRepository = new Mock<ICategoryRepository>();
+        var mockGameRepository = new Mock<IGameRepository>();
+        var categoryNamesListMock = new List<CategoriesNameDto>()
+        {
+            new CategoriesNameDto()
+            {
+                CategoryId = "1",
+                CategoryName = "Kategoria1"
+            },
+            new CategoriesNameDto()
+            {
+                CategoryId = "2",
+                CategoryName = "Kategoria2"
+            }
+        };
+        mockCategoryRepository.Setup(x => x.GetCategoryNames(It.IsAny<string>())).ReturnsAsync(categoryNamesListMock);
+        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var result = await categoryService.GetCategoryNames("1");
+        result.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetCategoryNames_ForInvalidUserId_ReturnEmptyList()
+    {
+        var mockUtilsService = new Mock<IUtilsService>();
+        var mockCategoryRepository = new Mock<ICategoryRepository>();
+        var mockGameRepository = new Mock<IGameRepository>();
+        var categoryNamesListMock = new List<CategoriesNameDto>();
+        mockCategoryRepository.Setup(x => x.GetCategoryNames(It.IsAny<string>())).ReturnsAsync(categoryNamesListMock);
+        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var result = await categoryService.GetCategoryNames("1");
+        result.Should().HaveCount(0);
+    }
 }
