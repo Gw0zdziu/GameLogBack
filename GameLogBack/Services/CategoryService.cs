@@ -1,6 +1,4 @@
 using GameLogBack.DataAccess.Interfaces;
-using GameLogBack.DbContext;
-using GameLogBack.Dtos.Category;
 using GameLogBack.Dtos.Category.RequestDto;
 using GameLogBack.Dtos.Category.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
@@ -8,7 +6,6 @@ using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
@@ -150,5 +147,10 @@ public class CategoryService : ICategoryService
             LastItemIndexList = categories.LastItemIndexList
         };
         return categoriesByUserIdDtoPaginated;
+    }
+
+    public async Task<List<CategoriesNameDto>> GetCategoryNames(string userId)
+    {
+        return await _categoryRepository.GetCategoryNames(userId);
     }
 }

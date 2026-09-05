@@ -14,4 +14,5 @@ public interface ICategoryService
     Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId);
     Task DeleteCategory(string categoryId, string userId);
     Task<PaginatedResults<CategoryByUserIdDto>> GetCategoriesByUserId(string userId, PaginatedQuery paginatedQuery);
+    Task<List<CategoriesNameDto>> GetCategoryNames(string userId);
 }
