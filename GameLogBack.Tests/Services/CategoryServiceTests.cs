@@ -506,13 +506,18 @@ public class CategoryServiceTests
     [Fact]
     public async Task GetCategoryNames_ForInvalidUserId_ReturnEmptyList()
     {
+        //Arrange
         var mockUtilsService = new Mock<IUtilsService>();
         var mockCategoryRepository = new Mock<ICategoryRepository>();
         var mockGameRepository = new Mock<IGameRepository>();
         var categoryNamesListMock = new List<CategoriesNameDto>();
         mockCategoryRepository.Setup(x => x.GetCategoryNames(It.IsAny<string>())).ReturnsAsync(categoryNamesListMock);
+        
+        //Act
         var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
         var result = await categoryService.GetCategoryNames("1");
+        
+        //Assert
         result.Should().HaveCount(0);
     }
 }
