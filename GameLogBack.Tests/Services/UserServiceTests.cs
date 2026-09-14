@@ -262,7 +262,7 @@ public class UserServiceTests
             CodeId = "1",
             Code = "1234",
             UserId = "1",
-            ExpiryDate = new DateTime(2026, 09, 01)
+            ExpiryDate = DateTime.Now.AddDays(1)
         };
         var user = new Users()
         {
