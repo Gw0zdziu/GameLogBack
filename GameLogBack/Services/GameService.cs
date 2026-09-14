@@ -113,34 +113,32 @@ public class GameService : IGameService
         await _gameRepository.Create(newGame);
     }
 
-    public async Task<GameDto> PutGame(GamePutDto gamePutDto, string gameId, string userId)
+    public async Task PutGame(GamePutDto gamePutDto, string gameId, string userId)
     {
+        
         var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
         if (game is null) throw new NotFoundException("Game not found");
         var isGameNameExist = await _gameRepository.CheckIfExistsWithSameName(gamePutDto.GameName, userId, gameId);
         if (isGameNameExist) throw new BadRequestException("Game with this name already exist");
+        var gameNameKebabCase = gamePutDto.GameName.ToKebabCase();
+        string gameImagePathInBucket;
+        if (string.IsNullOrEmpty(gamePutDto.GameImageUrl))
+        {
+            gameImagePathInBucket = null;
+        }
+        else
+        {
+            var gameImageDirectoryPath = _config.GamesImageDirectoryName;
+            gameImagePathInBucket = await _railwayBucketService.UploadFile(gameImageDirectoryPath, gameNameKebabCase, gamePutDto.GameImageUrl);
 
+        }
         game.GameName = gamePutDto.GameName;
-        game.GameImagePath = await _railwayBucketService.UploadFile(userId, gameId, gamePutDto.GameImageUrl);
+        game.GameImagePath = gameImagePathInBucket;
         game.UpdatedBy = userId;
         game.CategoryId = gamePutDto.CategoryId;
         game.YearPlayed = gamePutDto.YearPlayed;
         game.UpdatedDate = DateTime.UtcNow;
         await _gameRepository.Update(game);
-        var categoryName = await _categoryRepository.GetCategoryName(gamePutDto.CategoryId);
-        return new GameDto
-        {
-            GameId = game.GameId,
-            GameName = gamePutDto.GameName,
-            CategoryId = gamePutDto.CategoryId,
-            GameUrl = _railwayBucketService.FetchFile(game.GameImagePath),
-            CategoryName = categoryName,
-            CreatedBy = game.CreatedBy,
-            UpdatedBy = game.UpdatedBy,
-            YearPlayed = game.YearPlayed,
-            CreatedDate = game.CreatedDate,
-            UpdatedDate = game.UpdatedDate
-        };
     }
 
     public async Task DeleteGame(string gameId, string userId)
@@ -164,7 +162,8 @@ public class GameService : IGameService
                 CreatedDate = x.CreatedDate,
                 YearPlayed = x.YearPlayed,
                 CategoryId = x.CategoryId,
-                CategoryName = x.Category.CategoryName
+                CategoryName = x.Category.CategoryName,
+                
             }).ToList();
         return gamesByUserId;
     }
