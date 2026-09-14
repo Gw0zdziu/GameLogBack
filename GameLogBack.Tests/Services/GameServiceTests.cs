@@ -297,11 +297,10 @@ public class GameServiceTests
         //Act
         var gameService = new GameService(mockUtilsService.Object, mockRailwayService.Object, mockGameRepository.Object,
             mockCategoryRepository.Object, config);
-        var result = await gameService.PutGame(updatedGame, "1", "1");
+        await gameService.PutGame(updatedGame, "1", "1");
 
         //Assert
-        result.GameId.Should().Be("2");
-        result.GameName.Should().Be("Fortnite");
+        mockGameRepository.Verify(x => x.Update(It.IsAny<Games>()), Times.Once);
     }
 
     [Fact]
