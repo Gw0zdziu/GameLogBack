@@ -87,8 +87,8 @@ public class GameController : ControllerBase
             return BadRequest(errors);
         }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var game = await _gameService.PutGame(gamePutDto, gameId, userId);
-        return Ok(game);
+        await _gameService.PutGame(gamePutDto, gameId, userId);
+        return NoContent();
     }
 
     [HttpDelete("delete/{gameId}")]
