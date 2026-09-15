@@ -12,6 +12,7 @@ using GameLogBack.Services;
 using GameLogBack.Settings;
 using GameLogBack.Validators;
 using GameLogBack.Validators.Auth;
+using GameLogBack.Validators.Category;
 using GameLogBack.Validators.Game;
 using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Identity;
