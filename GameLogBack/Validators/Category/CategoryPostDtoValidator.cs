@@ -1,8 +1,7 @@
 ﻿using FluentValidation;
-using GameLogBack.Dtos.Category;
 using GameLogBack.Dtos.Category.RequestDto;
 
-namespace GameLogBack.Validators;
+namespace GameLogBack.Validators.Category;
 
 public class CategoryPostDtoValidator : AbstractValidator<CategoryPostDto>
 {
