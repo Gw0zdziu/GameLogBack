@@ -7,15 +7,16 @@ using GameLogBack.DataAccess.Repositories;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Interfaces;
+using GameLogBack.Localization;
 using GameLogBack.Middlewares;
 using GameLogBack.Services;
 using GameLogBack.Settings;
-using GameLogBack.Validators;
 using GameLogBack.Validators.Auth;
 using GameLogBack.Validators.Category;
 using GameLogBack.Validators.Game;
 using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Resend;
@@ -23,21 +24,19 @@ using Serilog;
 
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddValidatorsFromAssemblyContaining<LoginUserDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CategoryPostDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CategoryPutDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<GamePostDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<GamePutDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<RegisterNewUserDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<UpdateUserDtoValidator>();
-builder.Services.AddControllers();
 string connectionString;
 var gameBrainApiSettings = new GameBrainApiSettings();
 var authenticationSettings = new AuthenticationSettings();
-var config = new Config();
+Config config;
 BasicAWSCredentials awsCredentials;
 AmazonS3Config s3Config;
 BucketS3 bucketS3;
+var supportedCultures = new[] { "pl", "en" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+localizationOptions.RequestCultureProviders.Insert(0, new AcceptLanguageHeaderRequestCultureProvider());
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddResend( o =>
@@ -103,25 +102,48 @@ else
         RecoveryPasswordEndpoint = Environment.GetEnvironmentVariable("RECOVERY_PASSWORD_ENDPOINT"),
     };
 }
+
+builder.Services.AddValidatorsFromAssemblyContaining<LoginUserDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CategoryPostDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CategoryPutDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GamePostDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GamePutDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterNewUserDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateUserDtoValidator>();
+builder.Services.AddControllers();
+
+builder.Services.AddScoped<ICodeConfirmUsersRepository, CodeConfirmUsersRepository>();
+builder.Services.AddScoped<ICodeRecoveryPasswordsRepository, CodeRecoveryPasswordsRepository>();
+builder.Services.AddScoped<IRefreshTokenInfoRepository, RefreshTokenInfoRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserLoginsRepository, UserLoginsRepository>();
+builder.Services.AddScoped<IGameRepository, GameRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPasswordHasher<UserLogins>, PasswordHasher<UserLogins>>();
+builder.Services.AddScoped<IUtilsService, UtilsService>();
+builder.Services.AddScoped<IEmailSenderHelper, EmailSenderHelper>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
+builder.Services.AddScoped<IRailwayBucketService, RailwayBucketService>();
+builder.Services.AddScoped<IAppLocalizer, AppLocalizer>();
+
 builder.Services.AddSingleton(bucketS3);
 builder.Services.AddSingleton(config);
 builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
 builder.Services.AddSingleton(gameBrainApiSettings);
 builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
+builder.Services.AddSingleton(authenticationSettings);
+
+builder.Services.AddTransient<ErrorHandlingMiddleware>();
+
 builder.Services.AddHttpClient<GameBrainApiService>((client) =>
 {
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 
-});
-builder.Services.AddSingleton(authenticationSettings);
-builder.Services.AddTransient<ErrorHandlingMiddleware>();
-builder.Host.UseSerilog((context, configs) =>
-{
-    configs
-        .MinimumLevel.Information()
-        .Enrich.FromLogContext()
-        .WriteTo.Console();
 });
 builder.Services.AddCors(options =>
 {
@@ -160,38 +182,27 @@ builder.Services.AddAuthentication(option =>
         ClockSkew = TimeSpan.Zero
     };
 });
-builder.Services.AddScoped<ICodeConfirmUsersRepository, CodeConfirmUsersRepository>();
-builder.Services.AddScoped<ICodeRecoveryPasswordsRepository, CodeRecoveryPasswordsRepository>();
-builder.Services.AddScoped<IRefreshTokenInfoRepository, RefreshTokenInfoRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserLoginsRepository, UserLoginsRepository>();
-builder.Services.AddScoped<IGameRepository, GameRepository>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IPasswordHasher<UserLogins>, PasswordHasher<UserLogins>>();
-builder.Services.AddScoped<IUtilsService, UtilsService>();
-builder.Services.AddScoped<IEmailSenderHelper, EmailSenderHelper>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IGameService, GameService>();
-builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
-builder.Services.AddScoped<IRailwayBucketService, RailwayBucketService>();
-
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
+builder.Host.UseSerilog((context, configs) =>
+{
+    configs
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console();
+});
 
+var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
-
+app.UseRequestLocalization(localizationOptions);
 //app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
