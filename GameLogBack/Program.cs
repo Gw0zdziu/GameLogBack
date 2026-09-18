@@ -199,7 +199,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseRequestLocalization(localizationOptions);
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
