@@ -5,6 +5,7 @@ using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using GameLogBack.Localization;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,24 +19,26 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenInfoRepository _refreshTokenInfoRepository;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
+    private readonly IAppLocalizer _localizer;
 
 
     public AuthService(AuthenticationSettings authenticationSettings,
-        IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService, IUserLoginsRepository userLoginsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository)
+        IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService, IUserLoginsRepository userLoginsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository, IAppLocalizer localizer)
     {
         _authenticationSettings = authenticationSettings;
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
         _userLoginsRepository = userLoginsRepository;
         _refreshTokenInfoRepository = refreshTokenInfoRepository;
+        _localizer = localizer;
     }
 
     public async Task<string> LoginUser(LoginUserDto loginUserDto)
     {
         var user = await _userLoginsRepository.GetByUserName(loginUserDto.UserName);
-        if (user is null) throw new BadRequestException("Data of login is incorrect");
+        if (user is null) throw new BadRequestException(_localizer.Localize("IncorrectDataOfLogin"));
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
-        if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect");
+        if (result == PasswordVerificationResult.Failed) throw new BadRequestException(_localizer.Localize("IncorrectDataOfLogin"));
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
         var refreshToken = _utilsService.GetRefreshToken();
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(user.UserId);
@@ -66,7 +69,7 @@ public class AuthService : IAuthService
         var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(userId);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
-            throw new BadRequestException("Refresh token is expired");
+            throw new BadRequestException(_localizer.Localize("ExpiredRefreshToken"));
         var user = await _userLoginsRepository.GetByUserId(userId);
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtRefreshTokenExpireMinutes);
         return token;
@@ -76,7 +79,7 @@ public class AuthService : IAuthService
     public async Task LogoutUser(string userId)
     {
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(userId);
-        if (refreshTokenInfo is null) throw new BadRequestException("Refresh token is expired");
+        if (refreshTokenInfo is null) throw new BadRequestException(_localizer.Localize("ExpiredRefreshToken"));
         await _refreshTokenInfoRepository.Delete(refreshTokenInfo);
     }
 }
