@@ -6,6 +6,7 @@ using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
+using GameLogBack.Localization;
 
 namespace GameLogBack.Services;
 
@@ -13,13 +14,13 @@ public class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly IGameRepository _gameRepository;
-    private readonly IUtilsService _utilsService;
+    private readonly IAppLocalizer _localizer;
 
-    public CategoryService(IUtilsService utilsService, ICategoryRepository categoryRepository, IGameRepository gameRepository)
+    public CategoryService(IUtilsService utilsService, ICategoryRepository categoryRepository, IGameRepository gameRepository, IAppLocalizer localizer)
     {
-        _utilsService = utilsService;
         _categoryRepository = categoryRepository;
         _gameRepository = gameRepository;
+        _localizer = localizer;
     }
 
     public async Task<PaginatedResults<CategoryDto>> GetUserCategories(string userId, PaginatedQuery paginatedQuery)
@@ -51,7 +52,7 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> GetCategory(string categoryId, string userId)
     {
         var category = await _categoryRepository.GetById(categoryId, userId);
-        if (category is null) throw new NotFoundException("Category not found");
+        if (category is null) throw new NotFoundException(_localizer.Localize("CategoryNotFound"));
         var categoryWithGamesCounter = new CategoryDto
         {
             CategoryId = category.CategoryId,
@@ -69,7 +70,7 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
         var isCategoryExist = await _categoryRepository.CheckIfExists(categoryPostDto.CategoryName, userId);
-        if (isCategoryExist) throw new BadRequestException("Category with this name already exist");
+        if (isCategoryExist) throw new BadRequestException(_localizer.Localize("CategoryWithThisNameAlreadyExists"));
         var newCategory = new Categories
         {
             CategoryId = Guid.NewGuid().ToString(),
@@ -97,9 +98,9 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
         var category = await _categoryRepository.GetById(categoryId, userId);
-        if (category is null) throw new NotFoundException("Category not found");
-        var isCategoryNameExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
-        if (isCategoryNameExist) throw new BadRequestException("Category with this name already exist");
+        if (category is null) throw new NotFoundException(_localizer.Localize("CategoryNotFound"));
+        var isCategoryExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
+        if (isCategoryExist) throw new BadRequestException(_localizer.Localize("CategoryWithThisNameAlreadyExists"));
         category.CategoryName = categoryPutDto.CategoryName;
         category.Description = categoryPutDto.Description;
         category.UpdatedBy = userId;
@@ -120,9 +121,9 @@ public class CategoryService : ICategoryService
     public async Task DeleteCategory(string categoryId, string userId)
     {
         var category = await _categoryRepository.GetById(categoryId, userId);
-        if (category is null) throw new NotFoundException("Category not found");
+        if (category is null) throw new NotFoundException(_localizer.Localize("CategoryNotFound"));
         var isGameWithCategoryExist = await _gameRepository.CheckIfGameExitsById(categoryId);
-        if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category");
+        if (isGameWithCategoryExist) throw new BadRequestException(_localizer.Localize("ExistGameWithThisCategory"));
         await _categoryRepository.Delete(category);
     }
 
