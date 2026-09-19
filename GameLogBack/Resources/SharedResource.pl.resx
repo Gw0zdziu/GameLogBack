@@ -51,4 +51,19 @@
     <data name="RecoveryCodeHasExpired" xml:space="preserve">
         <value>Kod odzyskiwania wygasł</value>
     </data>
+    <data name="CategoryNotFound" xml:space="preserve">
+        <value>Nie znaleziono kategorii </value>
+    </data>
+    <data name="CategoryWithThisNameAlreadyExists" xml:space="preserve">
+        <value>Kategoria z tą nazwą już istnieje</value>
+    </data>
+    <data name="ExistGameWithThisCategory" xml:space="preserve">
+        <value>Istnieje gra z taką kategorią</value>
+    </data>
+    <data name="GameNotFound" xml:space="preserve">
+        <value>Nie znaleziono gry</value>
+    </data>
+    <data name="GameWithThisNameAlreadyExists" xml:space="preserve">
+        <value>Gra z tą nazwą już istnieje</value>
+    </data>
 </root>
