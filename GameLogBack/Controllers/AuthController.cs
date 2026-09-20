@@ -44,8 +44,8 @@ public class AuthController : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<ActionResult<string>> RefreshToken()
     {
-        var accessToken = Request.Headers["Authorization"].ToString();
-        if (string.IsNullOrWhiteSpace(accessToken)) throw new BadRequestException("Access token is empty");
+        var accessToken = Request.Headers.Authorization.ToString();
+        if (string.IsNullOrWhiteSpace(accessToken)) throw new UnauthorizedAccessException();
         accessToken = accessToken.Replace("Bearer ", "");
         var newTokenInfo = await _authService.GetRefreshToken(accessToken);
 
