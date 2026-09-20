@@ -45,7 +45,7 @@ public class AuthController : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<ActionResult<string>> RefreshToken()
     {
-        var accessToken = new StringBuilder(Request.Headers.Authorization.ToString())
+    var accessToken = new StringBuilder(Request.Headers.Authorization.ToString())
             .Replace("Bearer ", "").ToString();
         var newTokenInfo = await _authService.GetRefreshToken(accessToken);
         return Ok(newTokenInfo);
