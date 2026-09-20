@@ -40,7 +40,7 @@
         <value>Verification code not found</value>
     </data>
     <data name="ExpiredVerificationCode" xml:space="preserve">
-        <value>Confirm code is expired. You must generate new code</value>
+        <value>Confirm code is expired. You must generate new code.</value>
     </data>
     <data name="PasswordsDoNotMatch" xml:space="preserve">
         <value>Passwords do not match</value>
@@ -50,5 +50,20 @@
     </data>
     <data name="RecoveryCodeHasExpired" xml:space="preserve">
         <value>Recovery code has expired</value>
+    </data>
+    <data name="CategoryNotFound" xml:space="preserve">
+        <value>Category not found</value>
+    </data>
+    <data name="CategoryWithThisNameAlreadyExists" xml:space="preserve">
+        <value>Category with this name already exists</value>
+    </data>
+    <data name="ExistGameWithThisCategory" xml:space="preserve">
+        <value>Exist game with this category</value>
+    </data>
+    <data name="GameNotFound" xml:space="preserve">
+        <value>Category not found</value>
+    </data>
+    <data name="GameWithThisNameAlreadyExists" xml:space="preserve">
+        <value>Game with this name already exists</value>
     </data>
 </root>

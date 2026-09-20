@@ -110,5 +110,35 @@ namespace GameLogBack.Resources {
                 return ResourceManager.GetString("RecoveryCodeHasExpired", resourceCulture);
             }
         }
+        
+        internal static string CategoryNotFound {
+            get {
+                return ResourceManager.GetString("CategoryNotFound", resourceCulture);
+            }
+        }
+        
+        internal static string CategoryWithThisNameAlreadyExists {
+            get {
+                return ResourceManager.GetString("CategoryWithThisNameAlreadyExists", resourceCulture);
+            }
+        }
+        
+        internal static string ExistGameWithThisCategory {
+            get {
+                return ResourceManager.GetString("ExistGameWithThisCategory", resourceCulture);
+            }
+        }
+        
+        internal static string GameNotFound {
+            get {
+                return ResourceManager.GetString("GameNotFound", resourceCulture);
+            }
+        }
+        
+        internal static string GameWithThisNameAlreadyExists {
+            get {
+                return ResourceManager.GetString("GameWithThisNameAlreadyExists", resourceCulture);
+            }
+        }
     }
 }
