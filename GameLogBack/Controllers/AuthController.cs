@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.InteropServices.JavaScript;
 using System.Security.Claims;
+using System.Text;
 using FluentValidation;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Dtos.Auth.RequestDto;
@@ -44,10 +45,10 @@ public class AuthController : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<ActionResult<string>> RefreshToken()
     {
-        var accessToken = Request.Headers["Authorization"].ToString();
-        if (string.IsNullOrWhiteSpace(accessToken)) throw new BadRequestException("Access token is empty");
-        accessToken = accessToken.Replace("Bearer ", "");
+        var accessToken = new StringBuilder(Request.Headers.Authorization.ToString())
+            .Replace("Bearer ", "").ToString();
         var newTokenInfo = await _authService.GetRefreshToken(accessToken);
+        return Ok(newTokenInfo);
 
         return Ok(newTokenInfo);
     }
