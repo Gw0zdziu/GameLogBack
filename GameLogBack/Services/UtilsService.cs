@@ -69,12 +69,28 @@ public class UtilsService : IUtilsService
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-
-        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase))
-            throw new BadRequestException("Invalid token");
+        SecurityToken securityToken;
+        ClaimsPrincipal principal;
+        try
+        {
+            principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+        }
+        catch (ArgumentNullException e)
+        {
+            throw new BadRequestException("Token is null");
+        }
+        catch (SecurityTokenMalformedException e)
+        {
+            throw new BadRequestException("Token has invalid format");
+        }
+        catch (SecurityTokenExpiredException e)
+        {
+            throw new BadRequestException("Token is expired");
+        }
+        catch (Exception e)
+        {
+            throw new BadRequestException("Token is invalid");
+        }
 
         return principal;
     }
