@@ -6,9 +6,8 @@ using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DataAccess.Repositories;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
+using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
-using GameLogBack.Localization;
-using GameLogBack.Middlewares;
 using GameLogBack.Services;
 using GameLogBack.Settings;
 using GameLogBack.Validators.Auth;
@@ -103,6 +102,9 @@ else
     };
 }
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddValidatorsFromAssemblyContaining<LoginUserDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CategoryPostDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CategoryPutDtoValidator>();
@@ -128,7 +130,6 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
 builder.Services.AddScoped<IRailwayBucketService, RailwayBucketService>();
-builder.Services.AddScoped<IAppLocalizer, AppLocalizer>();
 
 builder.Services.AddSingleton(bucketS3);
 builder.Services.AddSingleton(config);
@@ -138,7 +139,6 @@ builder.Services.AddDbContext<GameLogDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddSingleton(authenticationSettings);
 
-builder.Services.AddTransient<ErrorHandlingMiddleware>();
 
 builder.Services.AddHttpClient<GameBrainApiService>((client) =>
 {
@@ -201,7 +201,7 @@ app.UseSwaggerUI();
 app.UseRequestLocalization(localizationOptions);
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseExceptionHandler();
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
 app.UseAuthentication();
 app.UseAuthorization();
