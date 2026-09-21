@@ -30,12 +30,6 @@ Config config;
 BasicAWSCredentials awsCredentials;
 AmazonS3Config s3Config;
 BucketS3 bucketS3;
-var supportedCultures = new[] { "pl", "en" };
-var localizationOptions = new RequestLocalizationOptions()
-    .SetDefaultCulture(supportedCultures[0])
-    .AddSupportedCultures(supportedCultures)
-    .AddSupportedUICultures(supportedCultures);
-localizationOptions.RequestCultureProviders.Insert(0, new AcceptLanguageHeaderRequestCultureProvider());
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddResend( o =>
@@ -182,7 +176,6 @@ builder.Services.AddAuthentication(option =>
         ClockSkew = TimeSpan.Zero
     };
 });
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -198,10 +191,10 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseRequestLocalization(localizationOptions);
 app.UseHttpsRedirection();
-app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
+
+app.UseSerilogRequestLogging();
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
 app.UseAuthentication();
 app.UseAuthorization();
