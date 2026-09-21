@@ -1,3 +1,4 @@
+using GameLogBack.Constants;
 using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.Dtos.Game.RequestDto;
 using GameLogBack.Dtos.Game.ResponseDto;
@@ -7,7 +8,6 @@ using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Extensions;
 using GameLogBack.Interfaces;
-using GameLogBack.Localization;
 using GameLogBack.Settings;
 
 namespace GameLogBack.Services;
@@ -17,18 +17,16 @@ public class GameService : IGameService
     private readonly IGameRepository _gameRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IRailwayBucketService _railwayBucketService;
-    private readonly IAppLocalizer _localizer;
     private readonly Config _config;
 
 
 
-    public GameService(IUtilsService utilsService, IRailwayBucketService railwayBucketService, IGameRepository gameRepository, ICategoryRepository categoryRepository, Config config, IAppLocalizer localizer)
+    public GameService(IUtilsService utilsService, IRailwayBucketService railwayBucketService, IGameRepository gameRepository, ICategoryRepository categoryRepository, Config config)
     {
         _railwayBucketService = railwayBucketService;
         _gameRepository = gameRepository;
         _categoryRepository = categoryRepository;
         _config = config;
-        _localizer = localizer;
     }
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
@@ -64,7 +62,7 @@ public class GameService : IGameService
     public async Task<GameDto> GetGame(string gameId, string userId)
     {
         var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
-        if (game is null) throw new NotFoundException(_localizer.Localize("GameNotFound"));
+        if (game is null) throw new NotFoundException("Game not found", ErrorCodes.Game.GameNotFound);
         return  new GameDto
         {
             GameId = game.GameId,
@@ -85,7 +83,7 @@ public class GameService : IGameService
     {
         string gameImagePathInBucket;
         var isGameNameExist = await _gameRepository.CheckIfGameExists(gamePostDto.GameName, userId);
-        if (isGameNameExist) throw new BadRequestException(_localizer.Localize("GameWithThisNameAlreadyExists"));
+        if (isGameNameExist) throw new BadRequestException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
         var gameNameKebabCase = gamePostDto.GameName.ToKebabCase();
         if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
         {
@@ -117,9 +115,9 @@ public class GameService : IGameService
     {
         
         var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
-        if (game is null) throw new NotFoundException(_localizer.Localize("GameNotFound"));
+        if (game is null) throw new NotFoundException("Game not found", ErrorCodes.Game.GameNotFound);
         var isGameNameExist = await _gameRepository.CheckIfExistsWithSameName(gamePutDto.GameName, userId, gameId);
-        if (isGameNameExist) throw new BadRequestException(_localizer.Localize("GameWithThisNameAlreadyExists"));
+        if (isGameNameExist) throw new BadRequestException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
         var gameNameKebabCase = gamePutDto.GameName.ToKebabCase();
         string gameImagePathInBucket;
         if (string.IsNullOrEmpty(gamePutDto.GameImageUrl))
@@ -144,7 +142,7 @@ public class GameService : IGameService
     public async Task DeleteGame(string gameId, string userId)
     {
         var gameToDelete = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
-        if (gameToDelete is null) throw new NotFoundException(_localizer.Localize("GameNotFound"));
+        if (gameToDelete is null) throw new NotFoundException("Game not found", ErrorCodes.Game.GameNotFound);
         await _gameRepository.Delete(gameToDelete);
     }
 
