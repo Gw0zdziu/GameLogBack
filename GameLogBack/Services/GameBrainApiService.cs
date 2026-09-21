@@ -41,7 +41,7 @@ public class GameBrainApiService : IGameBrainApiService
         }
         catch (Exception e)
         {
-            throw new FailureException("Your daily points limit of 50 has been reached");
+            throw new RateLimitExceededException("Your daily points limit of 50 has been reached");
         }
     }
 }

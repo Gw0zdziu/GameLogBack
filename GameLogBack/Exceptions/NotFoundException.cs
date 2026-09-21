@@ -1,8 +1,10 @@
+using System.Net;
+
 namespace GameLogBack.Exceptions;
 
-public class NotFoundException: Exception
+public class NotFoundException: AppException
 {
-    public NotFoundException(string message) : base(message)
+    public NotFoundException(string message, string errorCode) : base(message, HttpStatusCode.NotFound, errorCode)
     {
     }
 }

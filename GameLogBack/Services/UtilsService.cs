@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using GameLogBack.Constants;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
@@ -75,21 +76,21 @@ public class UtilsService : IUtilsService
         {
             principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
         }
-        catch (ArgumentNullException e)
+        catch (ArgumentNullException _)
         {
-            throw new BadRequestException("Token is null");
+            throw new BadRequestException("Token is null", ErrorCodes.Utils.UtilsTokenIsNull);
         }
-        catch (SecurityTokenMalformedException e)
+        catch (SecurityTokenMalformedException _)
         {
-            throw new BadRequestException("Token has invalid format");
+            throw new BadRequestException("Token has invalid format", ErrorCodes.Utils.UtilsTokenHasInvalidFormat);
         }
-        catch (SecurityTokenExpiredException e)
+        catch (SecurityTokenExpiredException _)
         {
-            throw new BadRequestException("Token is expired");
+            throw new BadRequestException("Token is expired", ErrorCodes.Utils.UtilsTokenExpired);
         }
-        catch (Exception e)
+        catch (Exception _)
         {
-            throw new BadRequestException("Token is invalid");
+            throw new BadRequestException("Token is invalid", ErrorCodes.Utils.UtilsTokenIsInvalid);
         }
 
         return principal;

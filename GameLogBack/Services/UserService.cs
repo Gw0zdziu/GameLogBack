@@ -1,13 +1,11 @@
+using GameLogBack.Constants;
 using GameLogBack.DataAccess.Interfaces;
-using GameLogBack.DbContext;
 using GameLogBack.Dtos.User;
 using GameLogBack.Dtos.User.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
-using GameLogBack.Localization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
@@ -20,10 +18,9 @@ public class UserService : IUserService
     private readonly IEmailSenderHelper _emailSenderHelper;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
-    private readonly IAppLocalizer _localizer;
 
     public UserService(IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
-        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository, IAppLocalizer localizer)
+        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository)
     {
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
@@ -32,15 +29,14 @@ public class UserService : IUserService
         _userLoginsRepository = userLoginsRepository;
         _codeConfirmUsersRepository = codeConfirmUsersRepository;
         _codeRecoveryPasswordsRepository = codeRecoveryPasswordsRepository;
-        _localizer = localizer;
     }
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
     {
         var isUserNameExist = await _userLoginsRepository.CheckIfUserExists(registerNewUser.Username);
-        if (isUserNameExist) throw new BadRequestException(_localizer.Localize("UsernameAlreadyTaken"));
+        if (isUserNameExist) throw new BadRequestException("Username is already taken", ErrorCodes.User.UsernameAlreadyTaken);
         var isUserEmailExist = await _userRepository.CheckIfUserExist(registerNewUser.UserEmail);
-        if (isUserEmailExist) throw new BadRequestException(_localizer.Localize("EmailAlreadyTaken"));
+        if (isUserEmailExist) throw new BadRequestException("Email is already taken", ErrorCodes.User.EmailAlreadyTaken);
         var newUserId = Guid.NewGuid().ToString();
         var code = _utilsService.GenerateCodeToConfirmEmail();
         var newUser = new Users
@@ -77,10 +73,7 @@ public class UserService : IUserService
     public async Task<GetUserDto> GetUser(string userId)
     {
         var user = await _userLoginsRepository.GetByUserId(userId);
-        if (user is null)
-        {
-            throw new NotFoundException(_localizer.Localize("UserNotFound"));
-        }
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         return new GetUserDto()
         {
             UserId = user.UserId,
@@ -121,13 +114,13 @@ public class UserService : IUserService
     public async Task ConfirmUser(ConfirmCodeDto confirmCodeDto)
     {
         var confirmCodeUser = await _codeConfirmUsersRepository.GetByUserId(confirmCodeDto.UserId);
-        if (confirmCodeUser is null) throw new NotFoundException(_localizer.Localize("VerificationCodeNotFound"));
+        if (confirmCodeUser is null) throw new NotFoundException("Verification code not found", ErrorCodes.User.VerificationCodeNotFound);
         if (confirmCodeUser.ExpiryDate < DateTime.UtcNow)
-            throw new BadRequestException(_localizer.Localize("ExpiredVerificationCode"));
+            throw new BadRequestException("Verification code has expired", ErrorCodes.User.ExpiredVerificationCode);
         if (confirmCodeUser.Code != confirmCodeDto.ConfirmCode)
-            throw new BadRequestException(_localizer.Localize("IncorrectVerificationCode"));
+            throw new BadRequestException("Verification code is incorrect", ErrorCodes.User.IncorrectVerificationCode);
         var user = await _userRepository.GetById(confirmCodeDto.UserId);
-        if (user is null) throw new NotFoundException(_localizer.Localize("UserNotFound"));
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         user.IsActive = true;
         await _userRepository.Update(user);
     }
@@ -135,11 +128,7 @@ public class UserService : IUserService
     public async Task RecoverPassword(string userEmail)
     {
         var user = await _userRepository.GetByEmail(userEmail);
-        if (user is null)
-        {
-            throw new NotFoundException(_localizer.Localize("UserNotFound"));
-        }
-
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         var code = _utilsService.GenerateCodeToRecoverPassword();
         var link = _utilsService.GenerateLinkToRecoveryPassword(code, user.UserId);
         var recoveryCode = await _codeRecoveryPasswordsRepository.GetByUserId(user.UserId);
@@ -169,15 +158,15 @@ public class UserService : IUserService
     {
         if (recoveryUpdatePasswordDto.NewPassword != recoveryUpdatePasswordDto.ConfirmPassword)
         {
-            throw new BadRequestException(_localizer.Localize("PasswordsDoNotMatch"));
+            throw new BadRequestException("Passwords do not match", ErrorCodes.User.PasswordsDoNotMatch);
         }
 
         var user = await _userRepository.GetUserWithUserLoginsAndCodeRecovery(recoveryUpdatePasswordDto.UserId,
             recoveryUpdatePasswordDto.Token);
-        if (user is null) throw new NotFoundException(_localizer.Localize("UserNotFound"));
-        if (user.CodeRecoveryPassword.IsUsed) throw new BadRequestException(_localizer.Localize("RecoveryCodeIsIncorrect"));
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
+        if (user.CodeRecoveryPassword.IsUsed) throw new BadRequestException("Recovery code is already used", ErrorCodes.User.RecoveryCodeIsAlreadyUsed);
         if (user.CodeRecoveryPassword.ExpiryDate < DateTime.UtcNow)
-            throw new BadRequestException(_localizer.Localize("RecoveryCodeHasExpired"));
+            throw new BadRequestException("Recovery code has expired", ErrorCodes.User.RecoveryCodeHasExpired);
         var newPassword = _passwordHasher.HashPassword(user.UserLogins, recoveryUpdatePasswordDto.NewPassword);
         user.UserLogins.Password = newPassword;
         user.CodeRecoveryPassword.IsUsed = true;
@@ -189,7 +178,7 @@ public class UserService : IUserService
     public async Task UpdateUser(UpdateUserDto updateUserDto, string userId)
     {
         var user = await _userRepository.GetById(userId);
-        if (user is null) throw new NotFoundException(_localizer.Localize("UserNotFound"));
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         user.FirstName = updateUserDto.FirstName;
         user.LastName = updateUserDto.LastName;
         user.UserEmail = updateUserDto.UserEmail;
