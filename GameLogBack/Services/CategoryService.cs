@@ -98,7 +98,7 @@ public class CategoryService : ICategoryService
         var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
         var isCategoryExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
-        if (isCategoryExist) throw new BadRequestException("Category already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
+        if (isCategoryExist) throw new BadRequestException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
         category.CategoryName = categoryPutDto.CategoryName;
         category.Description = categoryPutDto.Description;
         category.UpdatedBy = userId;
