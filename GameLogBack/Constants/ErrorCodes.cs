@@ -6,6 +6,7 @@ public static class ErrorCodes
     {
         public const string IncorrectDataOfLogin = "auth.incorrect-data-of-login";
         public const string ExpiredRefreshToken = "auth.expired-refresh-token";
+        public const string ExpiredAccessToken = "auth.expired-access-token";
     }
     
     public static class User
