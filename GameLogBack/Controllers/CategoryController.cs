@@ -72,7 +72,7 @@ public class CategoryController : ControllerBase
         }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var category = await _categoryService.CreateCategory(newCategory, userId);
-        return Ok(category);
+        return CreatedAtAction(nameof(GetCategory), new { categoryId = category.CategoryId }, category);
     }
 
     [HttpPut("update/{categoryId}")]
