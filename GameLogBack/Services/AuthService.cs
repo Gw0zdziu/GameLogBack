@@ -2,6 +2,8 @@ using System.Security.Claims;
 using GameLogBack.Constants;
 using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.Dtos.Auth.RequestDto;
+using GameLogBack.Dtos.Auth.ResponseDto;
+using GameLogBack.Dtos.User;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
@@ -29,7 +31,7 @@ public class AuthService : IAuthService
         _refreshTokenInfoRepository = refreshTokenInfoRepository;
     }
 
-    public async Task<string> LoginUser(LoginUserDto loginUserDto)
+    public async Task<LoginResponseDto> LoginUser(LoginUserDto loginUserDto)
     {
         var user = await _userLoginsRepository.GetByUserName(loginUserDto.UserName);
         if (user is null) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
@@ -56,7 +58,20 @@ public class AuthService : IAuthService
             await _refreshTokenInfoRepository.Update(refreshTokenInfo);
         }
         
-        return token;
+        return new LoginResponseDto()
+        {
+            Token = token,
+            ExpiresIn = _authenticationSettings.JwtAccessTokenExpireMinutes,
+            User = new GetUserDto()
+            {
+                UserId = user.UserId,
+                UserName = user.UserName,
+                FirstName = user.User.FirstName,
+                LastName = user.User.LastName,
+                UserEmail = user.User.UserEmail,
+                IsActive = user.User.IsActive
+            }
+        };
     }
 
     public async Task<string> GetRefreshToken(string tokenInfo)
@@ -75,7 +90,9 @@ public class AuthService : IAuthService
     public async Task LogoutUser(string userId)
     {
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(userId);
-        if (refreshTokenInfo is null) throw new BadRequestException("Refresh token is expired", ErrorCodes.Auth.ExpiredRefreshToken);
+        if (refreshTokenInfo is null) throw new BadRequestException("Token is expired. Please log in again", ErrorCodes.Auth.ExpiredAccessToken);
         await _refreshTokenInfoRepository.Delete(refreshTokenInfo);
     }
 }
+
+
