@@ -83,7 +83,7 @@ public class UserServiceTests
         var result = async () => await userService.RegisterUser(registerNewUser);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("User with this username already exist");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Username is already taken");
     }
     
     [Fact]
@@ -115,7 +115,7 @@ public class UserServiceTests
         var result = async () => await userService.RegisterUser(registerNewUser);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("User with this email already exist");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Email is already taken");
 
     }
 
@@ -316,7 +316,7 @@ public class UserServiceTests
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
-        await result.Should().ThrowAsync<NotFoundException>().WithMessage("Confirm code not found");
+        await result.Should().ThrowAsync<NotFoundException>().WithMessage("Verification code not found");
     }
     
     [Fact]
@@ -354,7 +354,7 @@ public class UserServiceTests
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Confirm code is expired. You must generate new code");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Verification code has expired");
     }
     
     [Fact]
@@ -388,7 +388,7 @@ public class UserServiceTests
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Confirm code is incorrect");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Verification code is incorrect");
     }
     
     [Fact]
@@ -603,7 +603,7 @@ public class UserServiceTests
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Passwords are not equal");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Passwords do not match");
     }
         
     [Fact]
@@ -685,7 +685,7 @@ public class UserServiceTests
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Recovery code is expired");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Recovery code has expired");
     }
     
     [Fact]
