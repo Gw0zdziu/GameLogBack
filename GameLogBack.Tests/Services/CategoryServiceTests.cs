@@ -210,7 +210,7 @@ public class CategoryServiceTests
         var result = async () => await categoryService.CreateCategory(newCategory, "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Category with this name already exist");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Category with this name already exists");
     }
 
     [Fact]
@@ -326,7 +326,7 @@ public class CategoryServiceTests
         var result = async () => await categoryService.UpdateCategory(updateCategory, "1", "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Category with this name already exist");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Category with this name already exists");
     }
 
     [Fact]
