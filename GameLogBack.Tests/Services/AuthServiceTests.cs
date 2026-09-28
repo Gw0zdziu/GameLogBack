@@ -44,7 +44,16 @@ public class AuthServiceTests
         {
             UserId = "1",
             UserName = "nickName",
-            Password = "password"
+            Password = "password",
+            User = new Users()
+            {
+                UserId = "1",
+                UserEmail = "email@gmail.com",
+                IsActive = true,
+                FirstName = "firstName",
+                LastName = "lastName",
+            }
+            
         };
         var refreshTokenInfo = new RefreshTokenInfo()
         {
@@ -68,7 +77,7 @@ public class AuthServiceTests
         
         //Assert
         mockRefreshTokenInfoRepository.Verify(x => x.Update(It.IsAny<RefreshTokenInfo>()), Times.Once);
-        result.Should().Be("newToken");
+        result.Token.Should().Be("newToken");
 
     }
     
@@ -91,13 +100,21 @@ public class AuthServiceTests
         var loginUserDto = new LoginUserDto()
         {
             UserName = "nickName",
-            Password = "password"
+            Password = "password",
         };
         var userLogins = new UserLogins()
         {
             UserId = "1",
             UserName = "nickName",
-            Password = "password"
+            Password = "password",
+            User = new Users()
+            {
+                UserId = "1",
+                UserEmail = "email@gmail.com",
+                IsActive = true,
+                FirstName = "firstName",
+                LastName = "lastName",
+            }
         };
         mockUserLoginsRepository.Setup(x => x.GetByUserName(It.IsAny<string>()))
             .ReturnsAsync(userLogins);
@@ -114,7 +131,7 @@ public class AuthServiceTests
         
         //Assert
         mockRefreshTokenInfoRepository.Verify(x => x.Create(It.IsAny<RefreshTokenInfo>()), Times.Once);
-        result.Should().Be("newToken");
+        result.Token.Should().Be("newToken");
     }
     
     [Fact]
@@ -356,7 +373,7 @@ public class AuthServiceTests
         var result = async () => await service.LogoutUser("1");
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Refresh token is expired");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Token is expired. Please log in again");
         
         
     }
