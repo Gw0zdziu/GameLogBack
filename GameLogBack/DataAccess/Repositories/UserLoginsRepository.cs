@@ -26,6 +26,6 @@ public class UserLoginsRepository : IUserLoginsRepository
 
     public async Task<UserLogins> GetByUserName(string userName)
     {
-        return await _context.UserLogins.FirstOrDefaultAsync(x => x.UserName == userName);
+        return await _context.UserLogins.Include(x => x.User).FirstOrDefaultAsync(x => x.UserName == userName);
     }
 }
