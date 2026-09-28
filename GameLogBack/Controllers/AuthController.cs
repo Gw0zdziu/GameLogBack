@@ -5,6 +5,7 @@ using System.Text;
 using FluentValidation;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Dtos.Auth.RequestDto;
+using GameLogBack.Dtos.Auth.ResponseDto;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
@@ -29,17 +30,17 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<string>> LoginUser([FromBody] LoginUserDto loginUserDto)
+    public async Task<ActionResult<LoginResponseDto>> LoginUser([FromBody] LoginUserDto loginUserDto)
     {
-        var result = await _validator.ValidateAsync(loginUserDto);
+        var validate = await _validator.ValidateAsync(loginUserDto);
 
-        if (!result.IsValid)
+        if (!validate.IsValid)
         {
-            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            var errors = validate.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
             return BadRequest(errors);
         }
-        var token = await _authService.LoginUser(loginUserDto);
-        return Ok(token);
+        var result = await _authService.LoginUser(loginUserDto);
+        return Ok(result);
     }
 
     [HttpPost("refresh-token")]
