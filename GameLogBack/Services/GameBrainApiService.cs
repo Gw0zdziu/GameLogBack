@@ -26,20 +26,34 @@ public class GameBrainApiService : IGameBrainApiService
             { "query", gameName },
             { "generate-filter-options", _gameBrainApiSettings.GenerateFilterOptions }
         };
+
         var url = QueryHelpers.AddQueryString(_gameBrainApiSettings.ApiUrl, queryParams);
+    
         try
         {
-            var response = _httpClient.GetAsync(url);
-            var result = await response.Result.Content.ReadAsStringAsync();
-            var deserializedResult = JsonConvert.DeserializeObject<GamesBrain>(result);
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+        
+            var resultContent = await response.Content.ReadAsStringAsync();
+            var deserializedResult = JsonConvert.DeserializeObject<GamesBrain>(resultContent);
+        
             var games = deserializedResult.results.Select(x => new GameDetails()
             {
                 name = x.name,
                 image = x.image
             }).ToList();
+        
             return games;
         }
-        catch (Exception e)
+        catch (HttpRequestException ex)
+        {
+            throw new RateLimitExceededException("Your daily points limit of 50 has been reached");
+        }
+        catch (JsonReaderException ex)
+        {
+            throw new InvalidOperationException("Failed to parse game data from the API.", ex);
+        }
+        catch (Exception ex)
         {
             throw new RateLimitExceededException("Your daily points limit of 50 has been reached");
         }
