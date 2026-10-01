@@ -35,12 +35,12 @@ public class GameBrainApiService : IGameBrainApiService
             response.EnsureSuccessStatusCode();
         
             var resultContent = await response.Content.ReadAsStringAsync();
-            var deserializedResult = JsonConvert.DeserializeObject<GamesBrain>(resultContent);
+            var deserializedResult = JsonConvert.DeserializeObject<GameSearchResponse>(resultContent);
         
-            var games = deserializedResult.results.Select(x => new GameDetails()
+            var games = deserializedResult.Results.Select(x => new GameDetails()
             {
-                name = x.name,
-                image = x.image
+                Name = x.Name,
+                Image = x.Image
             }).ToList();
         
             return games;
