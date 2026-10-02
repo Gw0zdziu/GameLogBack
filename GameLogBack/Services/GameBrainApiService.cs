@@ -9,13 +9,13 @@ namespace GameLogBack.Services;
 
 public class GameBrainApiService : IGameBrainApiService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly GameBrainApiSettings _gameBrainApiSettings;
 
-    public GameBrainApiService(HttpClient httpClient, GameBrainApiSettings gameBrainApiSettings)
+    public GameBrainApiService( GameBrainApiSettings gameBrainApiSettings, IHttpClientFactory httpClientFactory)
     {
-        _httpClient = httpClient;
         _gameBrainApiSettings = gameBrainApiSettings;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<List<GameDetails>> SearchGameDetails(string gameName)
@@ -31,13 +31,14 @@ public class GameBrainApiService : IGameBrainApiService
     
         try
         {
-            var response = await _httpClient.GetAsync(url);
+            var client =  _httpClientFactory.CreateClient("GameBrainApi");
+            var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
         
             var resultContent = await response.Content.ReadAsStringAsync();
-            var deserializedResult = JsonConvert.DeserializeObject<GameSearchResponse>(resultContent);
+            var deserializedResult = JsonConvert.DeserializeObject<GameSearchResponse>(resultContent).Results;
         
-            var games = deserializedResult.Results.Select(x => new GameDetails()
+            var games = deserializedResult.Select(x => new GameDetails()
             {
                 Name = x.Name,
                 Image = x.Image
