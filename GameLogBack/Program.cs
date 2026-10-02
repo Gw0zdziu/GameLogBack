@@ -134,8 +134,9 @@ builder.Services.AddDbContext<GameLogDbContext>(options =>
 builder.Services.AddSingleton(authenticationSettings);
 
 
-builder.Services.AddHttpClient<GameBrainApiService>((client) =>
+builder.Services.AddHttpClient("GameBrainApi", client =>
 {
+    client.BaseAddress = new Uri(gameBrainApiSettings.ApiUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 
 });
