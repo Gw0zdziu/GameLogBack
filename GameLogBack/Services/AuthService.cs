@@ -35,6 +35,7 @@ public class AuthService : IAuthService
     {
         var user = await _userLoginsRepository.GetByUserName(loginUserDto.UserName);
         if (user is null) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
+        if (!user.User.IsActive) throw new BadRequestException("Inactive account", ErrorCodes.Auth.InactiveAccount);
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
