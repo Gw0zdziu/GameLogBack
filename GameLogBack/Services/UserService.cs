@@ -15,12 +15,13 @@ public class UserService : IUserService
     private readonly IUserLoginsRepository _userLoginsRepository;
     private readonly ICodeConfirmUsersRepository _codeConfirmUsersRepository;
     private readonly ICodeRecoveryPasswordsRepository _codeRecoveryPasswordsRepository;
+    private readonly IRefreshTokenInfoRepository _refreshTokenInfoRepository;
     private readonly IEmailSenderHelper _emailSenderHelper;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
     public UserService(IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
-        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository)
+        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository)
     {
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
@@ -29,6 +30,7 @@ public class UserService : IUserService
         _userLoginsRepository = userLoginsRepository;
         _codeConfirmUsersRepository = codeConfirmUsersRepository;
         _codeRecoveryPasswordsRepository = codeRecoveryPasswordsRepository;
+        _refreshTokenInfoRepository = refreshTokenInfoRepository;
     }
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
@@ -171,6 +173,8 @@ public class UserService : IUserService
         user.UserLogins.Password = newPassword;
         user.CodeRecoveryPassword.IsUsed = true;
         await _userRepository.Update(user);
+        var refreshToken = await _refreshTokenInfoRepository.GetByUserId(recoveryUpdatePasswordDto.UserId);
+        await _refreshTokenInfoRepository.Delete(refreshToken);
         await _emailSenderHelper.SendEmail(user.UserEmail, "Password updated",
             "Successfully updated password.");
     }
