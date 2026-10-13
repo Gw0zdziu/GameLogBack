@@ -96,7 +96,7 @@ public class AuthController : ControllerBase
     
     [HttpGet("verify")]
     [Authorize]
-    public IActionResult Verify()
+    public ActionResult Verify()
     {
         return Ok(true);
     }
