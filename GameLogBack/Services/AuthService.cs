@@ -80,6 +80,10 @@ public class AuthService : IAuthService
 
     public async Task<string> GetRefreshToken(string token)
     {
+        if (token is null)
+        {
+            throw new BadRequestException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
+        }
         var hashedRefreshToken = HashHelper.GetHashValue(token);
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByRefreshToken(hashedRefreshToken);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
