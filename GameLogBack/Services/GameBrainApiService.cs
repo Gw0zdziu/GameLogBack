@@ -9,13 +9,13 @@ namespace GameLogBack.Services;
 
 public class GameBrainApiService : IGameBrainApiService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly GameBrainApiSettings _gameBrainApiSettings;
 
-    public GameBrainApiService(HttpClient httpClient, GameBrainApiSettings gameBrainApiSettings)
+    public GameBrainApiService( GameBrainApiSettings gameBrainApiSettings, IHttpClientFactory httpClientFactory)
     {
-        _httpClient = httpClient;
         _gameBrainApiSettings = gameBrainApiSettings;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<List<GameDetails>> SearchGameDetails(string gameName)
@@ -26,22 +26,37 @@ public class GameBrainApiService : IGameBrainApiService
             { "query", gameName },
             { "generate-filter-options", _gameBrainApiSettings.GenerateFilterOptions }
         };
+
         var url = QueryHelpers.AddQueryString(_gameBrainApiSettings.ApiUrl, queryParams);
+    
         try
         {
-            var response = _httpClient.GetAsync(url);
-            var result = await response.Result.Content.ReadAsStringAsync();
-            var deserializedResult = JsonConvert.DeserializeObject<GamesBrain>(result);
-            var games = deserializedResult.results.Select(x => new GameDetails()
+            var client =  _httpClientFactory.CreateClient("GameBrainApi");
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+        
+            var resultContent = await response.Content.ReadAsStringAsync();
+            var deserializedResult = JsonConvert.DeserializeObject<GameSearchResponse>(resultContent).Results;
+        
+            var games = deserializedResult.Select(x => new GameDetails()
             {
-                name = x.name,
-                image = x.image
+                Name = x.Name,
+                Image = x.Image
             }).ToList();
+        
             return games;
         }
-        catch (Exception e)
+        catch (HttpRequestException ex)
         {
-            throw new FailureException("Your daily points limit of 50 has been reached");
+            throw new RateLimitExceededException("Your daily points limit of 50 has been reached");
+        }
+        catch (JsonReaderException ex)
+        {
+            throw new InvalidOperationException("Failed to parse game data from the API.", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new RateLimitExceededException("Your daily points limit of 50 has been reached");
         }
     }
 }

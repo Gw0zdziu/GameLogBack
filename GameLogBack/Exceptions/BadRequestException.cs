@@ -1,9 +1,11 @@
+using System.Net;
+using GameLogBack.Constants;
+
 namespace GameLogBack.Exceptions;
 
-public class BadRequestException: Exception
+public class BadRequestException: AppException
 {
-    public BadRequestException(string message) : base(message)
+    public BadRequestException(string message, string errorCode) : base(message, HttpStatusCode.BadRequest, errorCode)
     {
-        
     }
 }

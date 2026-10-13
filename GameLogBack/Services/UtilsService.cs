@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using GameLogBack.Constants;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
@@ -69,12 +70,28 @@ public class UtilsService : IUtilsService
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-
-        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase))
-            throw new BadRequestException("Invalid token");
+        SecurityToken securityToken;
+        ClaimsPrincipal principal;
+        try
+        {
+            principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+        }
+        catch (ArgumentNullException _)
+        {
+            throw new BadRequestException("Token is null", ErrorCodes.Utils.UtilsTokenIsNull);
+        }
+        catch (SecurityTokenMalformedException _)
+        {
+            throw new BadRequestException("Token has invalid format", ErrorCodes.Utils.UtilsTokenHasInvalidFormat);
+        }
+        catch (SecurityTokenExpiredException _)
+        {
+            throw new BadRequestException("Token is expired", ErrorCodes.Utils.UtilsTokenExpired);
+        }
+        catch (Exception _)
+        {
+            throw new BadRequestException("Token is invalid", ErrorCodes.Utils.UtilsTokenIsInvalid);
+        }
 
         return principal;
     }

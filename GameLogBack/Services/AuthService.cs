@@ -1,13 +1,15 @@
 using System.Security.Claims;
+using GameLogBack.Constants;
 using GameLogBack.DataAccess.Interfaces;
-using GameLogBack.Dtos.Auth;
 using GameLogBack.Dtos.Auth.RequestDto;
+using GameLogBack.Dtos.Auth.ResponseDto;
+using GameLogBack.Dtos.User;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
+using GameLogBack.Helpers;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
@@ -30,14 +32,16 @@ public class AuthService : IAuthService
         _refreshTokenInfoRepository = refreshTokenInfoRepository;
     }
 
-    public async Task<string> LoginUser(LoginUserDto loginUserDto)
+    public async Task<LoginResponseDto> LoginUser(LoginUserDto loginUserDto)
     {
         var user = await _userLoginsRepository.GetByUserName(loginUserDto.UserName);
-        if (user is null) throw new BadRequestException("Data of login is incorrect");
+        if (user is null) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
+        if (!user.User.IsActive) throw new BadRequestException("Inactive account", ErrorCodes.Auth.InactiveAccount);
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
-        if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect");
+        if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
         var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
         var refreshToken = _utilsService.GetRefreshToken();
+        var hashedRefreshToken = HashHelper.GetHashValue(refreshToken);
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(user.UserId);
         if (refreshTokenInfo is null)
         {
@@ -45,38 +49,58 @@ public class AuthService : IAuthService
             {
                 UserId = user.UserId,
                 RefreshTokenId = Guid.NewGuid().ToString(),
-                RefreshToken = refreshToken,
+                RefreshToken = hashedRefreshToken,
                 ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes)
             };
             await _refreshTokenInfoRepository.Create(newRefreshTokenInfo);
         }
         else
         {
-            refreshTokenInfo.ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes);
-            refreshTokenInfo.RefreshToken = refreshToken;
+            refreshTokenInfo.RefreshToken = hashedRefreshToken;
+            refreshTokenInfo.ExpiryDate =
+                DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes);
             await _refreshTokenInfoRepository.Update(refreshTokenInfo);
         }
-        
-        return token;
+        return new LoginResponseDto()
+        {
+            Token = token,
+            RefreshToken = refreshToken,
+            ExpiresIn = _authenticationSettings.JwtAccessTokenExpireMinutes,
+            User = new GetUserDto()
+            {
+                UserId = user.UserId,
+                UserName = user.UserName,
+                FirstName = user.User.FirstName,
+                LastName = user.User.LastName,
+                UserEmail = user.User.UserEmail,
+                IsActive = user.User.IsActive
+            }
+        };
     }
 
-    public async Task<string> GetRefreshToken(string tokenInfo)
+    public async Task<string> GetRefreshToken(string token)
     {
-        var principal = _utilsService.GetPrincipalFromExpiredToken(tokenInfo);
-        var userId = principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
-        var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(userId);
+        var hashedRefreshToken = HashHelper.GetHashValue(token);
+        var refreshTokenInfo = await _refreshTokenInfoRepository.GetByRefreshToken(hashedRefreshToken);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
-            throw new BadRequestException("Refresh token is expired");
-        var user = await _userLoginsRepository.GetByUserId(userId);
-        var token = _utilsService.GetToken(user, _authenticationSettings.JwtRefreshTokenExpireMinutes);
-        return token;
+            throw new BadRequestException("Refresh token is expired", ErrorCodes.Auth.ExpiredRefreshToken);
+        var isEqual = HashHelper.IsHashEqual(hashedRefreshToken, refreshTokenInfo.RefreshToken);
+        if (!isEqual)
+        {
+            throw new BadRequestException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
+        }
+        var user = await _userLoginsRepository.GetByUserId(refreshTokenInfo.UserId);
+        var newToken = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
+        return newToken;
     }
 
 
     public async Task LogoutUser(string userId)
     {
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(userId);
-        if (refreshTokenInfo is null) throw new BadRequestException("Refresh token is expired");
+        if (refreshTokenInfo is null) throw new BadRequestException("Token is expired. Please log in again", ErrorCodes.Auth.ExpiredAccessToken);
         await _refreshTokenInfoRepository.Delete(refreshTokenInfo);
     }
 }
+
+

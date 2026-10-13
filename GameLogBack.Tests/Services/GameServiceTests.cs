@@ -251,7 +251,7 @@ public class GameServiceTests
         var result = async () => await gameService.PostGame(newGame, "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exist");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exists");
     }
 
     [Fact]
@@ -297,11 +297,10 @@ public class GameServiceTests
         //Act
         var gameService = new GameService(mockUtilsService.Object, mockRailwayService.Object, mockGameRepository.Object,
             mockCategoryRepository.Object, config);
-        var result = await gameService.PutGame(updatedGame, "1", "1");
+        await gameService.PutGame(updatedGame, "1", "1");
 
         //Assert
-        result.GameId.Should().Be("2");
-        result.GameName.Should().Be("Fortnite");
+        mockGameRepository.Verify(x => x.Update(It.IsAny<Games>()), Times.Once);
     }
 
     [Fact]
@@ -376,7 +375,7 @@ public class GameServiceTests
         var result = async () => await gameService.PutGame(updatedGame, "2", "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exist");
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exists");
     }
 
     [Fact]

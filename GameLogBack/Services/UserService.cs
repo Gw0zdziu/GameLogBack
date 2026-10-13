@@ -1,12 +1,11 @@
+using GameLogBack.Constants;
 using GameLogBack.DataAccess.Interfaces;
-using GameLogBack.DbContext;
 using GameLogBack.Dtos.User;
 using GameLogBack.Dtos.User.RequestDto;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
@@ -16,12 +15,13 @@ public class UserService : IUserService
     private readonly IUserLoginsRepository _userLoginsRepository;
     private readonly ICodeConfirmUsersRepository _codeConfirmUsersRepository;
     private readonly ICodeRecoveryPasswordsRepository _codeRecoveryPasswordsRepository;
+    private readonly IRefreshTokenInfoRepository _refreshTokenInfoRepository;
     private readonly IEmailSenderHelper _emailSenderHelper;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
     public UserService(IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
-        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository)
+        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository)
     {
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
@@ -30,14 +30,15 @@ public class UserService : IUserService
         _userLoginsRepository = userLoginsRepository;
         _codeConfirmUsersRepository = codeConfirmUsersRepository;
         _codeRecoveryPasswordsRepository = codeRecoveryPasswordsRepository;
+        _refreshTokenInfoRepository = refreshTokenInfoRepository;
     }
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
     {
         var isUserNameExist = await _userLoginsRepository.CheckIfUserExists(registerNewUser.Username);
-        if (isUserNameExist) throw new BadRequestException("User with this username already exist");
+        if (isUserNameExist) throw new BadRequestException("Username is already taken", ErrorCodes.User.UsernameAlreadyTaken);
         var isUserEmailExist = await _userRepository.CheckIfUserExist(registerNewUser.UserEmail);
-        if (isUserEmailExist) throw new BadRequestException("User with this email already exist");
+        if (isUserEmailExist) throw new BadRequestException("Email is already taken", ErrorCodes.User.EmailAlreadyTaken);
         var newUserId = Guid.NewGuid().ToString();
         var code = _utilsService.GenerateCodeToConfirmEmail();
         var newUser = new Users
@@ -65,8 +66,8 @@ public class UserService : IUserService
         newUser.UserLogins.Password = passwordHash;
         /*invitationCodes.IsUsed = true;*/
         await _userRepository.Create(newUser);
-        await _emailSenderHelper.SendEmail(registerNewUser.UserEmail, "Kod potwierdzający użytkownika",
-            $"Twój kod potwierdzający to : {code}");
+        await _emailSenderHelper.SendEmail(registerNewUser.UserEmail, $"GameLog - Verification code",
+            $"Your verification code: {code}");
         return newUserId;
     }
 
@@ -74,10 +75,7 @@ public class UserService : IUserService
     public async Task<GetUserDto> GetUser(string userId)
     {
         var user = await _userLoginsRepository.GetByUserId(userId);
-        if (user is null)
-        {
-            throw new NotFoundException("User not found");
-        }
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         return new GetUserDto()
         {
             UserId = user.UserId,
@@ -111,20 +109,20 @@ public class UserService : IUserService
             await _codeConfirmUsersRepository.Update(codeConfirmUsers);
         }
         var user = await _userRepository.GetById(userId);
-        await _emailSenderHelper.SendEmail(user.UserEmail, "Kod potwierdzający użytkownika",
-            $"Twój kod potwierdzający to : {code}");
+        await _emailSenderHelper.SendEmail(user.UserEmail, $"GameLog - Verification code",
+            $"Your verification code: {code}");
     }
 
     public async Task ConfirmUser(ConfirmCodeDto confirmCodeDto)
     {
         var confirmCodeUser = await _codeConfirmUsersRepository.GetByUserId(confirmCodeDto.UserId);
-        if (confirmCodeUser is null) throw new NotFoundException("Confirm code not found");
+        if (confirmCodeUser is null) throw new NotFoundException("Verification code not found", ErrorCodes.User.VerificationCodeNotFound);
         if (confirmCodeUser.ExpiryDate < DateTime.UtcNow)
-            throw new BadRequestException("Confirm code is expired. You must generate new code");
+            throw new BadRequestException("Verification code has expired", ErrorCodes.User.ExpiredVerificationCode);
         if (confirmCodeUser.Code != confirmCodeDto.ConfirmCode)
-            throw new BadRequestException("Confirm code is incorrect");
+            throw new BadRequestException("Verification code is incorrect", ErrorCodes.User.IncorrectVerificationCode);
         var user = await _userRepository.GetById(confirmCodeDto.UserId);
-        if (user is null) throw new NotFoundException("User not found");
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         user.IsActive = true;
         await _userRepository.Update(user);
     }
@@ -132,11 +130,7 @@ public class UserService : IUserService
     public async Task RecoverPassword(string userEmail)
     {
         var user = await _userRepository.GetByEmail(userEmail);
-        if (user is null)
-        {
-            throw new NotFoundException("User not found");
-        }
-
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         var code = _utilsService.GenerateCodeToRecoverPassword();
         var link = _utilsService.GenerateLinkToRecoveryPassword(code, user.UserId);
         var recoveryCode = await _codeRecoveryPasswordsRepository.GetByUserId(user.UserId);
@@ -159,34 +153,36 @@ public class UserService : IUserService
             recoveryCode.IsUsed = false;
             await _codeRecoveryPasswordsRepository.Update(recoveryCode);
         }
-        await _emailSenderHelper.SendEmail(userEmail, "Recovery password", link);
+        await _emailSenderHelper.SendEmail(userEmail, "GameLog - Recovery password", link);
     }
 
     public async Task UpdatePassword(RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
     {
         if (recoveryUpdatePasswordDto.NewPassword != recoveryUpdatePasswordDto.ConfirmPassword)
         {
-            throw new BadRequestException("Passwords are not equal");
+            throw new BadRequestException("Passwords do not match", ErrorCodes.User.PasswordsDoNotMatch);
         }
 
         var user = await _userRepository.GetUserWithUserLoginsAndCodeRecovery(recoveryUpdatePasswordDto.UserId,
             recoveryUpdatePasswordDto.Token);
-        if (user is null) throw new NotFoundException("User not found");
-        if (user.CodeRecoveryPassword.IsUsed) throw new BadRequestException("Recovery code is used");
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
+        if (user.CodeRecoveryPassword.IsUsed) throw new BadRequestException("Recovery code is already used", ErrorCodes.User.RecoveryCodeIsAlreadyUsed);
         if (user.CodeRecoveryPassword.ExpiryDate < DateTime.UtcNow)
-            throw new BadRequestException("Recovery code is expired");
+            throw new BadRequestException("Recovery code has expired", ErrorCodes.User.RecoveryCodeHasExpired);
         var newPassword = _passwordHasher.HashPassword(user.UserLogins, recoveryUpdatePasswordDto.NewPassword);
         user.UserLogins.Password = newPassword;
         user.CodeRecoveryPassword.IsUsed = true;
         await _userRepository.Update(user);
-        await _emailSenderHelper.SendEmail(user.UserEmail, "Aktualizacja hasła",
-            "Pomyślnie zaktualizowano hasło");
+        var refreshToken = await _refreshTokenInfoRepository.GetByUserId(recoveryUpdatePasswordDto.UserId);
+        await _refreshTokenInfoRepository.Delete(refreshToken);
+        await _emailSenderHelper.SendEmail(user.UserEmail, "Password updated",
+            "Successfully updated password.");
     }
     
     public async Task UpdateUser(UpdateUserDto updateUserDto, string userId)
     {
         var user = await _userRepository.GetById(userId);
-        if (user is null) throw new NotFoundException("User not found");
+        if (user is null) throw new NotFoundException("User not found", ErrorCodes.User.UserNotFound);
         user.FirstName = updateUserDto.FirstName;
         user.LastName = updateUserDto.LastName;
         user.UserEmail = updateUserDto.UserEmail;

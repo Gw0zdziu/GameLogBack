@@ -1,58 +1,55 @@
 ﻿using JetBrains.Annotations;
-
 namespace GameLogBack.Dtos.GameBrainApi.Response;
 
-public class GamesBrain
+public class GameSearchResponse
 {
-    public Sorting sorting { get; set; }
-    public List<string> active_filter_options  { get; set; }
-    public string query {get; set;}
-    public int total_results  { get; set; }
-    public int limit  { get; set; }
-    public int offset  { get; set; }
-    public List<Result> results { get; set; }
-    public List<SortingOptions> sorting_options { get; set; }
-
-
+    public Sorting Sorting { get; set; }
+    public List<string> ActiveFilterOptions { get; set; }
+    public string Query { get; set; }
+    public int TotalResults { get; set; }
+    public int Limit { get; set; }
+    public int Offset { get; set; }
+    public List<Result> Results { get; set; }
+    public List<SortingOptions> SortingOptions { get; set; }
 }
 
 public class Sorting
 {
-    public object key { get; set; }
-    public object direction { get; set; }
+    public string Key { get; set; }
+    public string Direction { get; set; }
 }
 
 public class Result
 {
-    public int id { get; set; }
-    public decimal? year { get; set; }
-    public string name { get; set; }
-    public string genre { get; set; }
-    public string image { get; set; }
-    public string link { get; set; }
-    public Rating rating { get; set; }
-    public bool adult_only  { get; set; }
-    public List<string> screenshots  { get; set; }
-    public string micro_trailer  { get; set; }
-    public string gameplay { get; set; }
-    public string short_description  { get; set; }
+    public int Id { get; set; }
+    public decimal? Year { get; set; }
+    public string Name { get; set; }
+    public string Genre { get; set; }
+    public string Image { get; set; }
+    public string Link { get; set; }
+    public Rating Rating { get; set; }
+    public bool AdultOnly { get; set; }
+    public List<string> Screenshots { get; set; }
+    public string MicroTrailer { get; set; }
+    public string Gameplay { get; set; }
+    public string ShortDescription { get; set; }
 }
 
 public class Rating
 {
-    public decimal? mean { get; set; }
-    public decimal? count  { get; set; }
+    public decimal? Mean { get; set; }
+    public decimal? Count { get; set; }
 }
 
 public class SortingOptions
 {
-    [CanBeNull] public string name { get; set; }
-    [CanBeNull] public string sort { get; set; }
-    [CanBeNull] public string key  { get; set; }
+    [CanBeNull] public string Name { get; set; }
+    [CanBeNull] public string Sort { get; set; }
+    [CanBeNull] public string Key { get; set; }
 }
 
 public class GameDetails
 {
-    public string name { get; set; }
-    public string image { get; set; }
+    public string Name { get; set; }
+    public string Image { get; set; }
 }

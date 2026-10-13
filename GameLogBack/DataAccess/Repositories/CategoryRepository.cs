@@ -1,5 +1,6 @@
 using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DbContext;
+using GameLogBack.Dtos.Category.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
 using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
@@ -24,7 +25,16 @@ public class CategoryRepository: ICategoryRepository
     {
         return await _categories.Where(x => x.UserId == id).Include(x => x.Games).GetPaginatedData(paginatedQuery);
     }
-    
+
+    public async Task<List<CategoriesNameDto>> GetCategoryNames(string userId)
+    {
+        return await _categories.Where(x => x.UserId == userId).Select(x => new CategoriesNameDto()
+        {
+            CategoryId = x.CategoryId,
+            CategoryName = x.CategoryName
+        }).ToListAsync();
+    }
+
     public async  Task<Categories> GetById(string id, string userId)
     {
         return await _categories.Include(x => x.Games).Where(x => x.CategoryId == id && x.UserId == userId).FirstOrDefaultAsync();

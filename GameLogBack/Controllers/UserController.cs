@@ -49,6 +49,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("update")]
+    [Authorize]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto updateUserDto)
     {
         var result = await _updateUserDtoValidator.ValidateAsync(updateUserDto);

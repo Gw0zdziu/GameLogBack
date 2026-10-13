@@ -1,6 +1,5 @@
+using GameLogBack.Constants;
 using GameLogBack.DataAccess.Interfaces;
-using GameLogBack.DbContext;
-using GameLogBack.Dtos.Category;
 using GameLogBack.Dtos.Category.RequestDto;
 using GameLogBack.Dtos.Category.ResponseDto;
 using GameLogBack.Dtos.PaginatedQuery;
@@ -8,7 +7,6 @@ using GameLogBack.Dtos.PaginatedResults;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameLogBack.Services;
 
@@ -16,11 +14,9 @@ public class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly IGameRepository _gameRepository;
-    private readonly IUtilsService _utilsService;
 
     public CategoryService(IUtilsService utilsService, ICategoryRepository categoryRepository, IGameRepository gameRepository)
     {
-        _utilsService = utilsService;
         _categoryRepository = categoryRepository;
         _gameRepository = gameRepository;
     }
@@ -54,7 +50,7 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> GetCategory(string categoryId, string userId)
     {
         var category = await _categoryRepository.GetById(categoryId, userId);
-        if (category is null) throw new NotFoundException("Category not found");
+        if (category is null) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
         var categoryWithGamesCounter = new CategoryDto
         {
             CategoryId = category.CategoryId,
@@ -72,7 +68,7 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
         var isCategoryExist = await _categoryRepository.CheckIfExists(categoryPostDto.CategoryName, userId);
-        if (isCategoryExist) throw new BadRequestException("Category with this name already exist");
+        if (isCategoryExist) throw new BadRequestException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
         var newCategory = new Categories
         {
             CategoryId = Guid.NewGuid().ToString(),
@@ -100,9 +96,9 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> UpdateCategory(CategoryPutDto categoryPutDto, string categoryId, string userId)
     {
         var category = await _categoryRepository.GetById(categoryId, userId);
-        if (category is null) throw new NotFoundException("Category not found");
-        var isCategoryNameExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
-        if (isCategoryNameExist) throw new BadRequestException("Category with this name already exist");
+        if (category is null) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
+        var isCategoryExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
+        if (isCategoryExist) throw new BadRequestException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
         category.CategoryName = categoryPutDto.CategoryName;
         category.Description = categoryPutDto.Description;
         category.UpdatedBy = userId;
@@ -123,9 +119,9 @@ public class CategoryService : ICategoryService
     public async Task DeleteCategory(string categoryId, string userId)
     {
         var category = await _categoryRepository.GetById(categoryId, userId);
-        if (category is null) throw new NotFoundException("Category not found");
+        if (category is null) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
         var isGameWithCategoryExist = await _gameRepository.CheckIfGameExitsById(categoryId);
-        if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category");
+        if (isGameWithCategoryExist) throw new BadRequestException("Exist game with this category", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
         await _categoryRepository.Delete(category);
     }
 
@@ -150,5 +146,10 @@ public class CategoryService : ICategoryService
             LastItemIndexList = categories.LastItemIndexList
         };
         return categoriesByUserIdDtoPaginated;
+    }
+
+    public async Task<List<CategoriesNameDto>> GetCategoryNames(string userId)
+    {
+        return await _categoryRepository.GetCategoryNames(userId);
     }
 }
