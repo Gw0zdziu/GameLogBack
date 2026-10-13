@@ -6,6 +6,7 @@ using FluentValidation;
 using GameLogBack.Dtos.Auth;
 using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Dtos.Auth.ResponseDto;
+using GameLogBack.Dtos.User;
 using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
@@ -39,30 +40,60 @@ public class AuthController : ControllerBase
             var errors = validate.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
             return BadRequest(errors);
         }
+        
         var result = await _authService.LoginUser(loginUserDto);
-        return Ok(result);
+        Response.Cookies.Append("refresh_token", result.RefreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.None,
+            Secure = true,
+            Expires = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes),
+            Path = "/api/auth"
+        });
+        var returnValue = new LoginDataResponseDto()
+        {
+            Token = result.Token,
+            ExpiresIn = _authenticationSettings.JwtAccessTokenExpireMinutes,
+            User = new GetUserDto()
+            {
+                UserId = result.User.UserId,
+                UserName = result.User.UserName,
+                FirstName = result.User.FirstName,
+                LastName = result.User.LastName,
+                UserEmail = result.User.UserEmail,
+                IsActive = result.User.IsActive
+            }
+        };
+        return Ok(returnValue);
     }
 
     [HttpPost("refresh-token")]
     public async Task<ActionResult<string>> RefreshToken()
     {
-    var accessToken = new StringBuilder(Request.Headers.Authorization.ToString())
-            .Replace("Bearer ", "").ToString();
-        var newTokenInfo = await _authService.GetRefreshToken(accessToken);
+        Request.Cookies.TryGetValue("refresh_token", out var refreshToken);
+        Console.WriteLine(refreshToken);
+        var newTokenInfo = await _authService.GetRefreshToken(refreshToken);
         return Ok(newTokenInfo);
 
-        return Ok(newTokenInfo);
     }
 
 
     [HttpDelete("logout")]
-    public IActionResult Logout()
+    [Authorize]
+    public async Task<ActionResult> Logout()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        _authService.LogoutUser(userId);
+        await _authService.LogoutUser(userId);
+        Response.Cookies.Delete("refresh_token", new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.None,
+            Secure = true,
+            Path = "/api/auth"
+        });
         return Ok();
     }
-
+    
     [HttpGet("verify")]
     [Authorize]
     public IActionResult Verify()

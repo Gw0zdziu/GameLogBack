@@ -19,6 +19,11 @@ public class RefreshTokenInfoRepository : IRefreshTokenInfoRepository
         return await _context.RefreshTokens.FirstOrDefaultAsync(x => x.UserId == userId);
     }
 
+    public async Task<RefreshTokenInfo> GetByRefreshToken(string token)
+    {
+        return await _context.RefreshTokens.FirstOrDefaultAsync(x => x.RefreshToken == token);
+    }
+
     public Task Create(RefreshTokenInfo refreshTokenInfo)
     {
         _context.RefreshTokens.Add(refreshTokenInfo);
