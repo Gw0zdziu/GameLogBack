@@ -18,17 +18,22 @@ namespace GameLogBack.Tests.Services;
 [TestSubject(typeof(UserService))]
 public class UserServiceTests
 {
+    private readonly Mock<IUserRepository> _mockUserRepository = new();
+    private readonly Mock<IUserLoginsRepository> _mockUserLoginsRepository = new();
+    private readonly Mock<ICodeConfirmUsersRepository> _mockCodeConfirmUsersRepository = new();
+    private readonly Mock<ICodeRecoveryPasswordsRepository> _mockCodeRecoveryPasswordsRepository = new();
+    private readonly Mock<IRefreshTokenInfoRepository> _mockRefreshTokenInfoRepository = new();
+    private readonly Mock<IEmailSenderHelper> _mockEmailSenderHelper = new();
+    private readonly Mock<IPasswordHasher<UserLogins>> _mockPasswordHasher = new();
+    private readonly Mock<IUtilsService> _mockUtilsService = new();
+    
+    
+    #region RegisterUser
+    
     [Fact]
     public async Task RegisterUser_ForValidData_ReturnsUserId()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var registerNewUser = new RegisterNewUserDto()
         {
             UserEmail = "email@gmail.com",
@@ -39,18 +44,20 @@ public class UserServiceTests
             LastName = "Nowak",
             InvitationCode = "1234"
         };
-        mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
-        mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(false);
-        mockUtilsService.Setup(x => x.GenerateCodeToConfirmEmail()).Returns("1234");
-        mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
+        _mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
+        _mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(false);
+        _mockUtilsService.Setup(x => x.GenerateCodeToConfirmEmail()).Returns("1234");
+        _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);
         var result = await userService.RegisterUser(registerNewUser);
         
         //Assert
-        mockUserRepository.Verify(x => x.Create(It.IsAny<Users>()), Times.Once);
-        mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _mockUserRepository.Verify(x => x.Create(It.IsAny<Users>()), Times.Once);
+        _mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         result.Should().NotBeNullOrEmpty();
 
     }
@@ -59,13 +66,6 @@ public class UserServiceTests
     public async Task RegisterUser_UserNameExist_ThrowBadRequestException()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var registerNewUser = new RegisterNewUserDto()
         {
             UserEmail = "email@gmail.com",
@@ -76,10 +76,12 @@ public class UserServiceTests
             LastName = "Nowak",
             InvitationCode = "1234"
         };
-        mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(true);
+        _mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(true);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);        
         var result = async () => await userService.RegisterUser(registerNewUser);
         
         //Assert
@@ -90,13 +92,7 @@ public class UserServiceTests
     public async Task RegisterUser_UserEmail_ThrowBadRequestException()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
+        
         var registerNewUser = new RegisterNewUserDto()
         {
             UserEmail = "email@gmail.com",
@@ -107,29 +103,28 @@ public class UserServiceTests
             LastName = "Nowak",
             InvitationCode = "1234"
         };
-        mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
-        mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(true);
+        _mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
+        _mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(true);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);        
         var result = async () => await userService.RegisterUser(registerNewUser);
         
         //Assert
         await result.Should().ThrowAsync<BadRequestException>().WithMessage("Email is already taken");
 
     }
-
+    
+    #endregion
+    
+    #region GetUser
+    
     [Fact]
     public async Task GetUser_ForValidParameters_ReturnUserData()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var userLogins = new UserLogins()
         {
             UserId = "1",
@@ -143,11 +138,12 @@ public class UserServiceTests
                 LastName = "Nowak"
             }
         };
-        mockUserLoginsRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(userLogins);
-        
+        _mockUserLoginsRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(userLogins);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);            
         var result = await userService.GetUser("1");
         
         //Assert
@@ -158,34 +154,26 @@ public class UserServiceTests
     public async Task GetUser_ForInvalidUserId_ThrowNotFoundException()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
-        mockUserLoginsRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((UserLogins)null);
+        _mockUserLoginsRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((UserLogins)null);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);   
         var result = async () => await userService.GetUser("1");
         
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("User not found");
     }
+    
+    #endregion
+
+    #region ResendNewConfirmCode
 
     [Fact]
     public async Task ResendNewConfirmCode_ForValidParameters_ShouldCallUpdateMethod()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var codeConfirmUsers = new CodeConfirmUsers()
         {
             CodeId = "1",
@@ -197,61 +185,48 @@ public class UserServiceTests
         {
             UserEmail = "email@gmail.com"
         };
-        mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(codeConfirmUsers);
-        mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
+        _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(codeConfirmUsers);
+        _mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);   
         await userService.ResendNewConfirmCode("1");
         
         //Assert
-        mockCodeConfirmUsersRepository.Verify(x => x.Update(It.IsAny<CodeConfirmUsers>()), Times.Once);
+        _mockCodeConfirmUsersRepository.Verify(x => x.Update(It.IsAny<CodeConfirmUsers>()), Times.Once);
     }
 
     [Fact]
     public async Task ResendNewConfirmCode_ForInvalidParameters_ShouldCallCreateMethod()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
-        var codeConfirmUsers = new CodeConfirmUsers()
-        {
-            CodeId = "1",
-            Code = "1234",
-            UserId = "1",
-            ExpiryDate = new DateTime(2026, 02, 01)
-        };
         var user = new Users()
         {
             UserEmail = "email@gmail.com"
         };
-        mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((CodeConfirmUsers)null);
-        mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
+        _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((CodeConfirmUsers)null);
+        _mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);   
         await userService.ResendNewConfirmCode("1");
         
         //Assert
-        mockCodeConfirmUsersRepository.Verify(x => x.Create(It.IsAny<CodeConfirmUsers>()), Times.Once);
+        _mockCodeConfirmUsersRepository.Verify(x => x.Create(It.IsAny<CodeConfirmUsers>()), Times.Once);
     }
+
+    #endregion
+
+    #region ConfirmUser
 
     [Fact]
     public async Task ConfirmUser_ForValidParameters_ShouldUpdateUser()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var confirmCodeDto = new ConfirmCodeDto()
         {
             UserId = "1",
@@ -268,16 +243,18 @@ public class UserServiceTests
         {
             IsActive = false
         };
-        mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
+        _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync(confirmCode);
-        mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
+        _mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
-        mockUserRepository.Verify(x => x.Update(It.IsAny<Users>()), Times.Once);
+        _mockUserRepository.Verify(x => x.Update(It.IsAny<Users>()), Times.Once);
         user.IsActive.Should().BeTrue();
     }
     
@@ -285,20 +262,6 @@ public class UserServiceTests
     public async Task ConfirmUser_ForNullableCodeConfirmUsers_NotFoundException()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
-        var confirmCode = new CodeConfirmUsers()
-        {
-            CodeId = "1",
-            Code = "1234",
-            UserId = "1",
-            ExpiryDate = new DateTime(2026, 09, 01)
-        };
         var confirmCodeDto = new ConfirmCodeDto()
         {
             UserId = "1",
@@ -308,11 +271,13 @@ public class UserServiceTests
         {
             IsActive = false
         };
-        mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
+        _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync((CodeConfirmUsers)null);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -323,13 +288,6 @@ public class UserServiceTests
     public async Task ConfirmUser_ExpiryDateIsOlderCurrentTime_BadRequestException()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var confirmCode = new CodeConfirmUsers()
         {
             CodeId = "1",
@@ -342,15 +300,13 @@ public class UserServiceTests
             UserId = "1",
             ConfirmCode = "1234"
         };
-        var user = new Users()
-        {
-            IsActive = false
-        };
-        mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
+        _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync(confirmCode);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -361,13 +317,6 @@ public class UserServiceTests
     public async Task ConfirmUser_CodesAreDifferent_BadRequestException()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var confirmCode = new CodeConfirmUsers()
         {
             CodeId = "1",
@@ -380,11 +329,13 @@ public class UserServiceTests
             UserId = "1",
             ConfirmCode = "1234"
         };
-        mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
+        _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync(confirmCode);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -395,13 +346,6 @@ public class UserServiceTests
     public async Task ConfirmUser_NullableUser_NotFoundException()
     {
         //Arrange
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var confirmCode = new CodeConfirmUsers()
         {
             CodeId = "1",
@@ -414,28 +358,28 @@ public class UserServiceTests
             UserId = "1",
             ConfirmCode = "1234"
         };
-        mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
+        _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync(confirmCode);
-        mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync((Users)null);
+        _mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync((Users)null);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("User not found");
     }
 
+
+    #endregion
+    
+    #region RecoverPassword
+    
     [Fact]
     public async Task RecoverPassword_IfRecoveryCodeExist_ShouldCallUpdateCodeMethod()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var user = new Users()
         {
             UserId = "1"
@@ -448,32 +392,27 @@ public class UserServiceTests
             ExpiryDate = new DateTime(2026, 10, 01),
             IsUsed = false
         };
-        mockUserRepository.Setup(x => x.GetByEmail(It.IsAny<string>())).ReturnsAsync(user);
-        mockUtilsService.Setup(x => x.GenerateCodeToRecoverPassword()).Returns("1234");
-        mockUtilsService.Setup(x => x.GenerateLinkToRecoveryPassword(It.IsAny<string>(), It.IsAny<string>())).Returns("http://localhost:5000/recovery-password/1234");
-        mockCodeRecoveryPasswordsRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
+        _mockUserRepository.Setup(x => x.GetByEmail(It.IsAny<string>())).ReturnsAsync(user);
+        _mockUtilsService.Setup(x => x.GenerateCodeToRecoverPassword()).Returns("1234");
+        _mockUtilsService.Setup(x => x.GenerateLinkToRecoveryPassword(It.IsAny<string>(), It.IsAny<string>())).Returns("http://localhost:5000/recovery-password/1234");
+        _mockCodeRecoveryPasswordsRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync(codeRecoveryPassword);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         await userService.RecoverPassword("email@gmail.com");
         
         //Assert
-        mockCodeRecoveryPasswordsRepository.Verify(x => x.Update(It.IsAny<CodeRecoveryPassword>()), Times.Once);
-        mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _mockCodeRecoveryPasswordsRepository.Verify(x => x.Update(It.IsAny<CodeRecoveryPassword>()), Times.Once);
+        _mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
 
     }
     
     [Fact]
     public async Task RecoverPassword_IfRecoveryCodeNotExist_ShouldCallCreateCodeMethod()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var user = new Users()
         {
             UserId = "1"
@@ -486,35 +425,32 @@ public class UserServiceTests
             ExpiryDate = new DateTime(2026, 10, 01),
             IsUsed = false
         };
-        mockUserRepository.Setup(x => x.GetByEmail(It.IsAny<string>())).ReturnsAsync(user);
-        mockUtilsService.Setup(x => x.GenerateCodeToRecoverPassword()).Returns("1234");
-        mockUtilsService.Setup(x => x.GenerateLinkToRecoveryPassword(It.IsAny<string>(), It.IsAny<string>())).Returns("http://localhost:5000/recovery-password/1234");
-        mockCodeRecoveryPasswordsRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
+        _mockUserRepository.Setup(x => x.GetByEmail(It.IsAny<string>())).ReturnsAsync(user);
+        _mockUtilsService.Setup(x => x.GenerateCodeToRecoverPassword()).Returns("1234");
+        _mockUtilsService.Setup(x => x.GenerateLinkToRecoveryPassword(It.IsAny<string>(), It.IsAny<string>())).Returns("http://localhost:5000/recovery-password/1234");
+        _mockCodeRecoveryPasswordsRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync((CodeRecoveryPassword)null);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         await userService.RecoverPassword("email@gmail.com");
         
         //Assert
-        mockCodeRecoveryPasswordsRepository.Verify(x => x.Create(It.IsAny<CodeRecoveryPassword>()), Times.Once);
-        mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _mockCodeRecoveryPasswordsRepository.Verify(x => x.Create(It.IsAny<CodeRecoveryPassword>()), Times.Once);
+        _mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
     
     [Fact]
     public async Task RecoverPassword_IfUserNotExist_ThrowBadRequestException()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
-        mockUserRepository.Setup(x => x.GetByEmail(It.IsAny<string>())).ReturnsAsync((Users)null);
+        _mockUserRepository.Setup(x => x.GetByEmail(It.IsAny<string>())).ReturnsAsync((Users)null);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.RecoverPassword("email@gmail.com");
 
         
@@ -522,23 +458,20 @@ public class UserServiceTests
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("User not found");
     }
     
+    #endregion
+
+    #region UpdatePassword
+
     [Fact]
     public async Task UpdatePassword_IfPasswordsAreCorrect_ShouldUpdateUserPassword()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var user = new Users()
         {
             UserEmail = "email@gmail.com",
             CodeRecoveryPassword = new CodeRecoveryPassword()
             {
                 IsUsed = false,
-                ExpiryDate = new DateTime(2026, 10, 01)
+                ExpiryDate = DateTime.UtcNow.AddDays(1)
             },
             UserLogins = new UserLogins()
             {
@@ -552,29 +485,34 @@ public class UserServiceTests
             ConfirmPassword = "password",
             Token = "1234"
         };
-        mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(user);
-        mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
+        var refreshTokenInfo = new RefreshTokenInfo()
+        {
+            RefreshToken = "refreshToken",
+            UserId = "1",
+            RefreshTokenId = "1",
+            ExpiryDate = DateTime.Now.AddDays(1),
+
+        };
+        _mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
+        _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(refreshTokenInfo);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
-        mockUserRepository.Verify(x => x.Update(It.IsAny<Users>()), Times.Once);
-        mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _mockUserRepository.Verify(x => x.Update(It.IsAny<Users>()), Times.Once);
+        _mockEmailSenderHelper.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _mockRefreshTokenInfoRepository.Verify(x => x.Delete(It.IsAny<RefreshTokenInfo>()), Times.Once);
         user.UserLogins.Password.Should().Be("hashedPassword");
     }
     
     [Fact]
     public async Task UpdatePassword_PasswordsIsDifferent_ThrowBadRequestException()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var user = new Users()
         {
             UserEmail = "email@gmail.com",
@@ -595,11 +533,13 @@ public class UserServiceTests
             ConfirmPassword = "confirmPassword",
             Token = "1234"
         };
-        mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(user);
-        mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
+        _mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
@@ -609,26 +549,6 @@ public class UserServiceTests
     [Fact]
     public async Task UpdatePassword_UserNotExist_ThrowBadRequestException()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
-        var user = new Users()
-        {
-            UserEmail = "email@gmail.com",
-            CodeRecoveryPassword = new CodeRecoveryPassword()
-            {
-                IsUsed = false,
-                ExpiryDate = new DateTime(2026, 10, 01)
-            },
-            UserLogins = new UserLogins()
-            {
-                Password = "password"
-            }
-        };
         var recoveryUpdatePasswordDto = new RecoveryUpdatePasswordDto()
         {
             UserId = "1",
@@ -636,11 +556,13 @@ public class UserServiceTests
             ConfirmPassword = "password",
             Token = "1234"
         };
-        mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((Users)null);
-        mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
+        _mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((Users)null);
+        _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
@@ -650,13 +572,7 @@ public class UserServiceTests
     [Fact]
     public async Task UpdatePassword_DateIsExpired_ThrowBadRequestException()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
+        
         var user = new Users()
         {
             UserEmail = "email@gmail.com",
@@ -677,27 +593,26 @@ public class UserServiceTests
             ConfirmPassword = "password",
             Token = "1234"
         };
-        mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(user);
-        mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
+        _mockUserRepository.Setup(x => x.GetUserWithUserLoginsAndCodeRecovery(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(user);
+        _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
         await result.Should().ThrowAsync<BadRequestException>().WithMessage("Recovery code has expired");
     }
-    
+
+    #endregion
+
+    #region UpdateUser
+
     [Fact]
     public async Task UpdateUser_IfUserExist_ShouldUpdateUser()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var user = new Users()
         {
             FirstName = "Piotr",
@@ -710,37 +625,34 @@ public class UserServiceTests
             LastName = "Nowak",
             UserEmail = "email@gmail.com"
         };
-        mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
+        _mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync(user);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         await userService.UpdateUser(updateUserDto, "1");
         
         //Assert
-        mockUserRepository.Verify(x => x.Update(It.IsAny<Users>()), Times.Once);
+        _mockUserRepository.Verify(x => x.Update(It.IsAny<Users>()), Times.Once);
         
     }
 
     [Fact]
     public async Task UpdateUser_IfUserNotExist_ThrowNotFoundException()
     {
-        var mockUserRepository = new Mock<IUserRepository>();
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockCodeConfirmUsersRepository = new Mock<ICodeConfirmUsersRepository>();
-        var mockCodeRecoveryPasswordsRepository = new Mock<ICodeRecoveryPasswordsRepository>();
-        var mockEmailSenderHelper = new Mock<IEmailSenderHelper>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
         var updateUserDto = new UpdateUserDto()
         {
             FirstName = "Jan",
             LastName = "Nowak",
             UserEmail = "email@gmail.com"
         };
-        mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync((Users)null);
+        _mockUserRepository.Setup(x => x.GetById(It.IsAny<string>())).ReturnsAsync((Users)null);
         
         //Act
-        var userService = new UserService(mockPasswordHasher.Object, mockUtilsService.Object, mockEmailSenderHelper.Object, mockUserRepository.Object, mockUserLoginsRepository.Object, mockCodeConfirmUsersRepository.Object, mockCodeRecoveryPasswordsRepository.Object);
+        var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
+            _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
         var result = async () => await userService.UpdateUser(updateUserDto, "1");
         
         //Assert
@@ -748,6 +660,6 @@ public class UserServiceTests
         
     }
 
-    
+    #endregion
     
 }
