@@ -11,19 +11,20 @@ using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GameLogBack.Services;
 
 public class UtilsService : IUtilsService
 {
-    private readonly AuthenticationSettings _authenticationSettings;
-    private readonly Config _config;
+    private readonly IOptions<AuthenticationSettings> _authenticationSettings;
+    private readonly IOptions<FrontendSettings> _frontendSettings;
 
-    public UtilsService(AuthenticationSettings authenticationSettings, Config config)
+    public UtilsService( IOptions<FrontendSettings> frontendSettings, IOptions<AuthenticationSettings> authenticationSettings)
     {
+        _frontendSettings = frontendSettings;
         _authenticationSettings = authenticationSettings;
-        _config = config;
     }
 
     public string GetRefreshToken()
@@ -42,11 +43,11 @@ public class UtilsService : IUtilsService
             new(ClaimTypes.NameIdentifier, userLogins.UserId),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.Value.JwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiresTime = DateTime.UtcNow.AddMinutes(expireIn);
-        var jwtToken = new JwtSecurityToken(_authenticationSettings.JwtIssuer,
-            _authenticationSettings.JwtIssuer, claims, null, expiresTime,
+        var jwtToken = new JwtSecurityToken(_authenticationSettings.Value.JwtIssuer,
+            _authenticationSettings.Value.JwtIssuer, claims, null, expiresTime,
             credentials);
         var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.WriteToken(jwtToken);
@@ -61,10 +62,10 @@ public class UtilsService : IUtilsService
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidAudience = _authenticationSettings.JwtIssuer,
-            ValidIssuer = _authenticationSettings.JwtIssuer,
+            ValidAudience = _authenticationSettings.Value.JwtIssuer,
+            ValidIssuer = _authenticationSettings.Value.JwtIssuer,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.Value.JwtKey)),
             ValidateLifetime = false,
             ClockSkew = TimeSpan.Zero
         };
@@ -113,8 +114,8 @@ public class UtilsService : IUtilsService
 
     public string GenerateLinkToRecoveryPassword(string recoverCode, string userId)
     {
-        var recoveryLink = new StringBuilder(_config.FrontendUrl)
-            .Append(_config.RecoveryPasswordEndpoint)
+        var recoveryLink = new StringBuilder(_frontendSettings.Value.FrontendUrl)
+            .Append(_frontendSettings.Value.RecoveryPasswordEndpoint)
             .Replace("{userId}", userId)
             .Replace("{token}", recoverCode)
             .ToString();

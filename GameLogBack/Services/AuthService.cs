@@ -10,26 +10,27 @@ using GameLogBack.Helpers;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace GameLogBack.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly AuthenticationSettings _authenticationSettings;
+    private readonly IOptions<AuthenticationSettings> _authenticationSettings;
     private readonly IUserLoginsRepository _userLoginsRepository;
     private readonly IRefreshTokenInfoRepository _refreshTokenInfoRepository;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
 
-    public AuthService(AuthenticationSettings authenticationSettings,
-        IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService, IUserLoginsRepository userLoginsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository)
+    public AuthService(
+        IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService, IUserLoginsRepository userLoginsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository, IOptions<AuthenticationSettings> authenticationSettings)
     {
-        _authenticationSettings = authenticationSettings;
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
         _userLoginsRepository = userLoginsRepository;
         _refreshTokenInfoRepository = refreshTokenInfoRepository;
+        _authenticationSettings = authenticationSettings;
     }
 
     public async Task<LoginResponseDto> LoginUser(LoginUserDto loginUserDto)
@@ -39,7 +40,7 @@ public class AuthService : IAuthService
         if (!user.User.IsActive) throw new BadRequestException("Inactive account", ErrorCodes.Auth.InactiveAccount);
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
         if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
-        var token = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
+        var token = _utilsService.GetToken(user, _authenticationSettings.Value.JwtAccessTokenExpireMinutes);
         var refreshToken = _utilsService.GetRefreshToken();
         var hashedRefreshToken = HashHelper.GetHashValue(refreshToken);
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(user.UserId);
@@ -50,7 +51,7 @@ public class AuthService : IAuthService
                 UserId = user.UserId,
                 RefreshTokenId = Guid.NewGuid().ToString(),
                 RefreshToken = hashedRefreshToken,
-                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes)
+                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.Value.JwtRefreshTokenExpireMinutes)
             };
             await _refreshTokenInfoRepository.Create(newRefreshTokenInfo);
         }
@@ -58,14 +59,14 @@ public class AuthService : IAuthService
         {
             refreshTokenInfo.RefreshToken = hashedRefreshToken;
             refreshTokenInfo.ExpiryDate =
-                DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes);
+                DateTime.UtcNow.AddMinutes(_authenticationSettings.Value.JwtRefreshTokenExpireMinutes);
             await _refreshTokenInfoRepository.Update(refreshTokenInfo);
         }
         return new LoginResponseDto()
         {
             Token = token,
             RefreshToken = refreshToken,
-            ExpiresIn = _authenticationSettings.JwtAccessTokenExpireMinutes,
+            ExpiresIn = _authenticationSettings.Value.JwtAccessTokenExpireMinutes,
             User = new GetUserDto()
             {
                 UserId = user.UserId,
@@ -94,7 +95,7 @@ public class AuthService : IAuthService
             throw new BadRequestException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
         }
         var user = await _userLoginsRepository.GetByUserId(refreshTokenInfo.UserId);
-        var newToken = _utilsService.GetToken(user, _authenticationSettings.JwtAccessTokenExpireMinutes);
+        var newToken = _utilsService.GetToken(user, _authenticationSettings.Value.JwtAccessTokenExpireMinutes);
         return newToken;
     }
 

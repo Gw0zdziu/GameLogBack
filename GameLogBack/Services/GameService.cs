@@ -9,24 +9,23 @@ using GameLogBack.Exceptions;
 using GameLogBack.Extensions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
+using Microsoft.Extensions.Options;
 
 namespace GameLogBack.Services;
 
 public class GameService : IGameService
 {
     private readonly IGameRepository _gameRepository;
-    private readonly ICategoryRepository _categoryRepository;
     private readonly IRailwayBucketService _railwayBucketService;
-    private readonly Config _config;
+    private readonly IOptions<BucketSettings> _options;
 
 
 
-    public GameService(IUtilsService utilsService, IRailwayBucketService railwayBucketService, IGameRepository gameRepository, ICategoryRepository categoryRepository, Config config)
+    public GameService(IRailwayBucketService railwayBucketService, IGameRepository gameRepository, IOptions<BucketSettings> options)
     {
         _railwayBucketService = railwayBucketService;
         _gameRepository = gameRepository;
-        _categoryRepository = categoryRepository;
-        _config = config;
+        _options = options;
     }
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
@@ -91,7 +90,7 @@ public class GameService : IGameService
         }
         else
         {
-            var gameImageDirectoryPath = _config.GamesImageDirectoryName;
+            var gameImageDirectoryPath = _options.Value.GamesImageDirectoryName;
             gameImagePathInBucket = await _railwayBucketService.UploadFile(gameImageDirectoryPath, gameNameKebabCase, gamePostDto.GameImageUrl);
 
         }
@@ -126,7 +125,7 @@ public class GameService : IGameService
         }
         else
         {
-            var gameImageDirectoryPath = _config.GamesImageDirectoryName;
+            var gameImageDirectoryPath = _options.Value.GamesImageDirectoryName;
             gameImagePathInBucket = await _railwayBucketService.UploadFile(gameImageDirectoryPath, gameNameKebabCase, gamePutDto.GameImageUrl);
 
         }

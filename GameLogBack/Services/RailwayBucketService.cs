@@ -4,6 +4,7 @@ using GameLogBack.Interfaces;
 using GameLogBack.Mappers;
 using GameLogBack.Settings;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Options;
 
 namespace GameLogBack.Services;
 
@@ -11,13 +12,13 @@ public class RailwayBucketService : IRailwayBucketService
 {
     private readonly HttpClient _client;
     private readonly IAmazonS3 _s3Client;
-    private readonly BucketS3 _bucketS3;
+    private readonly IOptions<BucketSettings> _options;
 
-    public RailwayBucketService(HttpClient client, IAmazonS3 s3Client, IConfiguration configuration, BucketS3 bucketS3)
+    public RailwayBucketService(HttpClient client, IAmazonS3 s3Client, IOptions<BucketSettings> options)
     {
         _client = client;
         _s3Client = s3Client;
-        _bucketS3 = bucketS3;
+        _options = options;
     }
 
     public async Task<string> UploadFile(string directoryName, string fileName, string urlFile)
@@ -30,7 +31,7 @@ public class RailwayBucketService : IRailwayBucketService
         await using var imageStream = await responseMessage.Content.ReadAsStreamAsync();
         var putRequest = new PutObjectRequest()
         {
-            BucketName = _bucketS3.BucketName,
+            BucketName = _options.Value.BucketName,
             Key = pathToFileBucket,
             InputStream = imageStream,
             ContentType = contentType,
@@ -49,7 +50,7 @@ public class RailwayBucketService : IRailwayBucketService
         if (filePath == null) return null;
         var request = new GetPreSignedUrlRequest
         {
-            BucketName = _bucketS3.BucketName,
+            BucketName = _options.Value.BucketName,
             Key = filePath.TrimStart('/'),
             Expires = DateTime.UtcNow.AddHours(1),
             Verb = HttpVerb.GET
