@@ -24,14 +24,18 @@ namespace GameLogBack.Tests.Services;
 [TestSubject(typeof(CategoryService))]
 public class CategoryServiceTests
 {
+    private readonly  Mock<IUtilsService> _mockUtilsService = new();
+    private readonly  Mock<ICategoryRepository> _mockCategoryRepository = new();
+    private readonly Mock<IGameRepository> _mockGameRepository = new();
+
+
+    #region GetUserCategories
 
     [Fact]
     public async Task GetUserCategories_ForValidParams_ReturnsListOfCategoriesForUser()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
+       
         var paginatedQuery = new PaginatedQuery
         {
             PageNumber = 1,
@@ -75,9 +79,9 @@ public class CategoryServiceTests
             LastItemIndexList = 2,
             AmountPagesList = [1]
         };
-        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(categoriesPaginatedMock);
+        _mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(categoriesPaginatedMock);
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.GetUserCategories("1", paginatedQuery);
 
         //Assert
@@ -88,9 +92,6 @@ public class CategoryServiceTests
     public async Task GetUserCategories_ForEmptyCategories_ReturnsResultWithEmptyListCategories()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var paginatedQuery = new PaginatedQuery
         {
             PageNumber = 1,
@@ -106,22 +107,23 @@ public class CategoryServiceTests
             LastItemIndexList = 0,
             AmountPagesList = [1]
         };
-        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(paginatedData);
+        _mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(paginatedData);
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.GetUserCategories("1", paginatedQuery);
 
         //Assert
         result.Results.Should().BeEmpty();
     }
 
+    #endregion
+
+    #region GetCategory
+
     [Fact]
     public async Task GetCategory_ForValidCategoryId_ReturnsCategory()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var categoryMock = new Categories()
         {
             CategoryId = "1",
@@ -134,10 +136,10 @@ public class CategoryServiceTests
             Games = new List<Games>(),
             UserId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
 
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.GetCategory("1", "2");
 
         //Assert
@@ -147,34 +149,31 @@ public class CategoryServiceTests
     [Fact]
     public async Task GetCategory_ForInvalidCategoryId_ThrowNotFoundException()
     {
-        //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
-         //Act
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        //Act
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = async () => { await categoryService.GetCategory("3", "1"); };
 
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("Category not found");
     }
 
+    #endregion
+    
+    #region CreateCategory
+    
     [Fact]
     public async Task CreateCategory_ForValidCategory_ReturnNewCreatedCategory()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var newCategory = new CategoryPostDto
         {
             CategoryName = "Category1",
             Description = ""
         };
         //Act
-        mockCategoryRepository.Setup(x => x.CheckIfExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        _mockCategoryRepository.Setup(x => x.CheckIfExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.CreateCategory(newCategory, "1");
 
         //Assert
@@ -185,9 +184,6 @@ public class CategoryServiceTests
     public async Task CreateCategory_ForInValidCategory_ThrowBadRequestException()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var newCategory = new CategoryPostDto
         {
             CategoryName = "Kategoria1",
@@ -204,22 +200,23 @@ public class CategoryServiceTests
             UpdatedBy = "Jakub",
             UserId = "1"
         };
-        mockCategoryRepository.Setup(x => x.CheckIfExists(newCategory.CategoryName, "1")).ReturnsAsync(true);
+        _mockCategoryRepository.Setup(x => x.CheckIfExists(newCategory.CategoryName, "1")).ReturnsAsync(true);
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = async () => await categoryService.CreateCategory(newCategory, "1");
 
         //Assert
         await result.Should().ThrowAsync<BadRequestException>().WithMessage("Category with this name already exists");
     }
 
+    #endregion
+
+    #region UpdateCategory
+
     [Fact]
     public async Task UpdateCategory_ForValidCategory_ReturnUpdatedCategory()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var updateCategory = new CategoryPutDto
         {
             CategoryName = "Kategoria3",
@@ -239,10 +236,10 @@ public class CategoryServiceTests
                 UserId = "1"
             },
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoriesTableMock[0]);
-        mockCategoryRepository.Setup(x => x.CheckIfExistsWithSameName(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoriesTableMock[0]);
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsWithSameName(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.UpdateCategory(updateCategory, "1", "1");
 
         //Assert
@@ -253,9 +250,6 @@ public class CategoryServiceTests
     public async Task UpdateCategory_ForInvalidCategoryId_ThrowNotFoundException()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var updateCategory = new CategoryPutDto
         {
             CategoryName = "Kategoria3",
@@ -286,9 +280,9 @@ public class CategoryServiceTests
                 UserId = "1"
             }
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = async () => await categoryService.UpdateCategory(updateCategory, "5", "1");
 
         //Assert
@@ -299,9 +293,6 @@ public class CategoryServiceTests
     public async Task UpdateCategory_ForInvalidCategoryName_ThrowBadRequestException()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var updateCategory = new CategoryPutDto
         {
             CategoryName = "Kategoria2",
@@ -319,23 +310,25 @@ public class CategoryServiceTests
                 UpdatedBy = "Jakub",
                 UserId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
-        mockCategoryRepository.Setup(x => x.CheckIfExistsWithSameName(updateCategory.CategoryName, "1", "1")).ReturnsAsync(true);
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsWithSameName(updateCategory.CategoryName, "1", "1")).ReturnsAsync(true);
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = async () => await categoryService.UpdateCategory(updateCategory, "1", "1");
 
         //Assert
         await result.Should().ThrowAsync<BadRequestException>().WithMessage("Category with this name already exists");
     }
 
+    #endregion
+
+
+    #region DeleteCategory
+
     [Fact]
     public async Task DeleteCategory_ForValidCategoryId_ShouldDeleteCategory()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();   
         var categoryMock = new Categories()
         {
             CategoryId = "1",
@@ -347,28 +340,24 @@ public class CategoryServiceTests
             UpdatedBy = "Jakub",
             UserId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
-        mockGameRepository.Setup(x => x.CheckIfGameExitsById(It.IsAny<string>())).ReturnsAsync(false);
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoryMock);
+        _mockGameRepository.Setup(x => x.CheckIfGameExitsById(It.IsAny<string>())).ReturnsAsync(false);
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         await categoryService.DeleteCategory("1", "1");
         
         //Assert
-        mockCategoryRepository.Verify(x => x.Delete(categoryMock), Times.Once);
+        _mockCategoryRepository.Verify(x => x.Delete(categoryMock), Times.Once);
     }
 
     [Fact]
     public async Task DeleteCategory_ForInvalidCategoryId_ThrowNotFoundException()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
-        
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Categories);
 
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = async () => await categoryService.DeleteCategory("3", "1");
 
 
@@ -380,9 +369,6 @@ public class CategoryServiceTests
     public async Task DeleteCategory_ForCategoryToDeleteExistGames_BadRequestException()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var categoriesTableMock = new Categories
         {
             CategoryId = "1",
@@ -406,11 +392,11 @@ public class CategoryServiceTests
             YearPlayed = new DateTime(2026, 01, 02),
             CategoryId = "1"
         };
-        mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoriesTableMock);
-        mockGameRepository.Setup(x => x.CheckIfGameExitsById(It.IsAny<string>())).ReturnsAsync(true);
+        _mockCategoryRepository.Setup(x => x.GetById(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(categoriesTableMock);
+        _mockGameRepository.Setup(x => x.CheckIfGameExitsById(It.IsAny<string>())).ReturnsAsync(true);
 
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = async () => await categoryService.DeleteCategory("1", "1");
 
 
@@ -422,9 +408,6 @@ public class CategoryServiceTests
     public async Task GetCategoriesByUserId_ForValidUserId_ReturnListCategories()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var categoriesPaginatedMock = new PaginatedResults<Categories>
         {
             Results = new List<Categories>
@@ -468,22 +451,24 @@ public class CategoryServiceTests
             PageNumber = 1,
             PageSize = 5
         };
-        mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(categoriesPaginatedMock);
+        _mockCategoryRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(categoriesPaginatedMock);
 
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.GetCategoriesByUserId("1", paginatedQuery);
 
         //Assert
         result.Results.Should().HaveCount(2);
     }
 
+    #endregion
+
+    #region GetCategoryNames
+
     [Fact]
     public async Task GetCategoryNames_ForValidUserId_ReturnListCategoryNames()
     {
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
+        //Arrange
         var categoryNamesListMock = new List<CategoriesNameDto>()
         {
             new CategoriesNameDto()
@@ -497,8 +482,8 @@ public class CategoryServiceTests
                 CategoryName = "Kategoria2"
             }
         };
-        mockCategoryRepository.Setup(x => x.GetCategoryNames(It.IsAny<string>())).ReturnsAsync(categoryNamesListMock);
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        _mockCategoryRepository.Setup(x => x.GetCategoryNames(It.IsAny<string>())).ReturnsAsync(categoryNamesListMock);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.GetCategoryNames("1");
         result.Should().HaveCount(2);
     }
@@ -507,17 +492,18 @@ public class CategoryServiceTests
     public async Task GetCategoryNames_ForInvalidUserId_ReturnEmptyList()
     {
         //Arrange
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockCategoryRepository = new Mock<ICategoryRepository>();
-        var mockGameRepository = new Mock<IGameRepository>();
         var categoryNamesListMock = new List<CategoriesNameDto>();
-        mockCategoryRepository.Setup(x => x.GetCategoryNames(It.IsAny<string>())).ReturnsAsync(categoryNamesListMock);
+        _mockCategoryRepository.Setup(x => x.GetCategoryNames(It.IsAny<string>())).ReturnsAsync(categoryNamesListMock);
         
         //Act
-        var categoryService = new CategoryService(mockUtilsService.Object, mockCategoryRepository.Object, mockGameRepository.Object);
+        var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.GetCategoryNames("1");
         
         //Assert
         result.Should().HaveCount(0);
     }
+
+    #endregion
+
+    
 }
