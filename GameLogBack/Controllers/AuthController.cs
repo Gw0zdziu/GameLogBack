@@ -12,6 +12,7 @@ using GameLogBack.Interfaces;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace GameLogBack.Controllers;
 
@@ -19,15 +20,15 @@ namespace GameLogBack.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    private readonly AuthenticationSettings _authenticationSettings;
+    private readonly IOptions<AuthenticationSettings> _authenticationSettings;
     private readonly IAuthService _authService;
     private readonly IValidator<LoginUserDto> _validator;
 
-    public AuthController(IAuthService authService, AuthenticationSettings authenticationSettings, IValidator<LoginUserDto> validator)
+    public AuthController(IAuthService authService,IValidator<LoginUserDto> validator, IOptions<AuthenticationSettings> authenticationSettings)
     {
         _authService = authService;
-        _authenticationSettings = authenticationSettings;
         _validator = validator;
+        _authenticationSettings = authenticationSettings;
     }
 
     [HttpPost("login")]
@@ -47,13 +48,13 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             SameSite = SameSiteMode.None,
             Secure = true,
-            Expires = DateTime.UtcNow.AddMinutes(_authenticationSettings.JwtRefreshTokenExpireMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(_authenticationSettings.Value.JwtRefreshTokenExpireMinutes),
             Path = "/api/auth"
         });
         var returnValue = new LoginDataResponseDto()
         {
             Token = result.Token,
-            ExpiresIn = _authenticationSettings.JwtAccessTokenExpireMinutes,
+            ExpiresIn = _authenticationSettings.Value.JwtAccessTokenExpireMinutes,
             User = new GetUserDto()
             {
                 UserId = result.User.UserId,
