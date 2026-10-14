@@ -14,49 +14,44 @@ using GameLogBack.Validators.Auth;
 using GameLogBack.Validators.Category;
 using GameLogBack.Validators.Game;
 using GameLogBack.Validators.User;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Resend;
 using Serilog;
 
 
 var builder = WebApplication.CreateBuilder(args);
-string connectionString;
-var gameBrainApiSettings = new GameBrainApiSettings();
-var authenticationSettings = new AuthenticationSettings();
-Config config;
-BasicAWSCredentials awsCredentials;
-AmazonS3Config s3Config;
-BucketS3 bucketS3;
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddResend( o =>
-    {
-        o.ApiToken = builder.Configuration.GetValue<string>("ResendApiKey");
-    } );
-    bucketS3 = new BucketS3(builder.Configuration.GetValue<string>("BucketName"));
-    awsCredentials = new BasicAWSCredentials(
-        builder.Configuration["BasicAWSCredentials:AccessKey"],
-        builder.Configuration["BasicAWSCredentials:SecretKey"]
-    );
-    s3Config = new AmazonS3Config()
-    {
-        ServiceURL     = builder.Configuration["AmazonS3Config:ServiceURL"],
-        ForcePathStyle =  bool.Parse(builder.Configuration["AmazonS3Config:ForcePathStyle"] ?? "true"),
-    };
-    connectionString = builder.Configuration.GetConnectionString("Postgres");
-    builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
-    builder.Configuration.GetSection("GameBrainSettings").Bind(gameBrainApiSettings);
-    config = new Config()
-    {
-        FrontendUrl = builder.Configuration["RecoveryPasswordEndpoint"],
-        GamesImageDirectoryName = builder.Configuration["GamesImageDirectoryName"],
-        RecoveryPasswordEndpoint = builder.Configuration["RecoveryPasswordEndpoint"],
-    };
-}
-else
+builder.Services.AddOptions<ResendSettings>()
+    .BindConfiguration(ResendSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<BucketSettings>()
+    .BindConfiguration(BucketSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<FrontendSettings>()
+    .BindConfiguration(FrontendSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<AuthenticationSettings>()
+    .BindConfiguration(AuthenticationSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<GameBrainApiSettings>()
+    .BindConfiguration(GameBrainApiSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<PostgresSqlSettings>()
+    .BindConfiguration(PostgresSqlSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+
+    /*else
 {
     builder.Services.AddResend(o =>
     {
@@ -88,14 +83,13 @@ else
         GenerateFilterOptions = Environment.GetEnvironmentVariable("GENERATE_FILTER_OPTIONS"),
 
     };
-    config = new Config()
+    frontendSettings = new FrontendSettings()
     {
         FrontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL"),
         GamesImageDirectoryName = Environment.GetEnvironmentVariable("GAMES_IMAGE_DIRECTORY_NAME"),
         RecoveryPasswordEndpoint = Environment.GetEnvironmentVariable("RECOVERY_PASSWORD_ENDPOINT"),
     };
-}
-
+}*/
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -124,22 +118,49 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
 builder.Services.AddScoped<IRailwayBucketService, RailwayBucketService>();
-
-builder.Services.AddSingleton(bucketS3);
-builder.Services.AddSingleton(config);
-builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(awsCredentials, s3Config));
-builder.Services.AddSingleton(gameBrainApiSettings);
-builder.Services.AddDbContext<GameLogDbContext>(options =>
-    options.UseNpgsql(connectionString));
-builder.Services.AddSingleton(authenticationSettings);
-
-
-builder.Services.AddHttpClient("GameBrainApi", client =>
+builder.Services.AddSingleton<IAmazonS3>(serviceProvider =>
 {
-    client.BaseAddress = new Uri(gameBrainApiSettings.ApiUrl);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-
+    var bucketSettingsSection = serviceProvider
+        .GetRequiredService<IOptions<BucketSettings>>()
+        .Value;
+    var awsCredentials = new BasicAWSCredentials(
+        bucketSettingsSection.AccessKey,
+        bucketSettingsSection.SecretKey);
+    var s3Config = new AmazonS3Config()
+    {
+        ServiceURL  = bucketSettingsSection.ServiceUrl,
+        ForcePathStyle =  bucketSettingsSection.ForcePathStyle,
+    };
+    return new AmazonS3Client(awsCredentials, s3Config);
 });
+
+
+builder.Services.AddDbContext<GameLogDbContext>((serviceProvider, options) =>
+{
+    var postgresSqlSettings = serviceProvider
+        .GetRequiredService<IOptions<PostgresSqlSettings>>()
+        .Value;
+    options.UseNpgsql(postgresSqlSettings.ConnectionString);
+});
+builder.Services.AddResend(_ => { });
+builder.Services
+    .AddOptions<ResendClientOptions>()
+    .Configure<IOptions<ResendSettings>>((clientOptions, settings) =>
+    {
+        clientOptions.ApiToken = settings.Value.ApiToken;
+        clientOptions.ThrowExceptions = settings.Value.ThrowExceptions;
+    });
+
+
+
+builder.Services.AddHttpClient();
+builder.Services
+    .AddOptions<HttpClient>()
+    .Configure<IOptions<GameBrainApiSettings>>((clientOptions, settings) =>
+    {
+        clientOptions.BaseAddress = new Uri(settings.Value.ApiUrl);
+        clientOptions.DefaultRequestHeaders.Add("Accept", "application/json");
+    });
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("GameLogProd", policy =>
@@ -155,28 +176,28 @@ builder.Services.AddCors(options =>
             .AllowCredentials()
     );
 });
-builder.Services.AddAuthentication(option =>
-{
-    option.DefaultAuthenticateScheme = "Bearer";
-    option.DefaultChallengeScheme = "Bearer";
-    option.DefaultScheme = "Bearer";
-}).AddJwtBearer(config =>
-{
-    config.RequireHttpsMetadata = false;
-    config.SaveToken = true;
-    config.UseSecurityTokenValidators = true;
-    config.TokenValidationParameters = new TokenValidationParameters
+
+builder.Services
+    .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<AuthenticationSettings>>((clientOptions, settings) =>
     {
-        ValidateIssuer = true,
-        ValidIssuer = authenticationSettings.JwtIssuer,
-        ValidateAudience = true,
-        ValidAudience = authenticationSettings.JwtIssuer,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey)),
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-});
+        clientOptions.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        clientOptions.SaveToken = true;
+        clientOptions.UseSecurityTokenValidators = true;
+        clientOptions.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = settings.Value.JwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = settings.Value.JwtIssuer,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.Value.JwtKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
