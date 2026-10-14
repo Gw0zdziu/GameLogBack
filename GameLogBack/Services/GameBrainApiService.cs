@@ -3,6 +3,7 @@ using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace GameLogBack.Services;
@@ -10,24 +11,24 @@ namespace GameLogBack.Services;
 public class GameBrainApiService : IGameBrainApiService
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly GameBrainApiSettings _gameBrainApiSettings;
+    private readonly IOptions<GameBrainApiSettings> _gameBrainApiSettings;
 
-    public GameBrainApiService( GameBrainApiSettings gameBrainApiSettings, IHttpClientFactory httpClientFactory)
+    public GameBrainApiService(IHttpClientFactory httpClientFactory, IOptions<GameBrainApiSettings> gameBrainApiSettings)
     {
-        _gameBrainApiSettings = gameBrainApiSettings;
         _httpClientFactory = httpClientFactory;
+        _gameBrainApiSettings = gameBrainApiSettings;
     }
 
     public async Task<List<GameDetails>> SearchGameDetails(string gameName)
     {
         var queryParams = new Dictionary<string, string>()
         {
-            { "api-key", _gameBrainApiSettings.ApiKey },
+            { "api-key", _gameBrainApiSettings.Value.ApiKey },
             { "query", gameName },
-            { "generate-filter-options", _gameBrainApiSettings.GenerateFilterOptions }
+            { "generate-filter-options", _gameBrainApiSettings.Value.GenerateFilterOptions }
         };
 
-        var url = QueryHelpers.AddQueryString(_gameBrainApiSettings.ApiUrl, queryParams);
+        var url = QueryHelpers.AddQueryString(_gameBrainApiSettings.Value.ApiUrl, queryParams);
     
         try
         {
