@@ -13,6 +13,7 @@ using GameLogBack.Settings;
 using GameLogBack.Tests.Helpers;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -25,13 +26,19 @@ public class AuthServiceTests
     private readonly Mock<IRefreshTokenInfoRepository>_mockRefreshTokenInfoRepository = new();
     private readonly Mock<IPasswordHasher<UserLogins>> _mockPasswordHasher = new();
     private readonly Mock<IUtilsService> _mockUtilsService = new();
-    private static readonly AuthenticationSettings MockAuthenticationSettings = new AuthenticationSettings()
+    private readonly Mock<IOptions<AuthenticationSettings>> _mockAuthenticationSettings = new();
+
+    public AuthServiceTests()
     {
-        JwtKey = "jwtKey",
-        JwtRefreshTokenExpireMinutes = 15,
-        JwtAccessTokenExpireMinutes = 21600,
-        JwtIssuer = "https://auth.example.com"
-    };
+        var mockAuthenticationData = new AuthenticationSettings()
+        {
+            JwtAccessTokenExpireMinutes = 15,
+            JwtRefreshTokenExpireMinutes = 21600,
+            JwtIssuer = "jwtIssuer",
+            JwtKey = "key"
+        };
+        _mockAuthenticationSettings.Setup(x => x.Value).Returns(mockAuthenticationData);
+    }
 
     #region LoginUser
 
@@ -77,7 +84,7 @@ public class AuthServiceTests
         _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(refreshTokenInfo);
         
         //Act
-        var service = new AuthService(MockAuthenticationSettings, _mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result =  await service.LoginUser(loginUserDto);
         
         //Assert
@@ -89,19 +96,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginUser_ForValidDataAndRefreshTokenNotExist_CreateRefreshTokenAndReturnsToken()
     {
-        
         //Arrange
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockRefreshTokenInfoRepository = new Mock<IRefreshTokenInfoRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockAuthenticationSettings = new AuthenticationSettings()
-        {
-            JwtKey = "jwtKey",
-            JwtRefreshTokenExpireMinutes = 15,
-            JwtAccessTokenExpireMinutes = 21600,
-            JwtIssuer = "https://auth.example.com"
-        };
         var loginUserDto = new LoginUserDto()
         {
             UserName = "nickName",
@@ -121,21 +116,21 @@ public class AuthServiceTests
                 LastName = "lastName",
             }
         };
-        mockUserLoginsRepository.Setup(x => x.GetByUserName(It.IsAny<string>()))
+        _mockUserLoginsRepository.Setup(x => x.GetByUserName(It.IsAny<string>()))
             .ReturnsAsync(userLogins);
-        mockPasswordHasher.Setup(x =>
+        _mockPasswordHasher.Setup(x =>
                 x.VerifyHashedPassword(It.IsAny<UserLogins>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(PasswordVerificationResult.Success);
-        mockUtilsService.Setup(x => x.GetToken(It.IsAny<UserLogins>(), It.IsAny<int>())).Returns("newToken");
-        mockUtilsService.Setup(x => x.GetRefreshToken()).Returns("refreshToken");
-        mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
+        _mockUtilsService.Setup(x => x.GetToken(It.IsAny<UserLogins>(), It.IsAny<int>())).Returns("newToken");
+        _mockUtilsService.Setup(x => x.GetRefreshToken()).Returns("refreshToken");
+        _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
         
         //Act
-        var service = new AuthService(mockAuthenticationSettings, mockPasswordHasher.Object, mockUtilsService.Object, mockUserLoginsRepository.Object, mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result =  await service.LoginUser(loginUserDto);
         
         //Assert
-        mockRefreshTokenInfoRepository.Verify(x => x.Create(It.IsAny<RefreshTokenInfo>()), Times.Once);
+        _mockRefreshTokenInfoRepository.Verify(x => x.Create(It.IsAny<RefreshTokenInfo>()), Times.Once);
         result.Token.Should().Be("newToken");
     }
     
@@ -144,33 +139,22 @@ public class AuthServiceTests
     {
         
         //Arrange
-        var mockUserLoginsRepository = new Mock<IUserLoginsRepository>();
-        var mockRefreshTokenInfoRepository = new Mock<IRefreshTokenInfoRepository>();
-        var mockPasswordHasher = new Mock<IPasswordHasher<UserLogins>>();
-        var mockUtilsService = new Mock<IUtilsService>();
-        var mockAuthenticationSettings = new AuthenticationSettings()
-        {
-            JwtKey = "jwtKey",
-            JwtRefreshTokenExpireMinutes = 15,
-            JwtAccessTokenExpireMinutes = 21600,
-            JwtIssuer = "https://auth.example.com"
-        };
         var loginUserDto = new LoginUserDto()
         {
             UserName = "nickName",
             Password = "password"
         };
-        mockUserLoginsRepository.Setup(x => x.GetByUserName(It.IsAny<string>()))
+        _mockUserLoginsRepository.Setup(x => x.GetByUserName(It.IsAny<string>()))
             .ReturnsAsync((UserLogins)null);
-        mockPasswordHasher.Setup(x =>
+        _mockPasswordHasher.Setup(x =>
                 x.VerifyHashedPassword(It.IsAny<UserLogins>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(PasswordVerificationResult.Success);
-        mockUtilsService.Setup(x => x.GetToken(It.IsAny<UserLogins>(), It.IsAny<int>())).Returns("newToken");
-        mockUtilsService.Setup(x => x.GetRefreshToken()).Returns("refreshToken");
-        mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
+        _mockUtilsService.Setup(x => x.GetToken(It.IsAny<UserLogins>(), It.IsAny<int>())).Returns("newToken");
+        _mockUtilsService.Setup(x => x.GetRefreshToken()).Returns("refreshToken");
+        _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
         
         //Act
-        var service = new AuthService(mockAuthenticationSettings, mockPasswordHasher.Object, mockUtilsService.Object, mockUserLoginsRepository.Object, mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result =  async () => await service.LoginUser(loginUserDto);
         
         //Assert
@@ -207,11 +191,48 @@ public class AuthServiceTests
         _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
         
         //Act
-        var service = new AuthService(MockAuthenticationSettings, _mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result =  async () => await service.LoginUser(loginUserDto);
         
         //Assert
         await result.Should().ThrowAsync<BadRequestException>().WithMessage("Data of login is incorrect");
+    }
+    
+    [Fact]
+    public async Task LoginUser_PasswordNotVerified_ThrowsBadRequestExceptionUserNotActivated()
+    {
+        
+        //Arrange
+        var loginUserDto = new LoginUserDto()
+        {
+            UserName = "nickName",
+            Password = "password"
+        };
+        var userLogins = new UserLogins()
+        {
+            UserId = "1",
+            UserName = "nickName",
+            Password = "password",
+            User = new Users()
+            {
+                IsActive = false
+            }
+        };
+        _mockUserLoginsRepository.Setup(x => x.GetByUserName(It.IsAny<string>()))
+            .ReturnsAsync(userLogins);
+        _mockPasswordHasher.Setup(x =>
+                x.VerifyHashedPassword(It.IsAny<UserLogins>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(PasswordVerificationResult.Failed);
+        _mockUtilsService.Setup(x => x.GetToken(It.IsAny<UserLogins>(), It.IsAny<int>())).Returns("newToken");
+        _mockUtilsService.Setup(x => x.GetRefreshToken()).Returns("refreshToken");
+        _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
+        
+        //Act
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
+        var result =  async () => await service.LoginUser(loginUserDto);
+        
+        //Assert
+        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Inactive account");
     }
 
     #endregion
@@ -242,7 +263,7 @@ public class AuthServiceTests
         _mockUtilsService.Setup(x => x.GetToken(It.IsAny<UserLogins>(), It.IsAny<int>())).Returns("newToken");
         
         //Act
-        var service = new AuthService(MockAuthenticationSettings, _mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result = await service.GetRefreshToken("oldRefreshToken");
         
         //Assert
@@ -258,7 +279,7 @@ public class AuthServiceTests
         _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
         
         //Act
-        var service = new AuthService(MockAuthenticationSettings, _mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result = async () => await service.GetRefreshToken("oldRefreshToken");
         
         //Assert
@@ -281,7 +302,7 @@ public class AuthServiceTests
         _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(refreshTokenInfo);
         
         //Act
-        var service = new AuthService(MockAuthenticationSettings, _mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result = async () => await service.GetRefreshToken("oldRefreshToken");
         
         //Assert
@@ -306,7 +327,7 @@ public class AuthServiceTests
         _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync(refreshTokenInfo);
         
         //Act
-        var service = new AuthService(MockAuthenticationSettings, _mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         await service.LogoutUser("1");
         
         //Assert
@@ -320,7 +341,7 @@ public class AuthServiceTests
         _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
         
         //Act
-        var service = new AuthService(MockAuthenticationSettings, _mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
         var result = async () => await service.LogoutUser("1");
         
         //Assert
