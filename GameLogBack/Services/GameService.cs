@@ -82,7 +82,7 @@ public class GameService : IGameService
     {
         string gameImagePathInBucket;
         var isGameNameExist = await _gameRepository.CheckIfGameExists(gamePostDto.GameName, userId);
-        if (isGameNameExist) throw new BadRequestException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
+        if (isGameNameExist) throw new ConflictException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
         var gameNameKebabCase = gamePostDto.GameName.ToKebabCase();
         if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
         {
@@ -116,7 +116,7 @@ public class GameService : IGameService
         var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
         if (game is null) throw new NotFoundException("Game not found", ErrorCodes.Game.GameNotFound);
         var isGameNameExist = await _gameRepository.CheckIfExistsWithSameName(gamePutDto.GameName, userId, gameId);
-        if (isGameNameExist) throw new BadRequestException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
+        if (isGameNameExist) throw new ConflictException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
         var gameNameKebabCase = gamePutDto.GameName.ToKebabCase();
         string gameImagePathInBucket;
         if (string.IsNullOrEmpty(gamePutDto.GameImageUrl))
