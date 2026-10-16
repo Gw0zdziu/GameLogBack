@@ -210,9 +210,11 @@ builder.Host.UseSerilog((context, configs) =>
 });
 
 var app = builder.Build();
-
-app.UseSwagger();
-app.UseSwaggerUI();
+if (builder.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 
@@ -223,3 +225,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
