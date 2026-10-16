@@ -22,13 +22,13 @@ public class CodeConfirmUsersRepository : ICodeConfirmUsersRepository
 
     public async Task Create(CodeConfirmUsers codeConfirmUsers)
     { 
-        _context.CodeConfirmUsers.Update(codeConfirmUsers);
+        await _context.CodeConfirmUsers.AddAsync(codeConfirmUsers);
         await _context.SaveChangesAsync();
     }
 
     public async Task Update(CodeConfirmUsers codeConfirmUsers)
     {
-        await _context.CodeConfirmUsers.AddAsync(codeConfirmUsers);
+        _context.CodeConfirmUsers.Update(codeConfirmUsers);
         await _context.SaveChangesAsync();
     }
 }
