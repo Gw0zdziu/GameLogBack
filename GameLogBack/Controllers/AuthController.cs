@@ -72,7 +72,6 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<string>> RefreshToken()
     {
         Request.Cookies.TryGetValue("refresh_token", out var refreshToken);
-        Console.WriteLine(refreshToken);
         var newTokenInfo = await _authService.GetRefreshToken(refreshToken);
         return Ok(newTokenInfo);
 
