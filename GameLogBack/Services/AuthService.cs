@@ -36,10 +36,10 @@ public class AuthService : IAuthService
     public async Task<LoginResponseDto> LoginUser(LoginUserDto loginUserDto)
     {
         var user = await _userLoginsRepository.GetByUserName(loginUserDto.UserName);
-        if (user is null) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
-        if (!user.User.IsActive) throw new BadRequestException("Inactive account", ErrorCodes.Auth.InactiveAccount);
+        if (user is null) throw new UnauthorizedException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
+        if (!user.User.IsActive) throw new UnauthorizedException("Inactive account", ErrorCodes.Auth.InactiveAccount);
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, loginUserDto.Password);
-        if (result == PasswordVerificationResult.Failed) throw new BadRequestException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
+        if (result == PasswordVerificationResult.Failed) throw new UnauthorizedException("Data of login is incorrect", ErrorCodes.Auth.IncorrectDataOfLogin);
         var token = _utilsService.GetToken(user, _authenticationSettings.Value.JwtAccessTokenExpireMinutes);
         var refreshToken = _utilsService.GetRefreshToken();
         var hashedRefreshToken = HashHelper.GetHashValue(refreshToken);
@@ -88,11 +88,11 @@ public class AuthService : IAuthService
         var hashedRefreshToken = HashHelper.GetHashValue(token);
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByRefreshToken(hashedRefreshToken);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
-            throw new BadRequestException("Refresh token is expired", ErrorCodes.Auth.ExpiredRefreshToken);
+            throw new UnauthorizedException("Refresh token is expired", ErrorCodes.Auth.ExpiredRefreshToken);
         var isEqual = HashHelper.IsHashEqual(hashedRefreshToken, refreshTokenInfo.RefreshToken);
         if (!isEqual)
         {
-            throw new BadRequestException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
+            throw new UnauthorizedException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
         }
         var user = await _userLoginsRepository.GetByUserId(refreshTokenInfo.UserId);
         var newToken = _utilsService.GetToken(user, _authenticationSettings.Value.JwtAccessTokenExpireMinutes);
@@ -103,7 +103,7 @@ public class AuthService : IAuthService
     public async Task LogoutUser(string userId)
     {
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByUserId(userId);
-        if (refreshTokenInfo is null) throw new BadRequestException("Token is expired. Please log in again", ErrorCodes.Auth.ExpiredAccessToken);
+        if (refreshTokenInfo is null) return;
         await _refreshTokenInfoRepository.Delete(refreshTokenInfo);
     }
 }

@@ -15,6 +15,7 @@ public class CategoryService : ICategoryService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IGameRepository _gameRepository;
 
+
     public CategoryService(IUtilsService utilsService, ICategoryRepository categoryRepository, IGameRepository gameRepository)
     {
         _categoryRepository = categoryRepository;
@@ -68,7 +69,7 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
         var isCategoryExist = await _categoryRepository.CheckIfExists(categoryPostDto.CategoryName, userId);
-        if (isCategoryExist) throw new BadRequestException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
+        if (isCategoryExist) throw new ConflictException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
         var newCategory = new Categories
         {
             CategoryId = Guid.NewGuid().ToString(),
@@ -98,7 +99,7 @@ public class CategoryService : ICategoryService
         var category = await _categoryRepository.GetById(categoryId, userId);
         if (category is null) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
         var isCategoryExist = await _categoryRepository.CheckIfExistsWithSameName(categoryPutDto.CategoryName, userId, categoryId);
-        if (isCategoryExist) throw new BadRequestException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
+        if (isCategoryExist) throw new ConflictException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
         category.CategoryName = categoryPutDto.CategoryName;
         category.Description = categoryPutDto.Description;
         category.UpdatedBy = userId;

@@ -36,9 +36,9 @@ public class UserService : IUserService
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
     {
         var isUserNameExist = await _userLoginsRepository.CheckIfUserExists(registerNewUser.Username);
-        if (isUserNameExist) throw new BadRequestException("Username is already taken", ErrorCodes.User.UsernameAlreadyTaken);
+        if (isUserNameExist) throw new ConflictException("Username is already taken", ErrorCodes.User.UsernameAlreadyTaken);
         var isUserEmailExist = await _userRepository.CheckIfUserExist(registerNewUser.UserEmail);
-        if (isUserEmailExist) throw new BadRequestException("Email is already taken", ErrorCodes.User.EmailAlreadyTaken);
+        if (isUserEmailExist) throw new ConflictException("Email is already taken", ErrorCodes.User.EmailAlreadyTaken);
         var newUserId = Guid.NewGuid().ToString();
         var code = _utilsService.GenerateCodeToConfirmEmail();
         var newUser = new Users
@@ -64,7 +64,6 @@ public class UserService : IUserService
         };
         var passwordHash = _passwordHasher.HashPassword(newUser.UserLogins, registerNewUser.Password);
         newUser.UserLogins.Password = passwordHash;
-        /*invitationCodes.IsUsed = true;*/
         await _userRepository.Create(newUser);
         await _emailSenderHelper.SendEmail(registerNewUser.UserEmail, $"GameLog - Verification code",
             $"Your verification code: {code}");
