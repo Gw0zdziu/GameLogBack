@@ -99,8 +99,7 @@ public class UtilsService : IUtilsService
 
     public string GenerateCodeToConfirmEmail()
     {
-        var randomNumber = new Random();
-        return randomNumber.Next(0, 9999).ToString("D4");
+        return RandomNumberGenerator.GetInt32(100000, 999999).ToString();
     }
 
     public string GenerateCodeToRecoverPassword()
