@@ -91,7 +91,7 @@ public class AuthController : ControllerBase
             Secure = true,
             Path = "/api/auth"
         });
-        return Ok();
+        return NoContent();
     }
     
     [HttpGet("verify")]
