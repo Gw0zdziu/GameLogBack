@@ -100,6 +100,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<GamePostDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<GamePutDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterNewUserDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateUserDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<PaginatedQuery>();
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<ICodeConfirmUsersRepository, CodeConfirmUsersRepository>();
