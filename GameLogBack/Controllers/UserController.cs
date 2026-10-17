@@ -12,6 +12,7 @@ namespace GameLogBack.Controllers;
 
 [Route("api/user")]
 [ApiController]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -26,6 +27,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
+    [AllowAnonymous]
     public async Task<ActionResult<string>> RegisterUser([FromBody] RegisterNewUserDto registerNewUser)
     {
         var result = await _registerNewUserDtoValidator.ValidateAsync(registerNewUser);
@@ -40,7 +42,6 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("get-user")]
-    [Authorize]
     public async Task<ActionResult<GetUserDto>> GetUser()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -49,7 +50,6 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("update")]
-    [Authorize]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto updateUserDto)
     {
         var result = await _updateUserDtoValidator.ValidateAsync(updateUserDto);
@@ -65,6 +65,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("resend-code/{userId}")]
+    [AllowAnonymous]
     public async Task<IActionResult> ResendCode([FromRoute] string userId)
     {
         await _userService.ResendNewConfirmCode(userId);
@@ -72,12 +73,14 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("confirm-user")]
+    [AllowAnonymous]
     public async Task<ActionResult> ConfirmUser([FromBody] ConfirmCodeDto confirmCodeDto)
     {
         await _userService.ConfirmUser(confirmCodeDto);
         return Ok();
     }
     [HttpPost("recovery-password")]
+    [AllowAnonymous]
     public async Task<ActionResult> RecoverPassword([FromBody] EmailRecoveryPasswordDto userEmail)
     {
         await _userService.RecoverPassword(userEmail.UserEmail);
@@ -85,6 +88,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("update-password")]
+    [AllowAnonymous]
     public async Task<ActionResult> UpdatePassword([FromBody] RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
     {
         await _userService.UpdatePassword(recoveryUpdatePasswordDto);
