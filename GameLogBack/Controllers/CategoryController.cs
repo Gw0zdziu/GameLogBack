@@ -18,18 +18,26 @@ public class CategoryController : ControllerBase
     private readonly ICategoryService _categoryService;
     private readonly IValidator<CategoryPostDto> _categoryPostDtoValidator;
     private readonly IValidator<CategoryPutDto> _categoryPutDtoValidator;
+    private readonly IValidator<PaginatedQuery> _paginatedQueryValidator;
 
-    public CategoryController(ICategoryService categoryService, IValidator<CategoryPostDto> categoryPostDtoValidator, IValidator<CategoryPutDto> categoryPutDtoValidator)
+    public CategoryController(ICategoryService categoryService, IValidator<CategoryPostDto> categoryPostDtoValidator, IValidator<CategoryPutDto> categoryPutDtoValidator, IValidator<PaginatedQuery> paginatedQueryValidator)
     {
         _categoryService = categoryService;
         _categoryPostDtoValidator = categoryPostDtoValidator;
         _categoryPutDtoValidator = categoryPutDtoValidator;
+        _paginatedQueryValidator = paginatedQueryValidator;
     }
 
     [HttpGet("get-user-categories")]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetUserCategories(
         [FromQuery] PaginatedQuery paginatedQuery)
     {
+        var result = await _paginatedQueryValidator.ValidateAsync(paginatedQuery);
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var categories = await _categoryService.GetUserCategories(userId, paginatedQuery);
         return Ok(categories);
@@ -39,6 +47,12 @@ public class CategoryController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<PaginatedResult<CategoryByUserIdDto>>>> GetCategoriesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
     {
+        var result = await _paginatedQueryValidator.ValidateAsync(paginatedQuery);
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var categories = await _categoryService.GetCategoriesByUserId(userId, paginatedQuery);
         return Ok(categories);
     }
