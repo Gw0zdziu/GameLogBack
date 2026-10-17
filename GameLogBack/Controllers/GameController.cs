@@ -19,18 +19,26 @@ public class GameController : ControllerBase
     private readonly IGameService _gameService;
     private readonly IValidator<GamePostDto> _gamePostDtoValidator;
     private readonly IValidator<GamePutDto> _gamePutDtoValidator;
+    private readonly IValidator<PaginatedQuery> _paginatedQueryValidator;
 
 
-    public GameController(IGameService gameService, IValidator<GamePostDto> gamePostDtoValidator, IValidator<GamePutDto> gamePutDtoValidator)
+    public GameController(IGameService gameService, IValidator<GamePostDto> gamePostDtoValidator, IValidator<GamePutDto> gamePutDtoValidator, IValidator<PaginatedQuery> paginatedQueryValidator)
     {
         _gameService = gameService;
         _gamePostDtoValidator = gamePostDtoValidator;
         _gamePutDtoValidator = gamePutDtoValidator;
+        _paginatedQueryValidator = paginatedQueryValidator;
     }
 
     [HttpGet("get-games")]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGames([FromQuery] PaginatedQuery paginatedQuery)
     {
+        var result = await _paginatedQueryValidator.ValidateAsync(paginatedQuery);
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var games = await _gameService.GetGames(userId, paginatedQuery);
         return Ok(games);
@@ -49,6 +57,13 @@ public class GameController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesByUserId([FromRoute] string userId, [FromQuery] PaginatedQuery paginatedQuery)
     {
+        var result = await _paginatedQueryValidator.ValidateAsync(paginatedQuery);
+        if (!result.IsValid)
+        {
+            var errors = result.Errors.Select(e =>  new {e.PropertyName, Errors = new List<object>(){e.ErrorMessage}});
+            return BadRequest(errors);
+        }
+        await _paginatedQueryValidator.ValidateAndThrowAsync(paginatedQuery);
         var games = await _gameService.GetGamesByUserId(userId, paginatedQuery);
         return Ok(games);
     }
