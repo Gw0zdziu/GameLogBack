@@ -9,7 +9,7 @@ namespace GameLogBack.Controllers;
 
 [ApiController]
 [Route("api/gamebrain")]
-[AllowAnonymous]
+[Authorize]
 public class GameBrainApiController : ControllerBase
 {
     private readonly IGameBrainApiService _gameBrainApiService;

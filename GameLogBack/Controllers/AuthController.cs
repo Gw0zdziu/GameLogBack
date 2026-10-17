@@ -18,6 +18,7 @@ namespace GameLogBack.Controllers;
 
 [Route("api/auth")]
 [ApiController]
+[Authorize]
 public class AuthController : ControllerBase
 {
     private readonly IOptions<AuthenticationSettings> _authenticationSettings;
@@ -32,6 +33,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     public async Task<ActionResult<LoginResponseDto>> LoginUser([FromBody] LoginUserDto loginUserDto)
     {
         var validate = await _validator.ValidateAsync(loginUserDto);
@@ -79,7 +81,6 @@ public class AuthController : ControllerBase
 
 
     [HttpDelete("logout")]
-    [Authorize]
     public async Task<ActionResult> Logout()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -95,7 +96,6 @@ public class AuthController : ControllerBase
     }
     
     [HttpGet("verify")]
-    [Authorize]
     public ActionResult Verify()
     {
         return Ok(true);
