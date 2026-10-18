@@ -172,7 +172,7 @@ public class CategoryServiceTests
             Description = ""
         };
         //Act
-        _mockCategoryRepository.Setup(x => x.CheckIfExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsByName(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
         var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = await categoryService.CreateCategory(newCategory, "1");
 
@@ -200,7 +200,7 @@ public class CategoryServiceTests
             UpdatedBy = "Jakub",
             UserId = "1"
         };
-        _mockCategoryRepository.Setup(x => x.CheckIfExists(newCategory.CategoryName, "1")).ReturnsAsync(true);
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsByName(newCategory.CategoryName, "1")).ReturnsAsync(true);
         //Act
         var categoryService = new CategoryService(_mockUtilsService.Object, _mockCategoryRepository.Object, _mockGameRepository.Object);
         var result = async () => await categoryService.CreateCategory(newCategory, "1");

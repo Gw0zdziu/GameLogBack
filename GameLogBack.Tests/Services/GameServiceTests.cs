@@ -23,7 +23,6 @@ namespace GameLogBack.Tests.Services;
 [TestSubject(typeof(GameService))]
 public class GameServiceTests
 {
-    private readonly Mock<IUtilsService> _mockUtilsService = new();
     private readonly Mock<ICategoryRepository> _mockCategoryRepository = new();
     private readonly Mock<IGameRepository> _mockGameRepository = new();
     private readonly Mock<IRailwayBucketService> _mockRailwayService = new();
@@ -100,7 +99,7 @@ public class GameServiceTests
         };
         _mockGameRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(paginatedGamesMock);
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = await gameService.GetGames("1", paginatedQuery);
 
         //Assert
@@ -133,7 +132,7 @@ public class GameServiceTests
         };
         _mockGameRepository.Setup(x => x.GetByGameIdAndUserId(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(gameMock);
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = await gameService.GetGame("1", "1");
 
         //Assert
@@ -144,37 +143,10 @@ public class GameServiceTests
     public async Task GetGame_ForInvalidGameId_ThrowNotFoundException()
     {
         //Arrange
-        var gamesMock = new List<Games>
-        {
-            new()
-            {
-                GameId = "1",
-                GameName = "Battlefield",
-                CreatedDate = new DateTime(2026, 02, 01),
-                UpdatedDate = new DateTime(2026, 02, 02),
-                YearPlayed = new DateTime(2026, 02, 01),
-                CategoryId = "1",
-                CreatedBy = "Piotr",
-                UpdatedBy = "Piotr",
-                UserId = "1"
-            },
-            new()
-            {
-                GameId = "2",
-                GameName = "CallOfDuty",
-                CreatedDate = new DateTime(2026, 02, 01),
-                UpdatedDate = new DateTime(2026, 02, 02),
-                YearPlayed = new DateTime(2026, 02, 01),
-                CategoryId = "1",
-                CreatedBy = "Piotr",
-                UpdatedBy = "Piotr",
-                UserId = "1"
-            }
-        };
         _mockGameRepository.Setup(x => x.GetByGameIdAndUserId(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(null as Games);
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = async () => await gameService.GetGame("3", "1");
 
         //Assert
@@ -195,11 +167,13 @@ public class GameServiceTests
             CategoryId = "1",
             YearPlayed = new DateTime(2026, 02, 01)
         };
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsByCategoryId(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
         _mockGameRepository.Setup(x => x.CheckIfGameExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
         _mockRailwayService.Setup(x => x.UploadFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("https://www.google.com");
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         await gameService.PostGame(newGame, "1");
 
         //Assert
@@ -216,14 +190,37 @@ public class GameServiceTests
             CategoryId = "1",
             YearPlayed = new DateTime(2026, 02, 01)
         };
+        
         _mockGameRepository.Setup(x => x.CheckIfGameExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = async () => await gameService.PostGame(newGame, "1");
 
         //Assert
         await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exists");
+    }
+    
+    [Fact]
+    public async Task PostGame_ForUnsignedCategoryToUser_ThrowNotFound()
+    {
+        //Arrange
+        var newGame = new GamePostDto
+        {
+            GameName = "Fortnite",
+            CategoryId = "1",
+            YearPlayed = new DateTime(2026, 02, 01)
+        };
+        
+        _mockGameRepository.Setup(x => x.CheckIfGameExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsByCategoryId(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(false);
+        //Act
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
+        var result = async () => await gameService.PostGame(newGame, "1");
+
+        //Assert
+        await result.Should().ThrowAsync<NotFoundException>().WithMessage("Category not found");
     }
 
     #endregion
@@ -263,7 +260,7 @@ public class GameServiceTests
         _mockCategoryRepository.Setup(x => x.GetCategoryName(It.IsAny<string>())).ReturnsAsync("FPS");
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         await gameService.PutGame(updatedGame, "1", "1");
 
         //Assert
@@ -284,7 +281,7 @@ public class GameServiceTests
             .ReturnsAsync(null as Games);
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = async () => await gameService.PutGame(updatedGame, "4", "1");
 
         //Assert
@@ -320,7 +317,7 @@ public class GameServiceTests
             .ReturnsAsync(true);
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = async () => await gameService.PutGame(updatedGame, "2", "1");
 
         //Assert
@@ -352,7 +349,7 @@ public class GameServiceTests
 
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         await gameService.DeleteGame("2", "1");
 
         //Assert
@@ -367,7 +364,7 @@ public class GameServiceTests
             .ReturnsAsync(null as Games);
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = async () => await gameService.DeleteGame("3", "1");
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("Game not found");
@@ -435,7 +432,7 @@ public class GameServiceTests
         _mockGameRepository.Setup(x => x.GetByUserId(It.IsAny<string>(), It.IsAny<PaginatedQuery>())).ReturnsAsync(paginatedGamesMock);
 
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = await gameService.GetGamesByUserId("1", paginatedQuery);
 
         //Assert
@@ -469,7 +466,7 @@ public class GameServiceTests
         _mockGameRepository.Setup(x => x.GetByCategoryId(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(gameMock);
         
         //Act
-        var gameService = new GameService( _mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = await gameService.GetGamesByCategoryId("1", "1");
 
         //Assert
