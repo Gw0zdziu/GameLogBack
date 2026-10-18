@@ -85,8 +85,7 @@ public class GameService : IGameService
         string gameImagePathInBucket;
         var isGameNameExist = await _gameRepository.CheckIfGameExists(gamePostDto.GameName, userId);
         if (isGameNameExist) throw new ConflictException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
-        var isCategorySignedToUser = await _categoryRepository.CheckIfExistsByCategoryId(gamePostDto.CategoryId, userId);
-        if(!isCategorySignedToUser) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
+        await ValidateCategoryForUser(gamePostDto.CategoryId, userId);
         var gameNameKebabCase = gamePostDto.GameName.ToKebabCase();
         if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
         {
@@ -119,6 +118,7 @@ public class GameService : IGameService
         
         var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
         if (game is null) throw new NotFoundException("Game not found", ErrorCodes.Game.GameNotFound);
+        await ValidateCategoryForUser(gamePutDto.CategoryId, userId);
         var isGameNameExist = await _gameRepository.CheckIfExistsWithSameName(gamePutDto.GameName, userId, gameId);
         if (isGameNameExist) throw new ConflictException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
         var gameNameKebabCase = gamePutDto.GameName.ToKebabCase();
@@ -187,5 +187,11 @@ public class GameService : IGameService
                 })
         ];
         
+    }
+    
+    private async Task ValidateCategoryForUser(string categoryId, string userId)
+    {
+        var isCategorySignedToUser = await _categoryRepository.CheckIfExistsByCategoryId(categoryId, userId);
+        if(!isCategorySignedToUser) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
     }
 }
