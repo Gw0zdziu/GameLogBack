@@ -181,33 +181,35 @@ namespace GameLogBack.Migrations
 
             modelBuilder.Entity("GameLogBack.Entities.InvitationCodes", b =>
                 {
-                    b.Property<string>("InvitationCodeId")
-                        .HasColumnType("text")
-                        .HasColumnName("invitation_code_id");
-
                     b.Property<string>("InvitationCode")
-                        .HasColumnType("text")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
                         .HasColumnName("invitation_code");
 
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean")
                         .HasColumnName("is_used");
 
-                    b.HasKey("InvitationCodeId");
+                    b.HasKey("InvitationCode");
 
                     b.ToTable("invitation_codes", (string)null);
                 });
 
             modelBuilder.Entity("GameLogBack.Entities.RefreshTokenInfo", b =>
                 {
-                    b.Property<string>("RefreshToken")
+                    b.Property<string>("RefreshTokenId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
-                        .HasColumnName("refresh_token");
+                        .HasColumnName("refresh_token_id");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiry_date");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("refresh_token");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -215,7 +217,7 @@ namespace GameLogBack.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
-                    b.HasKey("RefreshToken");
+                    b.HasKey("RefreshTokenId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
