@@ -74,8 +74,8 @@ namespace GameLogBack.Migrations
                         .HasColumnName("confirm_code_id");
 
                     b.Property<string>("Code")
-                        .HasMaxLength(4)
-                        .HasColumnType("character varying(4)")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
                         .HasColumnName("confirm_code");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -200,14 +200,19 @@ namespace GameLogBack.Migrations
 
             modelBuilder.Entity("GameLogBack.Entities.RefreshTokenInfo", b =>
                 {
-                    b.Property<string>("RefreshToken")
+                    b.Property<string>("RefreshTokenId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
-                        .HasColumnName("refresh_token");
+                        .HasColumnName("refresh_token_id");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiry_date");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("refresh_token");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -215,7 +220,7 @@ namespace GameLogBack.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
-                    b.HasKey("RefreshToken");
+                    b.HasKey("RefreshTokenId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
