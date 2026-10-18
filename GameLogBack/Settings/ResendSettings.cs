@@ -15,4 +15,7 @@ public class ResendSettings
     [Required]
     public bool ThrowExceptions { get; set; } 
     
+    [Required]
+    public bool IsSending { get; set; }
+    
 }
