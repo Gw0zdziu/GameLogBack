@@ -17,15 +17,17 @@ public class GameService : IGameService
 {
     private readonly IGameRepository _gameRepository;
     private readonly IRailwayBucketService _railwayBucketService;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IOptions<BucketSettings> _options;
 
 
 
-    public GameService(IRailwayBucketService railwayBucketService, IGameRepository gameRepository, IOptions<BucketSettings> options)
+    public GameService(IRailwayBucketService railwayBucketService, IGameRepository gameRepository, IOptions<BucketSettings> options, ICategoryRepository categoryRepository)
     {
         _railwayBucketService = railwayBucketService;
         _gameRepository = gameRepository;
         _options = options;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
@@ -83,6 +85,8 @@ public class GameService : IGameService
         string gameImagePathInBucket;
         var isGameNameExist = await _gameRepository.CheckIfGameExists(gamePostDto.GameName, userId);
         if (isGameNameExist) throw new ConflictException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
+        var isCategorySignedToUser = await _categoryRepository.CheckIfExistsByCategoryId(gamePostDto.CategoryId, userId);
+        if(!isCategorySignedToUser) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
         var gameNameKebabCase = gamePostDto.GameName.ToKebabCase();
         if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
         {
