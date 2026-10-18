@@ -16,12 +16,13 @@ public class UserService : IUserService
     private readonly ICodeConfirmUsersRepository _codeConfirmUsersRepository;
     private readonly ICodeRecoveryPasswordsRepository _codeRecoveryPasswordsRepository;
     private readonly IRefreshTokenInfoRepository _refreshTokenInfoRepository;
+    private readonly IInvitationCodesRepository _invitationCodesRepository;
     private readonly IEmailSenderHelper _emailSenderHelper;
     private readonly IPasswordHasher<UserLogins> _passwordHasher;
     private readonly IUtilsService _utilsService;
 
     public UserService(IPasswordHasher<UserLogins> passwordHasher, IUtilsService utilsService,
-        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository)
+        IEmailSenderHelper emailSenderHelper, IUserRepository userRepository, IUserLoginsRepository userLoginsRepository, ICodeConfirmUsersRepository codeConfirmUsersRepository, ICodeRecoveryPasswordsRepository codeRecoveryPasswordsRepository, IRefreshTokenInfoRepository refreshTokenInfoRepository, IInvitationCodesRepository invitationCodesRepository)
     {
         _passwordHasher = passwordHasher;
         _utilsService = utilsService;
@@ -31,6 +32,7 @@ public class UserService : IUserService
         _codeConfirmUsersRepository = codeConfirmUsersRepository;
         _codeRecoveryPasswordsRepository = codeRecoveryPasswordsRepository;
         _refreshTokenInfoRepository = refreshTokenInfoRepository;
+        _invitationCodesRepository = invitationCodesRepository;
     }
 
     public async Task<string> RegisterUser(RegisterNewUserDto registerNewUser)
@@ -39,8 +41,19 @@ public class UserService : IUserService
         if (isUserNameExist) throw new ConflictException("Username is already taken", ErrorCodes.User.UsernameAlreadyTaken);
         var isUserEmailExist = await _userRepository.CheckIfUserExist(registerNewUser.UserEmail);
         if (isUserEmailExist) throw new ConflictException("Email is already taken", ErrorCodes.User.EmailAlreadyTaken);
-        var newUserId = Guid.NewGuid().ToString();
+        var activatedInvitationCode = await _invitationCodesRepository.GetActiveInvitationCode(registerNewUser.InvitationCode);
+        if (activatedInvitationCode is null)
+        {
+            throw new BadRequestException("Invitation code is incorrect or inactive",
+                ErrorCodes.InvitationCode.InvitationCodeIncorrectOrActivated);
+        }
+        else
+        {
+            activatedInvitationCode.IsUsed = true;
+            await _invitationCodesRepository.Update(activatedInvitationCode);
+        }
         var code = _utilsService.GenerateCodeToConfirmEmail();
+        var newUserId = Guid.NewGuid().ToString();
         var newUser = new Users
         {
             UserId = newUserId,
