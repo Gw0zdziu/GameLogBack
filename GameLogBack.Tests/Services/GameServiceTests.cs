@@ -198,7 +198,7 @@ public class GameServiceTests
         var result = async () => await gameService.PostGame(newGame, "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exists");
+        await result.Should().ThrowAsync<ConflictException>().WithMessage("Game with this name already exists");
     }
     
     [Fact]
@@ -212,7 +212,7 @@ public class GameServiceTests
             YearPlayed = new DateTime(2026, 02, 01)
         };
         
-        _mockGameRepository.Setup(x => x.CheckIfGameExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+        _mockGameRepository.Setup(x => x.CheckIfGameExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
         _mockCategoryRepository.Setup(x => x.CheckIfExistsByCategoryId(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(false);
         //Act
@@ -249,6 +249,8 @@ public class GameServiceTests
             CategoryId = "1",
             YearPlayed = new DateTime(2026, 02, 01)
         };
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsByCategoryId(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
         _mockGameRepository.Setup(x => x.GetByGameIdAndUserId(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(game);
         _mockGameRepository
@@ -310,6 +312,8 @@ public class GameServiceTests
             CategoryId = "1",
             YearPlayed = new DateTime(2026, 02, 01)
         };
+        _mockCategoryRepository.Setup(x => x.CheckIfExistsByCategoryId(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
         _mockGameRepository.Setup(x => x.GetByGameIdAndUserId(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(game);
         _mockGameRepository
@@ -321,7 +325,7 @@ public class GameServiceTests
         var result = async () => await gameService.PutGame(updatedGame, "2", "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exists");
+        await result.Should().ThrowAsync<ConflictException>().WithMessage("Game with this name already exists");
     }
 
     #endregion
