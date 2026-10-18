@@ -68,7 +68,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> CreateCategory(CategoryPostDto categoryPostDto, string userId)
     {
-        var isCategoryExist = await _categoryRepository.CheckIfExists(categoryPostDto.CategoryName, userId);
+        var isCategoryExist = await _categoryRepository.CheckIfExistsByName(categoryPostDto.CategoryName, userId);
         if (isCategoryExist) throw new ConflictException("Category with this name already exists", ErrorCodes.Category.CategoryWithThisNameAlreadyExists);
         var newCategory = new Categories
         {
