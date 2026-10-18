@@ -246,11 +246,12 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         #region InvitationCodes
 
         modelBuilder.Entity<InvitationCodes>().ToTable("invitation_codes");
-        modelBuilder.Entity<InvitationCodes>().HasKey(k => k.InvitationCodeId);
+        modelBuilder.Entity<InvitationCodes>().HasKey(k => k.InvitationCode);
         modelBuilder.Entity<InvitationCodes>(entity =>
         {
-            entity.Property(x => x.InvitationCodeId).HasColumnName("invitation_code_id");
-            entity.Property(x => x.InvitationCode).HasColumnName("invitation_code");
+            entity.Property(x => x.InvitationCode)
+                .HasMaxLength(6)
+                .HasColumnName("invitation_code");
             entity.Property(x => x.IsUsed).HasColumnName("is_used");
         });
 
