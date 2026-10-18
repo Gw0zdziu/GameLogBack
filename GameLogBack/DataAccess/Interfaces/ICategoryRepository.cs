@@ -11,7 +11,8 @@ public interface ICategoryRepository
     public Task<List<CategoriesNameDto>> GetCategoryNames(string userId);
     public Task<Categories> GetById(string id, string userId);
     public Task<string> GetCategoryName(string id);
-    public Task<bool> CheckIfExists(string categoryName, string userId);
+    public Task<bool> CheckIfExistsByCategoryId(string categoryId, string userId);
+    public Task<bool> CheckIfExistsByName(string categoryName, string userId);
     public Task<bool> CheckIfExistsWithSameName(string categoryName, string userId, string categoryId);
     public Task Create(Categories category);
     public Task Update(Categories category);
