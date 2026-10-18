@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using GameLogBack.Interfaces;
+using GameLogBack.Settings;
 using Microsoft.Extensions.Options;
 using Resend;
 
@@ -8,30 +9,24 @@ namespace GameLogBack.Services;
 
 public class EmailSenderHelper : IEmailSenderHelper
 {
-    private readonly bool _isSendEmail;
     private readonly IResend _resend;
-    private readonly string _emailAddress;
+    private readonly IOptions<ResendSettings> _resendSettings;
 
-    public EmailSenderHelper(IConfiguration configuration, IResend resend)
+    public EmailSenderHelper(IConfiguration configuration, IResend resend, IOptions<ResendSettings> resendSettings)
     {
         _resend = resend;
-        _isSendEmail = configuration.GetValue<bool>("SendEmails");
-        _emailAddress = configuration.GetValue<string>("EmailAddress");
+        _resendSettings = resendSettings;
     }
 
     public async Task SendEmail(string to, string subject, string message)
     {
-        
-        if (_isSendEmail)
+        var mailMessage = new EmailMessage
         {
-            var mailMessage = new EmailMessage
-            {
-                From = _emailAddress,
-                To = to,
-                Subject = subject,
-                HtmlBody = message
-            };
-            await _resend.EmailSendAsync(mailMessage);
-        }
+            From = _resendSettings.Value.EmailAddress,
+            To = to,
+            Subject = subject,
+            HtmlBody = message
+        };
+        await _resend.EmailSendAsync(mailMessage);
     }
 }
