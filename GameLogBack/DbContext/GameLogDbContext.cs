@@ -140,7 +140,7 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .IsRequired();
         modelBuilder.Entity<CodeConfirmUsers>()
             .Property(p => p.Code)
-            .HasMaxLength(4);
+            .HasMaxLength(6);
         modelBuilder.Entity<CodeConfirmUsers>()
             .Property(p => p.UserId)
             .IsRequired();
