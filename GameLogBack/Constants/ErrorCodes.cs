@@ -37,6 +37,11 @@ public static class ErrorCodes
         
     }
     
+    public static class InvitationCode
+    {
+        public const string InvitationCodeIncorrectOrActivated = "invitation-code.code-is-incorrect-or-unactivate";
+    }
+    
     public static class Utils
     {
         public const string UtilsTokenExpired = "utils.token-expired";
