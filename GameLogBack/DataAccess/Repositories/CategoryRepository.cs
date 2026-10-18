@@ -45,7 +45,13 @@ public class CategoryRepository: ICategoryRepository
         return await _categories.Where(x => x.CategoryId == id).Select(x => x.CategoryName).FirstOrDefaultAsync();
     }
 
-    public async Task<bool> CheckIfExists(string categoryName, string userId)
+    public async Task<bool> CheckIfExistsByCategoryId(string categoryId, string userId)
+    {
+        return await _context.Categories
+            .AnyAsync(x => x.CategoryId == categoryId && x.UserId == userId);
+    }
+
+    public async Task<bool> CheckIfExistsByName(string categoryName, string userId)
     {
         return await _context.Categories
             .AnyAsync(x => x.CategoryName == categoryName && x.UserId == userId);
