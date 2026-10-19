@@ -200,7 +200,7 @@ public class GameServiceTests
         //Assert
         await result.Should().ThrowAsync<ConflictException>().WithMessage("Game with this name already exists");
     }
-    
+  
     [Fact]
     public async Task PostGame_ForUnsignedCategoryToUser_ThrowNotFound()
     {
@@ -221,7 +221,6 @@ public class GameServiceTests
 
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("Category not found");
-    }
 
     #endregion
 

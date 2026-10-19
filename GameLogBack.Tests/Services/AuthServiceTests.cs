@@ -254,7 +254,11 @@ public class AuthServiceTests
         {
             UserId = "1",
             UserName = "nickName",
-            Password = "password"
+            Password = "password",
+            User = new Users()
+            {
+                IsActive = true
+            }
         };
         var mockClaimsPrincipal = ClaimsPrincipalTestHelper.CreatePrincipal("1", "nickName", "admin");
         _mockUtilsService.Setup(x => x.GetPrincipalFromExpiredToken(It.IsAny<string>())).Returns(mockClaimsPrincipal);
@@ -283,7 +287,8 @@ public class AuthServiceTests
         var result = async () => await service.GetRefreshToken("oldRefreshToken");
         
         //Assert
-        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Refresh token is expired");
+        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Incorrect token");
+
     }
     
     [Fact]
@@ -306,7 +311,7 @@ public class AuthServiceTests
         var result = async () => await service.GetRefreshToken("oldRefreshToken");
         
         //Assert
-        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Refresh token is expired");
+        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Incorrect token");
     }
 
     #endregion
@@ -333,8 +338,7 @@ public class AuthServiceTests
         //Assert
         _mockRefreshTokenInfoRepository.Verify(x => x.Delete(It.IsAny<RefreshTokenInfo>()), Times.Once);
     }
-    
-    
+
 
     #endregion
     

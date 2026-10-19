@@ -53,7 +53,7 @@ public class UserServiceTests
         _mockInvitationCodesRepository.Setup(x => x.GetActiveInvitationCode(It.IsAny<string>()))
             .ReturnsAsync(invitationCode);
         _mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
-        _mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(false);
+        _mockUserRepository.Setup(x => x.CheckIfExistsUserByEmail(It.IsAny<string>())).ReturnsAsync(false);
         _mockUtilsService.Setup(x => x.GenerateCodeToConfirmEmail()).Returns("1234");
         _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
         
@@ -112,7 +112,7 @@ public class UserServiceTests
             InvitationCode = "1234"
         };
         _mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
-        _mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(true);
+        _mockUserRepository.Setup(x => x.CheckIfExistsUserByEmail(It.IsAny<string>())).ReturnsAsync(true);
         
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 

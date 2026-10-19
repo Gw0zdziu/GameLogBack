@@ -81,20 +81,19 @@ public class AuthService : IAuthService
 
     public async Task<string> GetRefreshToken(string token)
     {
-        if (token is null)
+        if (string.IsNullOrWhiteSpace(token))
         {
-            throw new BadRequestException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
+            throw new UnauthorizedException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
         }
         var hashedRefreshToken = HashHelper.GetHashValue(token);
         var refreshTokenInfo = await _refreshTokenInfoRepository.GetByRefreshToken(hashedRefreshToken);
         if (refreshTokenInfo is null || refreshTokenInfo.ExpiryDate < DateTime.UtcNow)
-            throw new UnauthorizedException("Refresh token is expired", ErrorCodes.Auth.ExpiredRefreshToken);
-        var isEqual = HashHelper.IsHashEqual(hashedRefreshToken, refreshTokenInfo.RefreshToken);
-        if (!isEqual)
+            throw new UnauthorizedException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
+        var user = await _userLoginsRepository.GetByUserId(refreshTokenInfo.UserId);
+        if (user is null || !user.User.IsActive)
         {
             throw new UnauthorizedException("Incorrect token", ErrorCodes.Auth.ExpiredRefreshToken);
         }
-        var user = await _userLoginsRepository.GetByUserId(refreshTokenInfo.UserId);
         var newToken = _utilsService.GetToken(user, _authenticationSettings.Value.JwtAccessTokenExpireMinutes);
         return newToken;
     }
