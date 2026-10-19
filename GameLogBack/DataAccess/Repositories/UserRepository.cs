@@ -14,10 +14,11 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public Task<bool> CheckIfUserExist(string email)
+    public Task<bool> CheckIfExistsUserByEmail(string email)
     {
-        return _context.Users.AnyAsync(x => x.UserEmail.ToLower() == email);
+        return _context.Users.AnyAsync(x => x.UserEmail.ToLower() == email.ToLower());
     }
+    
 
     public async Task<Users> GetByEmail(string email)
     {
