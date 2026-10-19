@@ -5,7 +5,7 @@
 namespace GameLogBack.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateRefreshTokenInfo : Migration
+    public partial class Update : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

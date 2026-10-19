@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameLogBack.Migrations
 {
     [DbContext(typeof(GameLogDbContext))]
-    [Migration("20261013160623_UpdateRefreshTokenInfo")]
-    partial class UpdateRefreshTokenInfo
+    [Migration("20261019165946_Update")]
+    partial class Update
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,8 +77,8 @@ namespace GameLogBack.Migrations
                         .HasColumnName("confirm_code_id");
 
                     b.Property<string>("Code")
-                        .HasMaxLength(4)
-                        .HasColumnType("character varying(4)")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
                         .HasColumnName("confirm_code");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -184,19 +184,16 @@ namespace GameLogBack.Migrations
 
             modelBuilder.Entity("GameLogBack.Entities.InvitationCodes", b =>
                 {
-                    b.Property<string>("InvitationCodeId")
-                        .HasColumnType("text")
-                        .HasColumnName("invitation_code_id");
-
                     b.Property<string>("InvitationCode")
-                        .HasColumnType("text")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
                         .HasColumnName("invitation_code");
 
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean")
                         .HasColumnName("is_used");
 
-                    b.HasKey("InvitationCodeId");
+                    b.HasKey("InvitationCode");
 
                     b.ToTable("invitation_codes", (string)null);
                 });
