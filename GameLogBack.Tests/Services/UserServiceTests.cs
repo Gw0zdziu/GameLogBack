@@ -23,6 +23,7 @@ public class UserServiceTests
     private readonly Mock<ICodeConfirmUsersRepository> _mockCodeConfirmUsersRepository = new();
     private readonly Mock<ICodeRecoveryPasswordsRepository> _mockCodeRecoveryPasswordsRepository = new();
     private readonly Mock<IRefreshTokenInfoRepository> _mockRefreshTokenInfoRepository = new();
+    private readonly Mock<IInvitationCodesRepository> _mockInvitationCodesRepository = new();
     private readonly Mock<IEmailSenderHelper> _mockEmailSenderHelper = new();
     private readonly Mock<IPasswordHasher<UserLogins>> _mockPasswordHasher = new();
     private readonly Mock<IUtilsService> _mockUtilsService = new();
@@ -44,15 +45,22 @@ public class UserServiceTests
             LastName = "Nowak",
             InvitationCode = "1234"
         };
+        var invitationCode = new InvitationCodes()
+        {
+            InvitationCode = "12456",
+            IsUsed = false
+        };
+        _mockInvitationCodesRepository.Setup(x => x.GetActiveInvitationCode(It.IsAny<string>()))
+            .ReturnsAsync(invitationCode);
         _mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
-        _mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(false);
+        _mockUserRepository.Setup(x => x.CheckIfExistsUserByEmail(It.IsAny<string>())).ReturnsAsync(false);
         _mockUtilsService.Setup(x => x.GenerateCodeToConfirmEmail()).Returns("1234");
         _mockPasswordHasher.Setup(x => x.HashPassword(It.IsAny<UserLogins>(), It.IsAny<string>())).Returns("hashedPassword");
         
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);
         var result = await userService.RegisterUser(registerNewUser);
         
         //Assert
@@ -81,11 +89,11 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);        
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);       
         var result = async () => await userService.RegisterUser(registerNewUser);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Username is already taken");
+        await result.Should().ThrowAsync<ConflictException>().WithMessage("Username is already taken");
     }
     
     [Fact]
@@ -104,16 +112,16 @@ public class UserServiceTests
             InvitationCode = "1234"
         };
         _mockUserLoginsRepository.Setup(x => x.CheckIfUserExists(It.IsAny<string>())).ReturnsAsync(false);
-        _mockUserRepository.Setup(x => x.CheckIfUserExist(It.IsAny<string>())).ReturnsAsync(true);
+        _mockUserRepository.Setup(x => x.CheckIfExistsUserByEmail(It.IsAny<string>())).ReturnsAsync(true);
         
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);        
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);        
         var result = async () => await userService.RegisterUser(registerNewUser);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Email is already taken");
+        await result.Should().ThrowAsync<ConflictException>().WithMessage("Email is already taken");
 
     }
     
@@ -143,7 +151,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);            
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);            
         var result = await userService.GetUser("1");
         
         //Assert
@@ -159,7 +167,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);   
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);
         var result = async () => await userService.GetUser("1");
         
         //Assert
@@ -191,7 +199,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);   
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object); 
         await userService.ResendNewConfirmCode("1");
         
         //Assert
@@ -212,7 +220,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);   
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);   
         await userService.ResendNewConfirmCode("1");
         
         //Assert
@@ -250,7 +258,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -267,17 +275,13 @@ public class UserServiceTests
             UserId = "1",
             ConfirmCode = "1234"
         };
-        var user = new Users()
-        {
-            IsActive = false
-        };
         _mockCodeConfirmUsersRepository.Setup(x => x.GetByUserId(It.IsAny<string>()))
             .ReturnsAsync((CodeConfirmUsers)null);
         
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -306,7 +310,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -335,7 +339,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -365,7 +369,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         var result = async () => await userService.ConfirmUser(confirmCodeDto);
         
         //Assert
@@ -401,7 +405,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         await userService.RecoverPassword("email@gmail.com");
         
         //Assert
@@ -417,14 +421,6 @@ public class UserServiceTests
         {
             UserId = "1"
         };
-        var codeRecoveryPassword = new CodeRecoveryPassword()
-        {
-            CodeId = "1",
-            Code = "1234",
-            UserId = "1",
-            ExpiryDate = new DateTime(2026, 10, 01),
-            IsUsed = false
-        };
         _mockUserRepository.Setup(x => x.GetByEmail(It.IsAny<string>())).ReturnsAsync(user);
         _mockUtilsService.Setup(x => x.GenerateCodeToRecoverPassword()).Returns("1234");
         _mockUtilsService.Setup(x => x.GenerateLinkToRecoveryPassword(It.IsAny<string>(), It.IsAny<string>())).Returns("http://localhost:5000/recovery-password/1234");
@@ -434,7 +430,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object); 
         await userService.RecoverPassword("email@gmail.com");
         
         //Assert
@@ -450,7 +446,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object); 
         var result = async () => await userService.RecoverPassword("email@gmail.com");
 
         
@@ -500,7 +496,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
@@ -539,7 +535,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object); 
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
@@ -562,7 +558,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
@@ -599,7 +595,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         var result = async () => await userService.UpdatePassword(recoveryUpdatePasswordDto);
         
         //Assert
@@ -630,7 +626,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         await userService.UpdateUser(updateUserDto, "1");
         
         //Assert
@@ -652,7 +648,7 @@ public class UserServiceTests
         //Act
         var userService = new UserService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockEmailSenderHelper.Object, 
             _mockUserRepository.Object, _mockUserLoginsRepository.Object, 
-            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object);  
+            _mockCodeConfirmUsersRepository.Object, _mockCodeRecoveryPasswordsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockInvitationCodesRepository.Object);  
         var result = async () => await userService.UpdateUser(updateUserDto, "1");
         
         //Assert
