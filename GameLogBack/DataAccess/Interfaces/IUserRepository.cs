@@ -4,7 +4,7 @@ namespace GameLogBack.DataAccess.Interfaces;
 
 public interface IUserRepository
 {
-    public Task<bool> CheckIfUserExist(string email);
+    public Task<bool> CheckIfExistsUserByEmail(string email);
     public Task<Users> GetByEmail(string email);
     public Task<Users> GetById(string id);
     public Task<Users> GetUserWithUserLoginsAndCodeRecovery(string userId, string token);
