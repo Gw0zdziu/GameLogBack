@@ -288,6 +288,7 @@ public class AuthServiceTests
         
         //Assert
         await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Incorrect token");
+
     }
     
     [Fact]
@@ -337,6 +338,7 @@ public class AuthServiceTests
         //Assert
         _mockRefreshTokenInfoRepository.Verify(x => x.Delete(It.IsAny<RefreshTokenInfo>()), Times.Once);
     }
+
 
     #endregion
     

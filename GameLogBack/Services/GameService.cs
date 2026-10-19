@@ -17,15 +17,17 @@ public class GameService : IGameService
 {
     private readonly IGameRepository _gameRepository;
     private readonly IRailwayBucketService _railwayBucketService;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IOptions<BucketSettings> _options;
 
 
 
-    public GameService(IRailwayBucketService railwayBucketService, IGameRepository gameRepository, IOptions<BucketSettings> options)
+    public GameService(IRailwayBucketService railwayBucketService, IGameRepository gameRepository, IOptions<BucketSettings> options, ICategoryRepository categoryRepository)
     {
         _railwayBucketService = railwayBucketService;
         _gameRepository = gameRepository;
         _options = options;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<PaginatedResults<GameDto>> GetGames(string userId, PaginatedQuery paginatedQuery)
@@ -83,6 +85,7 @@ public class GameService : IGameService
         string gameImagePathInBucket;
         var isGameNameExist = await _gameRepository.CheckIfGameExists(gamePostDto.GameName, userId);
         if (isGameNameExist) throw new ConflictException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
+        await ValidateCategoryForUser(gamePostDto.CategoryId, userId);
         var gameNameKebabCase = gamePostDto.GameName.ToKebabCase();
         if (string.IsNullOrEmpty(gamePostDto.GameImageUrl))
         {
@@ -115,6 +118,7 @@ public class GameService : IGameService
         
         var game = await _gameRepository.GetByGameIdAndUserId(gameId, userId);
         if (game is null) throw new NotFoundException("Game not found", ErrorCodes.Game.GameNotFound);
+        await ValidateCategoryForUser(gamePutDto.CategoryId, userId);
         var isGameNameExist = await _gameRepository.CheckIfExistsWithSameName(gamePutDto.GameName, userId, gameId);
         if (isGameNameExist) throw new ConflictException("Game with this name already exists", ErrorCodes.Game.GameWithThisNameAlreadyExists);
         var gameNameKebabCase = gamePutDto.GameName.ToKebabCase();
@@ -183,5 +187,11 @@ public class GameService : IGameService
                 })
         ];
         
+    }
+    
+    private async Task ValidateCategoryForUser(string categoryId, string userId)
+    {
+        var isCategorySignedToUser = await _categoryRepository.CheckIfExistsByCategoryId(categoryId, userId);
+        if(!isCategorySignedToUser) throw new NotFoundException("Category not found", ErrorCodes.Category.CategoryNotFound);
     }
 }
