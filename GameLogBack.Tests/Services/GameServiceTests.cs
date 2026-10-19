@@ -223,7 +223,7 @@ public class GameServiceTests
         var result = async () => await gameService.PostGame(newGame, "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exists");
+        await result.Should().ThrowAsync<ConflictException>().WithMessage("Game with this name already exists");
     }
 
     #endregion
@@ -324,7 +324,7 @@ public class GameServiceTests
         var result = async () => await gameService.PutGame(updatedGame, "2", "1");
 
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Game with this name already exists");
+        await result.Should().ThrowAsync<ConflictException>().WithMessage("Game with this name already exists");
     }
 
     #endregion
