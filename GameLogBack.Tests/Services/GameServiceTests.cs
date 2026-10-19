@@ -200,7 +200,7 @@ public class GameServiceTests
         //Assert
         await result.Should().ThrowAsync<ConflictException>().WithMessage("Game with this name already exists");
     }
-  
+
     [Fact]
     public async Task PostGame_ForUnsignedCategoryToUser_ThrowNotFound()
     {
@@ -211,16 +211,19 @@ public class GameServiceTests
             CategoryId = "1",
             YearPlayed = new DateTime(2026, 02, 01)
         };
-        
+
         _mockGameRepository.Setup(x => x.CheckIfGameExists(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
         _mockCategoryRepository.Setup(x => x.CheckIfExistsByCategoryId(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(false);
         //Act
-        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object, _mockBucketSettings.Object, _mockCategoryRepository.Object);
+        var gameService = new GameService(_mockRailwayService.Object, _mockGameRepository.Object,
+            _mockBucketSettings.Object, _mockCategoryRepository.Object);
         var result = async () => await gameService.PostGame(newGame, "1");
 
         //Assert
         await result.Should().ThrowAsync<NotFoundException>().WithMessage("Category not found");
+
+    }
 
     #endregion
 
