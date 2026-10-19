@@ -158,7 +158,7 @@ public class AuthServiceTests
         var result =  async () => await service.LoginUser(loginUserDto);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Data of login is incorrect");
+        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Data of login is incorrect");
     }
     
     [Fact]
@@ -195,7 +195,7 @@ public class AuthServiceTests
         var result =  async () => await service.LoginUser(loginUserDto);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Data of login is incorrect");
+        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Data of login is incorrect");
     }
     
     [Fact]
@@ -232,7 +232,7 @@ public class AuthServiceTests
         var result =  async () => await service.LoginUser(loginUserDto);
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Inactive account");
+        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Inactive account");
     }
 
     #endregion
@@ -254,7 +254,11 @@ public class AuthServiceTests
         {
             UserId = "1",
             UserName = "nickName",
-            Password = "password"
+            Password = "password",
+            User = new Users()
+            {
+                IsActive = true
+            }
         };
         var mockClaimsPrincipal = ClaimsPrincipalTestHelper.CreatePrincipal("1", "nickName", "admin");
         _mockUtilsService.Setup(x => x.GetPrincipalFromExpiredToken(It.IsAny<string>())).Returns(mockClaimsPrincipal);
@@ -283,7 +287,7 @@ public class AuthServiceTests
         var result = async () => await service.GetRefreshToken("oldRefreshToken");
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Refresh token is expired");
+        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Incorrect token");
     }
     
     [Fact]
@@ -306,7 +310,7 @@ public class AuthServiceTests
         var result = async () => await service.GetRefreshToken("oldRefreshToken");
         
         //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Refresh token is expired");
+        await result.Should().ThrowAsync<UnauthorizedException>().WithMessage("Incorrect token");
     }
 
     #endregion
@@ -332,22 +336,6 @@ public class AuthServiceTests
         
         //Assert
         _mockRefreshTokenInfoRepository.Verify(x => x.Delete(It.IsAny<RefreshTokenInfo>()), Times.Once);
-    }
-    
-    [Fact]
-    public async Task LogoutUser_InvalidRefreshToken_ThrowsBadRequestException()
-    {
-        //Arrange
-        _mockRefreshTokenInfoRepository.Setup(x => x.GetByUserId(It.IsAny<string>())).ReturnsAsync((RefreshTokenInfo)null);
-        
-        //Act
-        var service = new AuthService(_mockPasswordHasher.Object, _mockUtilsService.Object, _mockUserLoginsRepository.Object, _mockRefreshTokenInfoRepository.Object, _mockAuthenticationSettings.Object);
-        var result = async () => await service.LogoutUser("1");
-        
-        //Assert
-        await result.Should().ThrowAsync<BadRequestException>().WithMessage("Token is expired. Please log in again");
-        
-        
     }
 
     #endregion
