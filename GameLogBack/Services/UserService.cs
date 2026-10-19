@@ -39,7 +39,7 @@ public class UserService : IUserService
     {
         var isUserNameExist = await _userLoginsRepository.CheckIfUserExists(registerNewUser.Username);
         if (isUserNameExist) throw new ConflictException("Username is already taken", ErrorCodes.User.UsernameAlreadyTaken);
-        var isUserEmailExist = await _userRepository.CheckIfUserExist(registerNewUser.UserEmail);
+        var isUserEmailExist = await _userRepository.CheckIfExistsUserByEmail(registerNewUser.UserEmail);
         if (isUserEmailExist) throw new ConflictException("Email is already taken", ErrorCodes.User.EmailAlreadyTaken);
         var activatedInvitationCode = await _invitationCodesRepository.GetActiveInvitationCode(registerNewUser.InvitationCode);
         if (activatedInvitationCode is null)
