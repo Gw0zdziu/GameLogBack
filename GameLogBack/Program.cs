@@ -1,4 +1,6 @@
+using System.Net;
 using System.Text;
+using System.Threading.RateLimiting;
 using Amazon.Runtime;
 using Amazon.S3;
 using FluentValidation;
@@ -17,6 +19,7 @@ using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -50,6 +53,19 @@ builder.Services.AddOptions<PostgresSqlSettings>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddSlidingWindowLimiter("auth-user", opt =>
+    {
+        opt.PermitLimit = 10;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.SegmentsPerWindow = 6; 
+        opt.QueueLimit = 0;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+});
+
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -61,6 +77,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<GamePutDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterNewUserDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateUserDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<PaginatedQuery>();
+
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<ICodeConfirmUsersRepository, CodeConfirmUsersRepository>();
@@ -80,6 +97,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrainApiService, GameBrainApiService>();
 builder.Services.AddScoped<IRailwayBucketService, RailwayBucketService>();
+
 builder.Services.AddSingleton<IAmazonS3>(serviceProvider =>
 {
     var bucketSettingsSection = serviceProvider
@@ -182,6 +200,7 @@ app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging();
 app.UseCors(builder.Environment.IsDevelopment() ? "GameLogDev" : "GameLogProd");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
