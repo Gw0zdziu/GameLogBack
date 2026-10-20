@@ -56,10 +56,14 @@ public class AuthService : IAuthService
         }
         else
         {
-            refreshTokenInfo.RefreshToken = hashedRefreshToken;
-            refreshTokenInfo.ExpiryDate =
-                DateTime.UtcNow.AddMinutes(_authenticationSettings.Value.JwtRefreshTokenExpireMinutes);
-            await _refreshTokenInfoRepository.Update(refreshTokenInfo);
+            _refreshTokenInfoRepository.Delete(refreshTokenInfo);
+            var newRefreshTokenInfo = new RefreshTokenInfo
+            {
+                UserId = user.UserId,
+                RefreshToken = hashedRefreshToken,
+                ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.Value.JwtRefreshTokenExpireMinutes)
+            };
+            await _refreshTokenInfoRepository.Create(newRefreshTokenInfo);
         }
         return new LoginResponseDto()
         {
