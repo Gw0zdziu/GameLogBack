@@ -184,7 +184,6 @@ public class UserServiceTests
         //Arrange
         var codeConfirmUsers = new CodeConfirmUsers()
         {
-            CodeId = "1",
             Code = "1234",
             UserId = "1",
             ExpiryDate = new DateTime(2026, 02, 01)
@@ -242,7 +241,6 @@ public class UserServiceTests
         };
         var confirmCode = new CodeConfirmUsers()
         {
-            CodeId = "1",
             Code = "1234",
             UserId = "1",
             ExpiryDate = DateTime.Now.AddDays(1)
@@ -294,7 +292,6 @@ public class UserServiceTests
         //Arrange
         var confirmCode = new CodeConfirmUsers()
         {
-            CodeId = "1",
             Code = "1234",
             UserId = "1",
             ExpiryDate = DateTime.Now.AddDays(-1)
@@ -323,7 +320,6 @@ public class UserServiceTests
         //Arrange
         var confirmCode = new CodeConfirmUsers()
         {
-            CodeId = "1",
             Code = "12345",
             UserId = "1",
             ExpiryDate = DateTime.Now.AddDays(1)
@@ -352,7 +348,6 @@ public class UserServiceTests
         //Arrange
         var confirmCode = new CodeConfirmUsers()
         {
-            CodeId = "1",
             Code = "1234",
             UserId = "1",
             ExpiryDate = DateTime.Now.AddDays(1)
@@ -390,7 +385,6 @@ public class UserServiceTests
         };
         var codeRecoveryPassword = new CodeRecoveryPassword()
         {
-            CodeId = "1",
             Code = "1234",
             UserId = "1",
             ExpiryDate = new DateTime(2026, 10, 01),
@@ -485,7 +479,6 @@ public class UserServiceTests
         {
             RefreshToken = "refreshToken",
             UserId = "1",
-            RefreshTokenId = "1",
             ExpiryDate = DateTime.Now.AddDays(1),
 
         };

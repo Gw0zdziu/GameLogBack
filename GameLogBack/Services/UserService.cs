@@ -69,7 +69,6 @@ public class UserService : IUserService
             },
             CodeConfirm = new CodeConfirmUsers
             {
-                CodeId = Guid.NewGuid().ToString(),
                 ExpiryDate = DateTime.UtcNow.AddMinutes(15),
                 UserId = newUserId,
                 Code = code
@@ -108,7 +107,6 @@ public class UserService : IUserService
             codeConfirmUsers = new CodeConfirmUsers
             {
                 UserId = userId,
-                CodeId = Guid.NewGuid().ToString(),
                 ExpiryDate = DateTime.UtcNow.AddMinutes(15),
                 Code = code
             };
@@ -150,7 +148,6 @@ public class UserService : IUserService
         {
             var newRecoveryPasswordCode = new CodeRecoveryPassword()
             {
-                CodeId = Guid.NewGuid().ToString(),
                 ExpiryDate = DateTime.UtcNow.AddMinutes(15),
                 UserId = user.UserId,
                 Code = code,

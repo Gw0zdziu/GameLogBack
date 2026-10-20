@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameLogBack.Migrations
 {
     [DbContext(typeof(GameLogDbContext))]
-    [Migration("20251104185014_UsersLoginsDeleteUniqueFromUserNameColumn")]
-    partial class UsersLoginsDeleteUniqueFromUserNameColumn
+    [Migration("20261019212748_BaselineDatabase")]
+    partial class BaselineDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,8 +77,8 @@ namespace GameLogBack.Migrations
                         .HasColumnName("confirm_code_id");
 
                     b.Property<string>("Code")
-                        .HasMaxLength(4)
-                        .HasColumnType("character varying(4)")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
                         .HasColumnName("confirm_code");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -147,6 +147,10 @@ namespace GameLogBack.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<string>("GameImagePath")
+                        .HasColumnType("text")
+                        .HasColumnName("game_image_path");
+
                     b.Property<string>("GameName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -165,6 +169,10 @@ namespace GameLogBack.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
+                    b.Property<DateTime?>("YearPlayed")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("year_played");
+
                     b.HasKey("GameId");
 
                     b.HasIndex("CategoryId");
@@ -172,6 +180,22 @@ namespace GameLogBack.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("games", (string)null);
+                });
+
+            modelBuilder.Entity("GameLogBack.Entities.InvitationCodes", b =>
+                {
+                    b.Property<string>("InvitationCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
+                        .HasColumnName("invitation_code");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_used");
+
+                    b.HasKey("InvitationCode");
+
+                    b.ToTable("invitation_codes", (string)null);
                 });
 
             modelBuilder.Entity("GameLogBack.Entities.RefreshTokenInfo", b =>
@@ -244,7 +268,7 @@ namespace GameLogBack.Migrations
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(false)
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("LastName")
@@ -299,11 +323,11 @@ namespace GameLogBack.Migrations
             modelBuilder.Entity("GameLogBack.Entities.Games", b =>
                 {
                     b.HasOne("GameLogBack.Entities.Categories", "Category")
-                        .WithMany()
+                        .WithMany("Games")
                         .HasForeignKey("CategoryId");
 
                     b.HasOne("GameLogBack.Entities.Users", "User")
-                        .WithMany()
+                        .WithMany("Games")
                         .HasForeignKey("UserId");
 
                     b.Navigation("Category");
@@ -333,6 +357,11 @@ namespace GameLogBack.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameLogBack.Entities.Categories", b =>
+                {
+                    b.Navigation("Games");
+                });
+
             modelBuilder.Entity("GameLogBack.Entities.Users", b =>
                 {
                     b.Navigation("Categories");
@@ -340,6 +369,8 @@ namespace GameLogBack.Migrations
                     b.Navigation("CodeConfirm");
 
                     b.Navigation("CodeRecoveryPassword");
+
+                    b.Navigation("Games");
 
                     b.Navigation("RefreshTokens");
 

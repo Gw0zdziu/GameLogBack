@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameLogBack.Migrations
 {
     [DbContext(typeof(GameLogDbContext))]
-    [Migration("20250726193052_ChangeLimitLengthForCodeInCodeRecoveryPasswordTable")]
-    partial class ChangeLimitLengthForCodeInCodeRecoveryPasswordTable
+    [Migration("20261020164108_CodesRecoveryPassword_Update_ChangeFormatColumn")]
+    partial class CodesRecoveryPassword_Update_ChangeFormatColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,16 +25,57 @@ namespace GameLogBack.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("GameLogBack.Entities.Categories", b =>
+                {
+                    b.Property<string>("CategoryId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("category_id");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("category_name");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("CategoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("categories", (string)null);
+                });
+
             modelBuilder.Entity("GameLogBack.Entities.CodeConfirmUsers", b =>
                 {
-                    b.Property<string>("CodeId")
-                        .HasColumnType("text")
-                        .HasColumnName("confirm_code_id");
-
                     b.Property<string>("Code")
-                        .HasMaxLength(4)
-                        .HasColumnType("character varying(4)")
-                        .HasColumnName("confirm_code");
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
+                        .HasColumnName("code");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("timestamp with time zone")
@@ -45,7 +86,7 @@ namespace GameLogBack.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
-                    b.HasKey("CodeId");
+                    b.HasKey("Code");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -55,27 +96,24 @@ namespace GameLogBack.Migrations
 
             modelBuilder.Entity("GameLogBack.Entities.CodeRecoveryPassword", b =>
                 {
-                    b.Property<string>("CodeId")
-                        .HasColumnType("text")
-                        .HasColumnName("recovery_code_id");
-
                     b.Property<string>("Code")
                         .HasColumnType("text")
-                        .HasColumnName("recovery_code");
+                        .HasColumnName("code");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiry_date");
 
                     b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_used");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
-                    b.HasKey("CodeId");
+                    b.HasKey("Code");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -83,21 +121,86 @@ namespace GameLogBack.Migrations
                     b.ToTable("code_recovery_password", (string)null);
                 });
 
-            modelBuilder.Entity("GameLogBack.Entities.RefreshTokenInfo", b =>
+            modelBuilder.Entity("GameLogBack.Entities.Games", b =>
                 {
-                    b.Property<string>("RefreshTokenId")
+                    b.Property<string>("GameId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
-                        .HasColumnName("refresh_token_id");
+                        .HasColumnName("game_id");
+
+                    b.Property<string>("CategoryId")
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("category_id");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("GameImagePath")
+                        .HasColumnType("text")
+                        .HasColumnName("game_image_path");
+
+                    b.Property<string>("GameName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("game_name");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime?>("YearPlayed")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("year_played");
+
+                    b.HasKey("GameId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("games", (string)null);
+                });
+
+            modelBuilder.Entity("GameLogBack.Entities.InvitationCodes", b =>
+                {
+                    b.Property<string>("InvitationCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
+                        .HasColumnName("invitation_code");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_used");
+
+                    b.HasKey("InvitationCode");
+
+                    b.ToTable("invitation_codes", (string)null);
+                });
+
+            modelBuilder.Entity("GameLogBack.Entities.RefreshTokenInfo", b =>
+                {
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("refresh_token");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiry_date");
-
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("refresh_token");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -105,7 +208,7 @@ namespace GameLogBack.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
-                    b.HasKey("RefreshTokenId");
+                    b.HasKey("RefreshToken");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -153,7 +256,7 @@ namespace GameLogBack.Migrations
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(false)
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("LastName")
@@ -170,6 +273,17 @@ namespace GameLogBack.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("GameLogBack.Entities.Categories", b =>
+                {
+                    b.HasOne("GameLogBack.Entities.Users", "User")
+                        .WithMany("Categories")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GameLogBack.Entities.CodeConfirmUsers", b =>
@@ -190,6 +304,21 @@ namespace GameLogBack.Migrations
                         .HasForeignKey("GameLogBack.Entities.CodeRecoveryPassword", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameLogBack.Entities.Games", b =>
+                {
+                    b.HasOne("GameLogBack.Entities.Categories", "Category")
+                        .WithMany("Games")
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("GameLogBack.Entities.Users", "User")
+                        .WithMany("Games")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Category");
 
                     b.Navigation("User");
                 });
@@ -216,11 +345,20 @@ namespace GameLogBack.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameLogBack.Entities.Categories", b =>
+                {
+                    b.Navigation("Games");
+                });
+
             modelBuilder.Entity("GameLogBack.Entities.Users", b =>
                 {
+                    b.Navigation("Categories");
+
                     b.Navigation("CodeConfirm");
 
                     b.Navigation("CodeRecoveryPassword");
+
+                    b.Navigation("Games");
 
                     b.Navigation("RefreshTokens");
 

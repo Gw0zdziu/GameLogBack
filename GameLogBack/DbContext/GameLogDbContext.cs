@@ -59,31 +59,27 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
 
         #region UserLogins
 
-        modelBuilder.Entity<UserLogins>().ToTable("user_logins");
+        modelBuilder.Entity<UserLogins>().ToTable("user_logins")
+            .HasKey(k => k.UserId);
         modelBuilder.Entity<UserLogins>(entity =>
         {
-            entity.Property(p => p.UserId).HasColumnName("user_id");
-            entity.Property(p => p.UserName).HasColumnName("username");
-            entity.Property(p => p.Password).HasColumnName("password");
+            entity.Property(p => p.UserId)
+                .HasColumnName("user_id")
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(p => p.UserName)
+                .HasColumnName("username")
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(p => p.Password)
+                .HasColumnName("password")
+                .IsRequired()
+                .HasMaxLength(100);
         });
-        modelBuilder.Entity<UserLogins>()
-            .HasKey(k => k.UserId);
         modelBuilder.Entity<UserLogins>()
             .HasOne(r => r.User)
             .WithOne(u => u.UserLogins)
             .HasForeignKey<UserLogins>(k => k.UserId);
-        modelBuilder.Entity<UserLogins>()
-            .Property(p => p.UserId)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<UserLogins>()
-            .Property(p => p.UserName)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<UserLogins>()
-            .Property(p => p.Password)
-            .IsRequired()
-            .HasMaxLength(100);
         #endregion
 
         #region RefreshTokenInfo
@@ -91,31 +87,23 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         modelBuilder.Entity<RefreshTokenInfo>().ToTable("refresh_token_info");
         modelBuilder.Entity<RefreshTokenInfo>(entity =>
         {
-            entity.Property(p => p.UserId).HasColumnName("user_id");
-            entity.Property(p => p.RefreshTokenId).HasColumnName("refresh_token_id");
-            entity.Property(p => p.ExpiryDate).HasColumnName("expiry_date");
-            entity.Property(p => p.RefreshToken).HasColumnName("refresh_token");
+            entity.Property(p => p.UserId)
+                .HasColumnName("user_id")
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(p => p.ExpiryDate)
+                .HasColumnName("expiry_date")
+                .IsRequired();
+            entity.Property(p => p.RefreshToken)
+                .HasColumnName("refresh_token")
+                .HasMaxLength(150);
         });
         modelBuilder.Entity<RefreshTokenInfo>()
-            .HasKey(k => k.RefreshTokenId);
+            .HasKey(k => k.RefreshToken);
         modelBuilder.Entity<RefreshTokenInfo>()
             .HasOne(r => r.User)
             .WithOne(u => u.RefreshTokens)
             .HasForeignKey<RefreshTokenInfo>(k => k.UserId);
-        modelBuilder.Entity<RefreshTokenInfo>()
-            .Property(p => p.RefreshTokenId)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<RefreshTokenInfo>()
-            .Property(p => p.UserId)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<RefreshTokenInfo>()
-            .Property(p => p.ExpiryDate)
-            .IsRequired();
-        modelBuilder.Entity<RefreshTokenInfo>()
-            .Property(p => p.RefreshToken)
-            .IsRequired();
 
         #endregion
 
@@ -124,29 +112,20 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         modelBuilder.Entity<CodeConfirmUsers>().ToTable("confirm_confirm_users");
         modelBuilder.Entity<CodeConfirmUsers>(entity =>
         {
-            entity.Property(p => p.UserId).HasColumnName("user_id");
-            entity.Property(p => p.Code).HasColumnName("confirm_code");
-            entity.Property(p => p.CodeId).HasColumnName("confirm_code_id");
-            entity.Property(p => p.ExpiryDate).HasColumnName("expiry_date");
+            entity.Property(p => p.UserId).HasColumnName("user_id")
+                .IsRequired();
+            entity.Property(p => p.Code).HasColumnName("code")
+                .HasMaxLength(6);
+            entity.Property(p => p.ExpiryDate).HasColumnName("expiry_date")
+                .IsRequired();
         });
         modelBuilder.Entity<CodeConfirmUsers>()
-            .HasKey(k => k.CodeId);
+            .HasKey(k => k.Code);
         modelBuilder.Entity<CodeConfirmUsers>()
             .HasOne(r => r.User)
             .WithOne(r => r.CodeConfirm)
             .HasForeignKey<CodeConfirmUsers>(k => k.UserId);
-        modelBuilder.Entity<CodeConfirmUsers>()
-            .Property(p => p.CodeId)
-            .IsRequired();
-        modelBuilder.Entity<CodeConfirmUsers>()
-            .Property(p => p.Code)
-            .HasMaxLength(6);
-        modelBuilder.Entity<CodeConfirmUsers>()
-            .Property(p => p.UserId)
-            .IsRequired();
-        modelBuilder.Entity<CodeConfirmUsers>()
-            .Property(p => p.ExpiryDate)
-            .IsRequired();
+
 
         #endregion
 
@@ -155,59 +134,46 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
         modelBuilder.Entity<CodeRecoveryPassword>().ToTable("code_recovery_password");
         modelBuilder.Entity<CodeRecoveryPassword>(entities =>
         {
-            entities.Property(p => p.UserId).HasColumnName("user_id");
-            entities.Property(p => p.Code).HasColumnName("recovery_code");
-            entities.Property(p => p.CodeId).HasColumnName("recovery_code_id");
-            entities.Property(p => p.ExpiryDate).HasColumnName("expiry_date");
+            entities.Property(p => p.UserId).HasColumnName("user_id")
+                .IsRequired();
+            entities.Property(p => p.Code).HasColumnName("code")
+                .IsRequired();
+            entities.Property(p => p.ExpiryDate).HasColumnName("expiry_date")
+                .IsRequired();
+            entities.Property(x => x.IsUsed).HasColumnName("is_used");
         });
         modelBuilder.Entity<CodeRecoveryPassword>()
-            .HasKey(k => k.CodeId);
+            .HasKey(k => k.Code);
         modelBuilder.Entity<CodeRecoveryPassword>()
             .HasOne(r => r.User)
             .WithOne(r => r.CodeRecoveryPassword)
             .HasForeignKey<CodeRecoveryPassword>(k => k.UserId);
-        modelBuilder.Entity<CodeRecoveryPassword>()
-            .Property(p => p.CodeId)
-            .IsRequired();
-        modelBuilder.Entity<CodeRecoveryPassword>()
-            .Property(p => p.Code);
-        modelBuilder.Entity<CodeRecoveryPassword>()
-            .Property(p => p.UserId)
-            .IsRequired();
-        modelBuilder.Entity<CodeRecoveryPassword>()
-            .Property(p => p.ExpiryDate)
-            .IsRequired();
 
 
         #endregion
 
         #region Categories
+        
         modelBuilder.Entity<Categories>()
             .ToTable("categories");
         modelBuilder.Entity<Categories>(entity =>
         {
-            entity.Property(p => p.CategoryId).HasColumnName("category_id");
-            entity.Property(p => p.CategoryName).HasColumnName("category_name");
+            entity.Property(p => p.CategoryId).HasColumnName("category_id")
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(p => p.CategoryName).HasColumnName("category_name")
+                .IsRequired()
+                .HasMaxLength(100);
             entity.Property(p => p.CreatedBy).HasColumnName("created_by");
             entity.Property(p => p.UpdatedBy).HasColumnName("updated_by");
             entity.Property(p => p.CreatedDate).HasColumnName("created_date");
             entity.Property(p => p.UpdatedDate).HasColumnName("updated_date");
             entity.Property(p => p.Description).HasColumnName("description");
-            entity.Property(p => p.UserId).HasColumnName("user_id");
+            entity.Property(p => p.UserId).HasColumnName("user_id")
+                .IsRequired();
         });
         modelBuilder.Entity<Categories>()
             .HasKey(k => k.CategoryId);
-        modelBuilder.Entity<Categories>()
-            .Property(p => p.CategoryId)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<Categories>()
-            .Property(p => p.CategoryName)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<Categories>()
-            .Property(p => p.UserId)
-            .IsRequired();
 
         #endregion
 
@@ -217,8 +183,12 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             .ToTable("games");
         modelBuilder.Entity<Games>(entity =>
         {
-            entity.Property(p => p.GameId).HasColumnName("game_id");
-            entity.Property(p => p.GameName).HasColumnName("game_name");
+            entity.Property(p => p.GameId).HasColumnName("game_id")
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(p => p.GameName).HasColumnName("game_name")
+                .IsRequired()
+                .HasMaxLength(100);
             entity.Property(p => p.CreatedDate).HasColumnName("created_date");
             entity.Property(p => p.CreatedBy).HasColumnName("created_by");
             entity.Property(p => p.UpdatedDate).HasColumnName("updated_date");
@@ -226,21 +196,11 @@ public class GameLogDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(p => p.CategoryId).HasColumnName("category_id");
             entity.Property(p => p.UserId).HasColumnName("user_id");
             entity.Property(p => p.YearPlayed).HasColumnName("year_played");
-            entity.Property(p => p.GameImagePath).HasColumnName("game_image_path");
+            entity.Property(p => p.GameImagePath).HasColumnName("game_image_path")
+                .IsRequired(false);
         });
         modelBuilder.Entity<Games>()
             .HasKey(k => k.GameId);
-        modelBuilder.Entity<Games>()
-            .Property(p => p.GameId)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<Games>()
-            .Property(p => p.GameName)
-            .IsRequired()
-            .HasMaxLength(100);
-        modelBuilder.Entity<Games>()
-            .Property(p => p.GameImagePath)
-            .IsRequired(false);
         #endregion
 
         #region InvitationCodes

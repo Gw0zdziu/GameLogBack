@@ -5,24 +5,24 @@
 namespace GameLogBack.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateNameOfImageGamePathInGamesTable : Migration
+    public partial class CodesRecoveryPassword_Update_ChangeFormatColumn : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "GameImagePath",
-                table: "games",
-                newName: "game_image_path");
+                name: "IsUsed",
+                table: "code_recovery_password",
+                newName: "is_used");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "game_image_path",
-                table: "games",
-                newName: "GameImagePath");
+                name: "is_used",
+                table: "code_recovery_password",
+                newName: "IsUsed");
         }
     }
 }

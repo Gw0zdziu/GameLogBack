@@ -69,7 +69,6 @@ public class AuthServiceTests
         };
         var refreshTokenInfo = new RefreshTokenInfo()
         {
-            RefreshTokenId = "1",
             UserId = "1",
             RefreshToken = "oldRefreshToken",
             ExpiryDate = new DateTime(2026, 01, 01)
@@ -245,7 +244,6 @@ public class AuthServiceTests
         //Arrange
         var refreshTokenInfo = new RefreshTokenInfo()
         {
-            RefreshTokenId = "1",
             UserId = "1",
             RefreshToken =  Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("oldRefreshToken"))),
             ExpiryDate = DateTime.UtcNow.AddDays(1)
@@ -298,7 +296,6 @@ public class AuthServiceTests
         var mockClaimsPrincipal = ClaimsPrincipalTestHelper.CreatePrincipal("1", "nickName", "admin");
         var refreshTokenInfo = new RefreshTokenInfo()
         {
-            RefreshTokenId = "1",
             UserId = "1",
             RefreshToken = "oldRefreshToken",
             ExpiryDate = new DateTime(2026, 07, 01)
@@ -324,7 +321,6 @@ public class AuthServiceTests
         //Arrange
         var refreshTokenInfo = new RefreshTokenInfo()
         {
-            RefreshTokenId = "1",
             UserId = "1",
             RefreshToken = "oldRefreshToken",
             ExpiryDate = new DateTime(2026, 10, 01)
