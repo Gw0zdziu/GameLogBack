@@ -7,6 +7,7 @@ using GameLogBack.Interfaces;
 using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GameLogBack.Controllers;
 
@@ -28,6 +29,7 @@ public class UserController : ControllerBase
 
     [HttpPost("register")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-user")]
     public async Task<ActionResult<string>> RegisterUser([FromBody] RegisterNewUserDto registerNewUser)
     {
         var result = await _registerNewUserDtoValidator.ValidateAsync(registerNewUser);
@@ -66,6 +68,7 @@ public class UserController : ControllerBase
 
     [HttpGet("resend-code/{userId}")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-user")]
     public async Task<IActionResult> ResendCode([FromRoute] string userId)
     {
         await _userService.ResendNewConfirmCode(userId);
@@ -74,6 +77,7 @@ public class UserController : ControllerBase
 
     [HttpPost("confirm-user")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-user")]
     public async Task<ActionResult> ConfirmUser([FromBody] ConfirmCodeDto confirmCodeDto)
     {
         await _userService.ConfirmUser(confirmCodeDto);
@@ -81,6 +85,8 @@ public class UserController : ControllerBase
     }
     [HttpPost("recovery-password")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-user")]
+
     public async Task<ActionResult> RecoverPassword([FromBody] EmailRecoveryPasswordDto userEmail)
     {
         await _userService.RecoverPassword(userEmail.UserEmail);
@@ -89,6 +95,7 @@ public class UserController : ControllerBase
 
     [HttpPost("update-password")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-user")]
     public async Task<ActionResult> UpdatePassword([FromBody] RecoveryUpdatePasswordDto recoveryUpdatePasswordDto)
     {
         await _userService.UpdatePassword(recoveryUpdatePasswordDto);

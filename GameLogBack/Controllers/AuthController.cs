@@ -1,17 +1,14 @@
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices.JavaScript;
+
 using System.Security.Claims;
-using System.Text;
 using FluentValidation;
-using GameLogBack.Dtos.Auth;
 using GameLogBack.Dtos.Auth.RequestDto;
 using GameLogBack.Dtos.Auth.ResponseDto;
 using GameLogBack.Dtos.User;
-using GameLogBack.Exceptions;
 using GameLogBack.Interfaces;
 using GameLogBack.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 
 namespace GameLogBack.Controllers;
@@ -34,6 +31,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-user")]
     public async Task<ActionResult<LoginResponseDto>> LoginUser([FromBody] LoginUserDto loginUserDto)
     {
         var validate = await _validator.ValidateAsync(loginUserDto);
