@@ -50,46 +50,6 @@ builder.Services.AddOptions<PostgresSqlSettings>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-
-    /*else
-{
-    builder.Services.AddResend(o =>
-    {
-        o.ApiToken = Environment.GetEnvironmentVariable("RESEND_API_KEY")!;
-    });
-    bucketS3 = new BucketS3(Environment.GetEnvironmentVariable("BUCKET_NAME"));
-    awsCredentials = new BasicAWSCredentials(
-        Environment.GetEnvironmentVariable("BASIC_AWS_ACCESS_TOKEN"),
-        Environment.GetEnvironmentVariable("BASIC_AWS_SECRET_KEY")
-    );
-    s3Config = new AmazonS3Config()
-    {
-        ServiceURL     = Environment.GetEnvironmentVariable("BASIC_AWS_SERVICE_URL"),
-        ForcePathStyle =bool.Parse(Environment.GetEnvironmentVariable("AWS_FORCE_PATH_STYLE") ?? "true")
-    };
-    connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-    authenticationSettings = new AuthenticationSettings()
-    {
-        JwtKey = Environment.GetEnvironmentVariable("JWT_KEY"),
-        JwtAccessTokenExpireMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_EXPIRE_MINUTES") ?? "15"),
-        JwtRefreshTokenExpireMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRE_DAYS") ?? "15"),
-        JwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
-
-    };
-    gameBrainApiSettings = new GameBrainApiSettings()
-    {
-        ApiUrl = Environment.GetEnvironmentVariable("GAME_BRAIN_API_URL"),
-        ApiKey = Environment.GetEnvironmentVariable("GAME_BRAIN_API_KEY"),
-        GenerateFilterOptions = Environment.GetEnvironmentVariable("GENERATE_FILTER_OPTIONS"),
-
-    };
-    frontendSettings = new FrontendSettings()
-    {
-        FrontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL"),
-        GamesImageDirectoryName = Environment.GetEnvironmentVariable("GAMES_IMAGE_DIRECTORY_NAME"),
-        RecoveryPasswordEndpoint = Environment.GetEnvironmentVariable("RECOVERY_PASSWORD_ENDPOINT"),
-    };
-}*/
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
