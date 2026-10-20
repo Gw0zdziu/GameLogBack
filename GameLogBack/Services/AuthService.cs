@@ -49,7 +49,6 @@ public class AuthService : IAuthService
             var newRefreshTokenInfo = new RefreshTokenInfo
             {
                 UserId = user.UserId,
-                RefreshTokenId = Guid.NewGuid().ToString(),
                 RefreshToken = hashedRefreshToken,
                 ExpiryDate = DateTime.UtcNow.AddMinutes(_authenticationSettings.Value.JwtRefreshTokenExpireMinutes)
             };
