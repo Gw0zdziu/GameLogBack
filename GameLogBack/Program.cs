@@ -4,11 +4,13 @@ using System.Threading.RateLimiting;
 using Amazon.Runtime;
 using Amazon.S3;
 using FluentValidation;
+using GameLogBack.Constants;
 using GameLogBack.DataAccess.Interfaces;
 using GameLogBack.DataAccess.Repositories;
 using GameLogBack.DbContext;
 using GameLogBack.Entities;
 using GameLogBack.Exceptions;
+using GameLogBack.Exceptions.Handler;
 using GameLogBack.Interfaces;
 using GameLogBack.Services;
 using GameLogBack.Settings;
@@ -18,7 +20,7 @@ using GameLogBack.Validators.Game;
 using GameLogBack.Validators.User;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -55,15 +57,36 @@ builder.Services.AddOptions<PostgresSqlSettings>()
 
 builder.Services.AddRateLimiter(options =>
 {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddSlidingWindowLimiter("auth-user", opt =>
     {
         opt.PermitLimit = 10;
         opt.Window = TimeSpan.FromMinutes(1);
-        opt.SegmentsPerWindow = 6; 
+        opt.SegmentsPerWindow = 6;
         opt.QueueLimit = 0;
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
     });
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        var problemDetailsService = context.HttpContext.RequestServices.GetService<IProblemDetailsService>();
+        if (problemDetailsService is not  null)
+        {
+            await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = context.HttpContext,
+                ProblemDetails = new ProblemDetails()
+                {
+                    Status = StatusCodes.Status429TooManyRequests,
+                    Title = "Too many request",
+                    Extensions =
+                    {
+                        ["code"] = ErrorCodes.RateLimiter.TooManyRequests
+                    }
+                }
+            });
+        }
+    };
 });
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
