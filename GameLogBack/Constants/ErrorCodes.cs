@@ -9,7 +9,7 @@ public static class ErrorCodes
         public const string ExpiredAccessToken = "auth.expired-access-token";
         public const string InactiveAccount = "auth.inactive-user";
     }
-    
+
     public static class User
     {
         public const string UserNotFound = "user.not-found";
@@ -34,14 +34,14 @@ public static class ErrorCodes
     {
         public const string GameNotFound = "game.not-found";
         public const string GameWithThisNameAlreadyExists = "game.game-with-this-name-already-exists";
-        
+
     }
-    
+
     public static class InvitationCode
     {
         public const string InvitationCodeIncorrectOrActivated = "invitation-code.code-is-incorrect-or-unactivate";
     }
-    
+
     public static class Utils
     {
         public const string UtilsTokenExpired = "utils.token-expired";
@@ -49,10 +49,15 @@ public static class ErrorCodes
         public const string UtilsTokenHasInvalidFormat = "utils.token-has-invalid-format";
         public const string UtilsTokenIsInvalid = "utils.token-is-invalid";
     }
-    
+
+    public static class RateLimiter
+    {
+        public const string TooManyRequests = "limiter.too-many-requests";
+    }
+
     public static class Internal
     {
         public const string InternalServerError = "internal.server-error";
     }
-    
+
 }
