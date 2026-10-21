@@ -1,9 +1,8 @@
-
 using GameLogBack.Constants;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameLogBack.Exceptions;
+namespace GameLogBack.Exceptions.Handler;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
