@@ -27,7 +27,7 @@ public class GlobalExceptionHandler : IExceptionHandler
                     ["code"] = appException.ErrorCode
                 }
             };
-            _logger.LogWarning(exception, message: appException.Message);
+            _logger.LogWarning(exception, "{Message}", exception.Message);
         }
         else
         {
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler : IExceptionHandler
                     ["code"] = ErrorCodes.Internal.InternalServerError
                 }
             };
-            _logger.LogError(exception.ToString());
+            _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
         }
         httpContext.Response.StatusCode = problem.Status!.Value;
         problem.Extensions["traceId"] = httpContext.TraceIdentifier;
